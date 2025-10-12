@@ -210,20 +210,20 @@
 
 ### Tests for User Story 5 (TDD - Write FIRST, ensure FAIL before implementation)
 
-- [ ] T092 [P] [US5] Contract test for GET /financialReports endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_financial_api.py` - verify revenue data
-- [ ] T093 [P] [US5] Integration test for financial reporting flow in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_financial_api.py` - date range → report
-- [ ] T094 [P] [US5] MCP protocol test for financial tools invocation in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/mcp/test_tool_invocation.py`
+- [X] T092 [P] [US5] Contract test for GET /financialReports endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_financial_api.py` - verify revenue data
+- [X] T093 [P] [US5] Integration test for financial reporting flow in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_financial_api.py` - date range → report
+- [X] T094 [P] [US5] MCP protocol test for financial tools invocation in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/mcp/test_tool_invocation.py`
 
 ### Implementation for User Story 5
 
-- [ ] T095 [P] [US5] Create FinancialReport model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/financial.py` with revenue/expense breakdown per data-model.md
-- [ ] T096 [P] [US5] Create RevenueBreakdown and ExpenseBreakdown models in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/financial.py`
-- [ ] T097 [US5] Add `get_financial_report(start_date, end_date)` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T095)
-- [ ] T098 [US5] Add `get_property_financials(property_id, start_date, end_date)` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T095)
-- [ ] T099 [US5] Create FastAPI route `GET /financialReports` in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/financial.py` with date filters (depends on T097)
-- [ ] T100 [US5] Register `get_revenue_report` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/mcp/server.py` (depends on T099)
-- [ ] T101 [US5] Register `get_property_financials` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/mcp/server.py` (depends on T098)
-- [ ] T102 [US5] Add error handling for invalid date ranges in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/financial.py`
+- [X] T095 [P] [US5] Create FinancialReport model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/financial.py` with revenue/expense breakdown per data-model.md
+- [X] T096 [P] [US5] Create RevenueBreakdown and ExpenseBreakdown models in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/financial.py`
+- [X] T097 [US5] Add `get_financial_report(start_date, end_date)` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T095)
+- [X] T098 [US5] Add `get_property_financials(property_id, start_date, end_date)` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T095)
+- [X] T099 [US5] Create FastAPI route `GET /financialReports` in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/financial.py` with date filters (depends on T097)
+- [X] T100 [US5] Register `get_revenue_report` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/mcp/server.py` (depends on T099)
+- [X] T101 [US5] Register `get_property_financials` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/mcp/server.py` (depends on T098)
+- [X] T102 [US5] Add error handling for invalid date ranges in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/financial.py`
 
 **Checkpoint**: All user stories complete - full MCP server functional
 
