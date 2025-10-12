@@ -3,17 +3,27 @@
 Provides REST API and MCP tool endpoints for Hostaway property management.
 """
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from datetime import UTC
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
+from src.mcp.auth import TokenManager
 from src.mcp.config import HostawayConfig
+from src.mcp.logging import (
+    clear_correlation_id,
+    get_logger,
+    set_correlation_id,
+    setup_logging,
+)
 from src.mcp.server import initialize_mcp
 from src.services.hostaway_client import HostawayClient
 from src.services.rate_limiter import RateLimiter
-from src.mcp.auth import TokenManager
+
+logger = get_logger(__name__)
 
 
 # Global instances (initialized in lifespan)
@@ -34,6 +44,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     global config, token_manager, rate_limiter, hostaway_client
 
     config = HostawayConfig()  # type: ignore[call-arg]
+
+    # Setup structured logging
+    setup_logging(
+        level=config.log_level if hasattr(config, "log_level") else "INFO",
+        json_format=True,
+    )
+    logger.info("Starting Hostaway MCP Server", extra={"version": "0.1.0"})
+
     rate_limiter = RateLimiter(
         ip_rate_limit=config.rate_limit_ip,
         account_rate_limit=config.rate_limit_account,
@@ -46,11 +64,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         rate_limiter=rate_limiter,
     )
 
+    logger.info("Hostaway MCP Server started successfully")
+
     yield
 
     # Shutdown: Cleanup resources
+    logger.info("Shutting down Hostaway MCP Server")
     await hostaway_client.aclose()
     await token_manager.aclose()
+    logger.info("Hostaway MCP Server shut down complete")
 
 
 # Create FastAPI app
@@ -71,6 +93,45 @@ app.add_middleware(
 )
 
 
+# Correlation ID middleware for request tracing
+class CorrelationIdMiddleware(BaseHTTPMiddleware):
+    """Middleware to handle correlation IDs for request tracing."""
+
+    async def dispatch(self, request: Request, call_next):  # type: ignore[no-untyped-def]
+        """Extract or generate correlation ID and add to context.
+
+        Args:
+            request: Incoming HTTP request
+            call_next: Next middleware/handler in chain
+
+        Returns:
+            HTTP response with correlation ID header
+        """
+        # Get correlation ID from header or generate new one
+        correlation_id = request.headers.get("X-Correlation-ID")
+        if not correlation_id:
+            import uuid
+
+            correlation_id = str(uuid.uuid4())
+
+        # Set correlation ID in context for logging
+        set_correlation_id(correlation_id)
+
+        # Process request
+        response = await call_next(request)
+
+        # Add correlation ID to response headers
+        response.headers["X-Correlation-ID"] = correlation_id
+
+        # Clear correlation ID from context
+        clear_correlation_id()
+
+        return response
+
+
+app.add_middleware(CorrelationIdMiddleware)
+
+
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     """Health check endpoint for monitoring and deployment verification.
@@ -78,11 +139,11 @@ async def health_check() -> dict[str, str]:
     Returns:
         Status message with timestamp and version for health monitoring
     """
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     return {
         "status": "healthy",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "version": "0.1.0",
         "service": "hostaway-mcp",
     }
@@ -106,18 +167,22 @@ async def root() -> dict[str, str]:
 # Register authentication routes BEFORE MCP initialization
 # (so they're automatically exposed as MCP tools)
 from src.api.routes import auth
+
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 
 # Register listings routes
 from src.api.routes import listings
+
 app.include_router(listings.router, prefix="/api", tags=["Listings"])
 
 # Register bookings routes
 from src.api.routes import bookings
+
 app.include_router(bookings.router, prefix="/api", tags=["Bookings"])
 
 # Register financial routes
 from src.api.routes import financial
+
 app.include_router(financial.router, prefix="/api", tags=["Financial"])
 
 # Initialize MCP server (wraps the FastAPI app)

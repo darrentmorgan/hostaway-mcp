@@ -1,0 +1,94 @@
+# Pre-commit hooks configuration for Hostaway MCP Server
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Ruff - Fast Python linter and formatter (replaces black, isort, flake8, etc.)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      # Run the formatter
+      - id: ruff-format
+        name: ruff format
+        description: Format Python code with ruff
+
+      # Run the linter
+      - id: ruff
+        name: ruff lint
+        description: Lint Python code with ruff
+        args: [--fix]
+
+  # Mypy - Static type checker
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+        name: mypy type check
+        description: Run mypy static type checker
+        additional_dependencies:
+          - types-requests
+          - pydantic
+          - httpx
+        args: [--strict, --python-version=3.12]
+        # Only run on src and tests directories
+        files: ^(src|tests)/.*\.py$
+
+  # General hooks for file formatting
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # Check for files that would conflict in case-insensitive filesystems
+      - id: check-case-conflict
+
+      # Check for merge conflicts
+      - id: check-merge-conflict
+
+      # Check YAML files are valid
+      - id: check-yaml
+
+      # Check TOML files are valid
+      - id: check-toml
+
+      # Check JSON files are valid
+      - id: check-json
+
+      # Ensure files end with newline
+      - id: end-of-file-fixer
+
+      # Trim trailing whitespace
+      - id: trailing-whitespace
+
+      # Check for accidentally committed large files
+      - id: check-added-large-files
+        args: [--maxkb=500]
+
+      # Detect private keys
+      - id: detect-private-key
+
+      # Check that executables have shebangs
+      - id: check-executables-have-shebangs
+
+      # Check that scripts with shebangs are executable
+      - id: check-shebang-scripts-are-executable
+
+  # Security checks - detect common security issues
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.10
+    hooks:
+      - id: bandit
+        name: bandit security scan
+        description: Scan for common security issues
+        args: [-c, pyproject.toml]
+        additional_dependencies: ["bandit[toml]"]
+        # Only scan src directory, skip tests
+        files: ^src/.*\.py$
+
+# Configuration
+default_language_version:
+  python: python3.12
+
+# Fail fast - stop on first failure
+fail_fast: false
+
+# Minimum pre-commit version
+minimum_pre_commit_version: "3.0.0"
