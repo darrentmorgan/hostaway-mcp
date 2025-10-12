@@ -112,6 +112,10 @@ app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 from src.api.routes import listings
 app.include_router(listings.router, prefix="/api", tags=["Listings"])
 
+# Register bookings routes
+from src.api.routes import bookings
+app.include_router(bookings.router, prefix="/api", tags=["Bookings"])
+
 # Initialize MCP server (wraps the FastAPI app)
 # This must come AFTER all routes are registered
 mcp = initialize_mcp(app)

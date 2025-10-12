@@ -321,6 +321,105 @@ class HostawayClient:
         # Hostaway wraps results in a "result" field
         return response.get("result", [])
 
+    # Bookings/Reservations API methods
+
+    async def search_bookings(
+        self,
+        listing_id: Optional[int] = None,
+        check_in_from: Optional[str] = None,
+        check_in_to: Optional[str] = None,
+        check_out_from: Optional[str] = None,
+        check_out_to: Optional[str] = None,
+        status: Optional[list[str]] = None,
+        guest_email: Optional[str] = None,
+        booking_source: Optional[str] = None,
+        min_guests: Optional[int] = None,
+        max_guests: Optional[int] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[dict[str, Any]]:
+        """Search bookings/reservations with filters.
+
+        Args:
+            listing_id: Filter by specific property ID
+            check_in_from: Filter bookings with check-in on or after this date (YYYY-MM-DD)
+            check_in_to: Filter bookings with check-in on or before this date (YYYY-MM-DD)
+            check_out_from: Filter bookings with check-out on or after this date (YYYY-MM-DD)
+            check_out_to: Filter bookings with check-out on or before this date (YYYY-MM-DD)
+            status: Filter by booking status (multiple allowed)
+            guest_email: Filter by guest email address
+            booking_source: Filter by booking channel (airbnb, vrbo, etc.)
+            min_guests: Filter bookings with at least this many guests
+            max_guests: Filter bookings with at most this many guests
+            limit: Maximum number of results to return (default: 100)
+            offset: Number of results to skip for pagination (default: 0)
+
+        Returns:
+            List of booking dictionaries from API response
+
+        Raises:
+            httpx.HTTPStatusError: If API returns error status code
+        """
+        # Build query parameters, only including non-None values
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+
+        if listing_id is not None:
+            params["listingId"] = listing_id
+        if check_in_from is not None:
+            params["checkInFrom"] = check_in_from
+        if check_in_to is not None:
+            params["checkInTo"] = check_in_to
+        if check_out_from is not None:
+            params["checkOutFrom"] = check_out_from
+        if check_out_to is not None:
+            params["checkOutTo"] = check_out_to
+        if status is not None:
+            params["status"] = ",".join(status)
+        if guest_email is not None:
+            params["guestEmail"] = guest_email
+        if booking_source is not None:
+            params["channelName"] = booking_source
+        if min_guests is not None:
+            params["minGuests"] = min_guests
+        if max_guests is not None:
+            params["maxGuests"] = max_guests
+
+        response = await self.get("/reservations", params=params)
+        # Hostaway wraps results in a "result" field
+        return response.get("result", [])
+
+    async def get_booking(self, booking_id: int) -> dict[str, Any]:
+        """Retrieve detailed information for a specific booking/reservation.
+
+        Args:
+            booking_id: Unique identifier for the booking
+
+        Returns:
+            Booking details dictionary from API response
+
+        Raises:
+            httpx.HTTPStatusError: If API returns error status code (e.g., 404 not found)
+        """
+        response = await self.get(f"/reservations/{booking_id}")
+        # Hostaway wraps result in a "result" field
+        return response.get("result", {})
+
+    async def get_booking_guest(self, booking_id: int) -> dict[str, Any]:
+        """Retrieve guest information for a specific booking/reservation.
+
+        Args:
+            booking_id: Unique identifier for the booking
+
+        Returns:
+            Guest details dictionary from API response
+
+        Raises:
+            httpx.HTTPStatusError: If API returns error status code (e.g., 404 not found)
+        """
+        response = await self.get(f"/reservations/{booking_id}/guest")
+        # Hostaway wraps result in a "result" field
+        return response.get("result", {})
+
     async def aclose(self) -> None:
         """Close the HTTP client and cleanup resources.
 

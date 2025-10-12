@@ -4,6 +4,13 @@ This package contains Pydantic models for all Hostaway API entities.
 """
 
 from src.models.auth import AccessToken, TokenRefreshRequest, TokenRefreshResponse
+from src.models.bookings import (
+    Booking,
+    BookingSearchFilters,
+    BookingStatus,
+    PaymentInfo,
+    PaymentStatus,
+)
 from src.models.listings import (
     AvailabilityInfo,
     Listing,
@@ -21,4 +28,10 @@ __all__ = [
     "ListingSummary",
     "PricingInfo",
     "AvailabilityInfo",
+    # Booking models
+    "Booking",
+    "BookingSearchFilters",
+    "BookingStatus",
+    "PaymentInfo",
+    "PaymentStatus",
 ]
