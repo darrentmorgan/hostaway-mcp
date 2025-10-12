@@ -83,7 +83,7 @@ All FastAPI routes are automatically exposed as MCP tools via FastAPI-MCP integr
 
 ### Authentication
 
-- `POST /auth/token` - Obtain access token (manual authentication for testing)
+- `POST /auth/authenticate` - Obtain access token (manual authentication for testing)
 - `POST /auth/refresh` - Refresh expired access token
 
 ### Property Listings
