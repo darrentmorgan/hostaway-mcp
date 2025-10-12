@@ -1,0 +1,304 @@
+openapi: 3.1.0
+info:
+  title: Hostaway Authentication API
+  description: OAuth 2.0 authentication endpoints for Hostaway MCP Server
+  version: 1.0.0
+  contact:
+    name: Hostaway API Support
+    url: https://api.hostaway.com/documentation
+
+servers:
+  - url: https://api.hostaway.com/v1
+    description: Hostaway Production API
+
+security:
+  - oauth2ClientCredentials: []
+
+paths:
+  /accessTokens:
+    post:
+      operationId: obtainAccessToken
+      summary: Obtain OAuth access token
+      description: |
+        Exchange client credentials for an OAuth 2.0 access token using the Client Credentials Grant flow.
+        Tokens are valid for 24 months and should be stored securely for subsequent API requests.
+
+        Rate Limits:
+        - 15 requests per 10 seconds per IP address
+        - 20 requests per 10 seconds per account
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - grant_type
+                - client_id
+                - client_secret
+                - scope
+              properties:
+                grant_type:
+                  type: string
+                  enum: [client_credentials]
+                  description: OAuth 2.0 grant type (must be 'client_credentials')
+                  example: client_credentials
+                client_id:
+                  type: string
+                  description: Hostaway account ID
+                  example: "12345"
+                client_secret:
+                  type: string
+                  format: password
+                  description: Hostaway secret key
+                  example: "abcdef1234567890"
+                scope:
+                  type: string
+                  enum: [general]
+                  description: Access scope (must be 'general')
+                  example: general
+            example:
+              grant_type: client_credentials
+              client_id: "12345"
+              client_secret: "abcdef1234567890"
+              scope: general
+      responses:
+        '200':
+          description: Successfully obtained access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenResponse'
+              examples:
+                success:
+                  value:
+                    access_token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
+                    token_type: "Bearer"
+                    expires_in: 63072000
+                    scope: "general"
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidGrant:
+                  value:
+                    error: "invalid_grant"
+                    error_description: "The provided authorization grant is invalid"
+                    status: 400
+                missingParameter:
+                  value:
+                    error: "invalid_request"
+                    error_description: "Missing required parameter: client_id"
+                    status: 400
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredentials:
+                  value:
+                    error: "invalid_client"
+                    error_description: "Client authentication failed"
+                    status: 401
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimitExceeded:
+                  value:
+                    error: "rate_limit_exceeded"
+                    error_description: "Too many requests. Maximum 15 per 10 seconds per IP or 20 per 10 seconds per account."
+                    status: 429
+                    retry_after: 10
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                serverError:
+                  value:
+                    error: "server_error"
+                    error_description: "An unexpected error occurred. Please try again later."
+                    status: 500
+
+  /accessTokens/refresh:
+    post:
+      operationId: refreshAccessToken
+      summary: Refresh expiring access token
+      description: |
+        Refresh an access token before it expires. While tokens are valid for 24 months,
+        this endpoint allows proactive token refresh to prevent service interruption.
+
+        Note: This endpoint follows the same rate limits as token generation.
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - grant_type
+                - refresh_token
+              properties:
+                grant_type:
+                  type: string
+                  enum: [refresh_token]
+                  description: OAuth 2.0 grant type (must be 'refresh_token')
+                  example: refresh_token
+                refresh_token:
+                  type: string
+                  description: The refresh token obtained from the initial authentication
+                  example: "def50200..."
+            example:
+              grant_type: refresh_token
+              refresh_token: "def50200..."
+      responses:
+        '200':
+          description: Successfully refreshed access token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenResponse'
+              examples:
+                success:
+                  value:
+                    access_token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
+                    token_type: "Bearer"
+                    expires_in: 63072000
+                    scope: "general"
+                    refresh_token: "def50200..."
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidRefreshToken:
+                  value:
+                    error: "invalid_grant"
+                    error_description: "The refresh token is invalid or expired"
+                    status: 400
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  value:
+                    error: "unauthorized"
+                    error_description: "Invalid or missing access token"
+                    status: 401
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimitExceeded:
+                  value:
+                    error: "rate_limit_exceeded"
+                    error_description: "Too many requests. Maximum 15 per 10 seconds per IP or 20 per 10 seconds per account."
+                    status: 429
+                    retry_after: 10
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    oauth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.hostaway.com/v1/accessTokens
+          scopes:
+            general: General access to Hostaway API resources
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AccessTokenResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - expires_in
+      properties:
+        access_token:
+          type: string
+          description: JWT access token for API authentication
+          example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
+        token_type:
+          type: string
+          enum: [Bearer]
+          description: Token type (always 'Bearer')
+          example: "Bearer"
+        expires_in:
+          type: integer
+          description: Token validity period in seconds (24 months = 63072000 seconds)
+          example: 63072000
+        scope:
+          type: string
+          description: Access scope granted
+          example: "general"
+        refresh_token:
+          type: string
+          description: Refresh token for obtaining new access tokens (optional)
+          example: "def50200..."
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - status
+      properties:
+        error:
+          type: string
+          description: Error code identifying the type of error
+          example: "invalid_client"
+        error_description:
+          type: string
+          description: Human-readable error message
+          example: "Client authentication failed"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 401
+        retry_after:
+          type: integer
+          description: Seconds to wait before retrying (only present for rate limit errors)
+          example: 10
+        error_uri:
+          type: string
+          format: uri
+          description: URI with more information about the error
+          example: "https://api.hostaway.com/docs/errors/invalid_client"
+
+tags:
+  - name: Authentication
+    description: OAuth 2.0 authentication endpoints for obtaining and refreshing access tokens
