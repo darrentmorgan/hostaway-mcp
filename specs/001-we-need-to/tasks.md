@@ -144,28 +144,28 @@
 
 ### Tests for User Story 3 (TDD - Write FIRST, ensure FAIL before implementation)
 
-- [ ] T058 [P] [US3] Contract test for GET /reservations endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_bookings_api.py` - verify search filters
-- [ ] T059 [P] [US3] Contract test for GET /reservations/{id} endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_bookings_api.py` - verify booking details
-- [ ] T060 [P] [US3] Contract test for GET /reservations/{id}/guest endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_bookings_api.py` - verify guest info
-- [ ] T061 [P] [US3] Integration test for booking search flow in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_bookings_api.py` - filters → results
-- [ ] T062 [P] [US3] MCP protocol test for booking tools invocation in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/mcp/test_tool_invocation.py`
+- [X] T058 [P] [US3] Contract test for GET /reservations endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_bookings_api.py` - verify search filters
+- [X] T059 [P] [US3] Contract test for GET /reservations/{id} endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_bookings_api.py` - verify booking details
+- [X] T060 [P] [US3] Contract test for GET /reservations/{id}/guest endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_bookings_api.py` - verify guest info
+- [X] T061 [P] [US3] Integration test for booking search flow in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_bookings_api.py` - filters → results
+- [X] T062 [P] [US3] MCP protocol test for booking tools invocation in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/mcp/test_tool_invocation.py`
 
 ### Implementation for User Story 3
 
-- [ ] T063 [P] [US3] Create Booking model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/bookings.py` with full reservation details per data-model.md
-- [ ] T064 [P] [US3] Create BookingSearchFilters model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/bookings.py` for search criteria
-- [ ] T065 [P] [US3] Create PaymentInfo model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/bookings.py` with payment status
-- [ ] T066 [P] [US3] Create BookingStatus and PaymentStatus enums in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/bookings.py`
-- [ ] T067 [US3] Add `search_bookings(filters)` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T063, T064)
-- [ ] T068 [US3] Add `get_booking_by_id(booking_id)` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T063)
-- [ ] T069 [US3] Add `get_booking_guest(booking_id)` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T063)
-- [ ] T070 [US3] Create FastAPI route `GET /reservations` in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/bookings.py` with search filters (depends on T067)
-- [ ] T071 [US3] Create FastAPI route `GET /reservations/{id}` in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/bookings.py` (depends on T068)
-- [ ] T072 [US3] Create FastAPI route `GET /reservations/{id}/guest` in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/bookings.py` (depends on T069)
-- [ ] T073 [US3] Register `search_bookings` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/mcp/server.py` (depends on T070)
-- [ ] T074 [US3] Register `get_booking_details` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/mcp/server.py` (depends on T071)
-- [ ] T075 [US3] Register `get_booking_guest_info` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/mcp/server.py` (depends on T072)
-- [ ] T076 [US3] Add error handling for invalid date ranges and booking not found in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/bookings.py`
+- [X] T063 [P] [US3] Create Booking model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/bookings.py` with full reservation details per data-model.md
+- [X] T064 [P] [US3] Create BookingSearchFilters model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/bookings.py` for search criteria
+- [X] T065 [P] [US3] Create PaymentInfo model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/bookings.py` with payment status
+- [X] T066 [P] [US3] Create BookingStatus and PaymentStatus enums in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/bookings.py`
+- [X] T067 [US3] Add `search_bookings(filters)` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T063, T064)
+- [X] T068 [US3] Add `get_booking_by_id(booking_id)` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T063)
+- [X] T069 [US3] Add `get_booking_guest(booking_id)` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T063)
+- [X] T070 [US3] Create FastAPI route `GET /reservations` in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/bookings.py` with search filters (depends on T067)
+- [X] T071 [US3] Create FastAPI route `GET /reservations/{id}` in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/bookings.py` (depends on T068)
+- [X] T072 [US3] Create FastAPI route `GET /reservations/{id}/guest` in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/bookings.py` (depends on T069)
+- [X] T073 [US3] Register `search_bookings` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/mcp/server.py` (depends on T070)
+- [X] T074 [US3] Register `get_booking_details` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/mcp/server.py` (depends on T071)
+- [X] T075 [US3] Register `get_booking_guest_info` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/mcp/server.py` (depends on T072)
+- [X] T076 [US3] Add error handling for invalid date ranges and booking not found in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/bookings.py`
 
 **Checkpoint**: User Stories 1, 2, AND 3 complete - auth + properties + bookings all work independently
 
