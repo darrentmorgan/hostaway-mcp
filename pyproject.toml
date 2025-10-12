@@ -9,6 +9,7 @@ description = "MCP server for Hostaway property management API"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aiolimiter>=1.2.1",
     "email-validator>=2.3.0",
     "fastapi>=0.100.0",
     "fastapi-mcp>=0.4.0",
@@ -16,6 +17,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",
     "python-json-logger>=4.0.0",
+    "tenacity>=9.1.2",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -23,14 +25,12 @@ packages = ["src"]
 
 [dependency-groups]
 dev = [
-    "aiolimiter>=1.2.1",
     "mypy>=1.18.2",
     "pre-commit>=4.3.0",
     "pytest>=8.4.2",
     "pytest-asyncio>=1.2.0",
     "pytest-cov>=7.0.0",
     "ruff>=0.14.0",
-    "tenacity>=9.1.2",
 ]
 
 [tool.ruff]

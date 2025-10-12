@@ -19,10 +19,10 @@ RUN apt-get update && apt-get install -y \
 
 # Install uv for fast dependency management
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.cargo/bin:$PATH"
+ENV PATH="/root/.local/bin:$PATH"
 
-# Copy dependency files
-COPY pyproject.toml uv.lock ./
+# Copy dependency files and README (required by hatchling)
+COPY pyproject.toml uv.lock README.md ./
 
 # Install dependencies using uv (creates .venv)
 RUN uv sync --frozen --no-dev

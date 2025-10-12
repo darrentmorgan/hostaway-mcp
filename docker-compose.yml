@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Hostaway MCP Server
   hostaway-mcp:
@@ -11,8 +9,8 @@ services:
       - "8000:8000"
     environment:
       # Hostaway API Configuration
-      - HOSTAWAY_CLIENT_ID=${HOSTAWAY_CLIENT_ID}
-      - HOSTAWAY_CLIENT_SECRET=${HOSTAWAY_CLIENT_SECRET}
+      - HOSTAWAY_ACCOUNT_ID=${HOSTAWAY_ACCOUNT_ID}
+      - HOSTAWAY_SECRET_KEY=${HOSTAWAY_SECRET_KEY}
       - HOSTAWAY_API_BASE_URL=${HOSTAWAY_API_BASE_URL:-https://api.hostaway.com/v1}
 
       # Rate Limiting Configuration
