@@ -17,6 +17,12 @@ from src.models.listings import (
     ListingSummary,
     PricingInfo,
 )
+from src.models.financial import (
+    ExpenseBreakdown,
+    FinancialReport,
+    FinancialReportPeriod,
+    RevenueBreakdown,
+)
 
 __all__ = [
     # Authentication models
@@ -34,4 +40,9 @@ __all__ = [
     "BookingStatus",
     "PaymentInfo",
     "PaymentStatus",
+    # Financial models
+    "FinancialReport",
+    "RevenueBreakdown",
+    "ExpenseBreakdown",
+    "FinancialReportPeriod",
 ]

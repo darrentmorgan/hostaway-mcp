@@ -116,6 +116,10 @@ app.include_router(listings.router, prefix="/api", tags=["Listings"])
 from src.api.routes import bookings
 app.include_router(bookings.router, prefix="/api", tags=["Bookings"])
 
+# Register financial routes
+from src.api.routes import financial
+app.include_router(financial.router, prefix="/api", tags=["Financial"])
+
 # Initialize MCP server (wraps the FastAPI app)
 # This must come AFTER all routes are registered
 mcp = initialize_mcp(app)

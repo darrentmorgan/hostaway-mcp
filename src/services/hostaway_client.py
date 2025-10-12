@@ -420,6 +420,62 @@ class HostawayClient:
         # Hostaway wraps result in a "result" field
         return response.get("result", {})
 
+    # Financial Reports API methods
+
+    async def get_financial_report(
+        self,
+        start_date: str,
+        end_date: str,
+    ) -> dict[str, Any]:
+        """Retrieve financial report for date range.
+
+        Args:
+            start_date: Report start date in ISO format (YYYY-MM-DD)
+            end_date: Report end date in ISO format (YYYY-MM-DD)
+
+        Returns:
+            Financial report with revenue, expenses, and profitability metrics
+
+        Raises:
+            httpx.HTTPStatusError: If API returns error status code (e.g., 400 for invalid dates)
+        """
+        response = await self.get(
+            "/financialReports",
+            params={"startDate": start_date, "endDate": end_date},
+        )
+        # Hostaway wraps result in a "result" field
+        return response.get("result", {})
+
+    async def get_property_financials(
+        self,
+        property_id: int,
+        start_date: str,
+        end_date: str,
+    ) -> dict[str, Any]:
+        """Retrieve financial report for a specific property.
+
+        Args:
+            property_id: Unique identifier for the property
+            start_date: Report start date in ISO format (YYYY-MM-DD)
+            end_date: Report end date in ISO format (YYYY-MM-DD)
+
+        Returns:
+            Property-specific financial report
+
+        Raises:
+            httpx.HTTPStatusError: If API returns error status code
+        """
+        response = await self.get(
+            "/financialReports",
+            params={
+                "startDate": start_date,
+                "endDate": end_date,
+                "listingId": property_id,
+            },
+        )
+        # Hostaway wraps result in a "result" field
+        return response.get("result", {})
+
     async def aclose(self) -> None:
         """Close the HTTP client and cleanup resources.
 
