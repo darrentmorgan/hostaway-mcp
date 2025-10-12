@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "MCP Server → Agent Specialization Map",
+  "description": "NOTE: Delegation architecture designed but NOT ACTIVE. All MCP servers loaded globally in main session.",
+  "version": "2.0.0",
+  "architecture_status": {
+    "current": "DIRECT_ACCESS",
+    "designed": "DELEGATION",
+    "note": "All 6 MCP servers loaded globally. Sub-agents via Task tool do NOT inherit MCP access. This map documents agent specializations and intended architecture."
+  },
+  "global_mcp_servers": {
+    "loaded": ["playwright", "Context7", "supabase", "firecrawl-mcp", "clickup", "chrome-devtools"],
+    "working": ["playwright", "Context7"],
+    "needs_config": ["supabase"],
+    "not_tested": ["firecrawl-mcp", "clickup", "chrome-devtools"],
+    "context_usage": "~125k tokens"
+  },
+  "browser_automation_note": "Agent configs reference 'chrome-devtools' but actual MCP is 'playwright' (mcp__plugin_testing-suite_playwright-server)",
+  "mcp_delegation_map": {
+    "Context7": {
+      "description": "Library documentation and code examples",
+      "agents": ["documentation-expert", "general-purpose"],
+      "primary": "documentation-expert",
+      "actual_mcp": "mcp__plugin_supabase-toolkit_supabase__search_docs",
+      "status": "✅ Working",
+      "use_cases": [
+        "Library API references",
+        "Code examples lookup",
+        "Framework documentation",
+        "Package version information"
+      ],
+      "routing_triggers": [
+        "search docs",
+        "library documentation",
+        "API reference",
+        "how to use",
+        "package docs"
+      ]
+    },
+    "supabase": {
+      "description": "Supabase database operations and migrations",
+      "agents": ["backend-architect", "database-optimizer", "data-engineer"],
+      "primary": "backend-architect",
+      "actual_mcp": "mcp__plugin_supabase-toolkit_supabase",
+      "status": "⚠️ Needs valid SUPABASE_ACCESS_TOKEN",
+      "use_cases": [
+        "Database migrations",
+        "Schema design",
+        "RPC function management",
+        "Query optimization",
+        "Data pipelines"
+      ],
+      "routing_triggers": [
+        "database",
+        "migration",
+        "supabase",
+        "schema",
+        "RPC",
+        "SQL query"
+      ]
+    },
+    "playwright": {
+      "description": "Browser automation and E2E testing (replaces chrome-devtools)",
+      "agents": ["qa-expert", "performance-engineer"],
+      "primary": "qa-expert",
+      "actual_mcp": "mcp__plugin_testing-suite_playwright-server",
+      "status": "✅ Working",
+      "note": "Agent configs may reference 'chrome-devtools' but Playwright is actual implementation",
+      "use_cases": [
+        "E2E testing",
+        "Visual QA",
+        "Browser automation",
+        "Performance profiling",
+        "Network debugging"
+      ],
+      "routing_triggers": [
+        "browser test",
+        "E2E test",
+        "playwright",
+        "Chrome DevTools",
+        "visual test",
+        "browser automation",
+        "screenshot",
+        "performance trace"
+      ]
+    },
+    "firecrawl-mcp": {
+      "description": "Web scraping and content extraction",
+      "agents": ["web-scraper", "general-purpose"],
+      "primary": "web-scraper",
+      "model": "haiku",
+      "status": "❓ Not tested",
+      "use_cases": [
+        "Web scraping",
+        "Content extraction",
+        "URL crawling",
+        "Website research",
+        "Competitor data gathering"
+      ],
+      "routing_triggers": [
+        "scrape",
+        "crawl",
+        "extract from web",
+        "fetch URL",
+        "web content",
+        "website data"
+      ]
+    },
+    "clickup": {
+      "description": "ClickUp task and project management",
+      "agents": ["task-coordinator", "product-manager"],
+      "primary": "task-coordinator",
+      "model_routing": {
+        "task-coordinator": "haiku (simple task operations)",
+        "product-manager": "sonnet (strategic planning)"
+      },
+      "status": "❓ Not tested",
+      "use_cases": [
+        "Task creation and updates (task-coordinator)",
+        "Project planning and strategy (product-manager)",
+        "Roadmap management (product-manager)",
+        "Team coordination (task-coordinator)",
+        "Simple task queries (task-coordinator)"
+      ],
+      "routing_triggers": [
+        "clickup",
+        "create task",
+        "update task",
+        "project plan",
+        "roadmap",
+        "task management",
+        "assign task"
+      ],
+      "routing_logic": "Use task-coordinator (Haiku) for CRUD operations, product-manager (Sonnet) for strategy"
+    }
+  },
+  "delegation_rules_designed_but_not_active": {
+    "main_orchestrator": {
+      "designed_mcp_access": "NONE",
+      "actual_mcp_access": "ALL (6 servers loaded)",
+      "designed_strategy": "ALWAYS_DELEGATE",
+      "actual_strategy": "DIRECT_ACCESS",
+      "note": "Delegation not implemented. Task tool sub-agents don't inherit MCP.",
+      "fallback_agent": "general-purpose",
+      "designed_context_budget": "< 50k tokens",
+      "actual_context_budget": "~125k tokens"
+    },
+    "routing_priority": [
+      "1. Main session has direct access to all MCP tools",
+      "2. Use agent specializations for guidance only",
+      "3. Perform all MCP operations from main session",
+      "4. Sub-agents provide planning/analysis without MCP access"
+    ],
+    "current_patterns": [
+      "✅ Main session calls MCP tools directly",
+      "✅ All MCP servers loaded for immediate access",
+      "✅ No delegation overhead",
+      "⚠️ Higher context usage (~125k tokens)"
+    ]
+  },
+  "agent_configurations": {
+    "documentation-expert": {
+      "mcp_servers": ["Context7"],
+      "config_file": ".claude/agents/configs/documentation-expert.json",
+      "context_budget": "Moderate (docs can be large)",
+      "response_format": "Concise summary with code examples"
+    },
+    "qa-expert": {
+      "mcp_servers": ["playwright"],
+      "legacy_reference": "chrome-devtools",
+      "config_file": ".claude/agents/configs/qa-expert.json",
+      "context_budget": "High (screenshots/traces)",
+      "response_format": "Test results + screenshot analysis"
+    },
+    "backend-architect": {
+      "mcp_servers": ["supabase"],
+      "config_file": ".claude/agents/configs/backend-architect.json",
+      "context_budget": "Moderate",
+      "response_format": "Migration SQL + schema summary"
+    },
+    "database-optimizer": {
+      "mcp_servers": ["supabase"],
+      "config_file": ".claude/agents/configs/database-optimizer.json",
+      "context_budget": "Low (focused queries)",
+      "response_format": "Optimized query + performance metrics"
+    },
+    "general-purpose": {
+      "mcp_servers": ["firecrawl-mcp", "Context7"],
+      "config_file": ".claude/agents/configs/general-purpose.json",
+      "context_budget": "Variable",
+      "response_format": "Task-dependent summary"
+    },
+    "product-manager": {
+      "mcp_servers": ["clickup"],
+      "config_file": ".claude/agents/configs/product-manager.json",
+      "context_budget": "Low",
+      "response_format": "Task IDs + plan summary"
+    },
+    "data-engineer": {
+      "mcp_servers": ["supabase"],
+      "config_file": ".claude/agents/configs/data-engineer.json",
+      "context_budget": "Moderate",
+      "response_format": "Pipeline code + data summary"
+    },
+    "performance-engineer": {
+      "mcp_servers": ["playwright"],
+      "config_file": ".claude/agents/configs/performance-engineer.json",
+      "context_budget": "High",
+      "response_format": "Performance metrics + optimization recommendations"
+    },
+    "web-scraper": {
+      "mcp_servers": ["firecrawl-mcp"],
+      "model": "haiku",
+      "custom_agent": "~/.claude/agents/utilities/web-scraper.md",
+      "context_budget": "Low (extraction only)",
+      "response_format": "Structured data (JSON/CSV/Markdown)",
+      "use_for": "Web scraping, content extraction, URL discovery"
+    },
+    "task-coordinator": {
+      "mcp_servers": ["clickup"],
+      "model": "haiku",
+      "custom_agent": "~/.claude/agents/business/task-coordinator.md",
+      "context_budget": "Low (CRUD operations)",
+      "response_format": "Task IDs + operation summary",
+      "use_for": "ClickUp task CRUD, simple coordination (NOT strategy)"
+    }
+  },
+  "see_also": {
+    "configuration_guide": ".claude/docs/MCP_CONFIGURATION.md",
+    "global_config": "~/Library/Application Support/Claude/claude_desktop_config.json",
+    "project_settings": ".claude/settings.local.json"
+  }
+}
