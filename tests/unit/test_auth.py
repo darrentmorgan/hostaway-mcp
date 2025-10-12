@@ -371,7 +371,8 @@ class TestTokenManager:
         async with httpx.AsyncClient(base_url=config.api_base_url) as client:
             manager = TokenManager(config=config, client=client)
 
-            with pytest.raises(httpx.HTTPStatusError):
+            # 401 errors are transformed to ValueError by TokenManager
+            with pytest.raises(ValueError, match="Invalid Hostaway credentials"):
                 await manager.get_token()
 
     @pytest.mark.asyncio

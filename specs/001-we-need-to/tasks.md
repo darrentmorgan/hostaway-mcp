@@ -64,6 +64,18 @@
 
 ---
 
+## Phase 2.5: Cross-Cutting Error Handling (FR-013 Partial Failures)
+
+**Purpose**: Implement partial failure handling and error recovery patterns
+
+- [ ] T029a [P] [FOUND] Create PartialFailureResponse model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/errors.py` with successful/failed operation tracking
+- [ ] T029b [P] [FOUND] Add error recovery middleware to FastAPI app in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/main.py` for graceful degradation
+- [ ] T029c [FOUND] Implement batch operation handler in HostawayClient for partial success scenarios (depends on T029a)
+- [ ] T029d [P] [FOUND] Unit test for partial failure response model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/unit/test_errors.py`
+- [ ] T029e [P] [FOUND] Integration test for batch operations with mixed success/failure in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_error_handling.py`
+
+---
+
 ## Phase 3: User Story 1 - AI Agent Authentication (Priority: P1) 🎯 MVP
 
 **Goal**: AI assistant authenticates with Hostaway to access property/booking/guest data
@@ -72,10 +84,10 @@
 
 ### Tests for User Story 1 (TDD - Write FIRST, ensure FAIL before implementation)
 
-- [ ] T030 [P] [US1] Contract test for OAuth token endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_auth_api.py` - verify token exchange works
-- [ ] T031 [P] [US1] Integration test for authentication flow in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_auth_api.py` - test valid/invalid credentials
-- [ ] T032 [P] [US1] Integration test for token refresh flow in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_auth_api.py` - verify auto-refresh works
-- [ ] T033 [P] [US1] MCP protocol test for authentication tool discovery in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/mcp/test_tool_discovery.py`
+- [X] T030 [P] [US1] Contract test for OAuth token endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_auth_api.py` - verify token exchange works
+- [X] T031 [P] [US1] Integration test for authentication flow in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_auth_api.py` - test valid/invalid credentials
+- [X] T032 [P] [US1] Integration test for token refresh flow in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_auth_api.py` - verify auto-refresh works
+- [X] T033 [P] [US1] MCP protocol test for authentication tool discovery in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/mcp/test_tool_discovery.py`
 
 ### Implementation for User Story 1
 
@@ -376,9 +388,10 @@ With 3+ developers after Foundational phase completes:
 
 ## Task Count Summary
 
-- **Total Tasks**: 120
+- **Total Tasks**: 125
 - **Setup**: 7 tasks
 - **Foundational**: 22 tasks (15 implementation + 7 tests)
+- **Error Handling (FR-013)**: 5 tasks (3 implementation + 2 tests)
 - **User Story 1 (Auth)**: 9 tasks (4 tests + 5 implementation)
 - **User Story 2 (Properties)**: 19 tasks (5 tests + 14 implementation)
 - **User Story 3 (Bookings)**: 19 tasks (5 tests + 14 implementation)

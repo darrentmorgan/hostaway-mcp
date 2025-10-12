@@ -106,7 +106,7 @@ class TestOAuthTokenEndpoint:
         """
         # Mock httpx client with 401 error
         mock_client = AsyncMock(spec=httpx.AsyncClient)
-        mock_response = AsyncMock()
+        mock_response = MagicMock()  # Use MagicMock for sync methods
         mock_response.status_code = 401
         mock_response.json.return_value = {
             "error": "invalid_client",
@@ -115,18 +115,16 @@ class TestOAuthTokenEndpoint:
         }
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
             "401 Unauthorized",
-            request=AsyncMock(),
+            request=MagicMock(),
             response=mock_response,
         )
-        mock_client.post.return_value = mock_response
+        mock_client.post = AsyncMock(return_value=mock_response)
 
         token_manager = TokenManager(config=test_config, client=mock_client)
 
-        # Attempt token exchange should raise error
-        with pytest.raises(httpx.HTTPStatusError) as exc_info:
+        # Attempt token exchange should raise ValueError (transformed from 401)
+        with pytest.raises(ValueError, match="Invalid Hostaway credentials"):
             await token_manager.get_token()
-
-        assert exc_info.value.response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_token_exchange_missing_parameters(
@@ -140,7 +138,7 @@ class TestOAuthTokenEndpoint:
         """
         # Mock httpx client with 400 error
         mock_client = AsyncMock(spec=httpx.AsyncClient)
-        mock_response = AsyncMock()
+        mock_response = MagicMock()  # Use MagicMock for sync methods like json()
         mock_response.status_code = 400
         mock_response.json.return_value = {
             "error": "invalid_request",
@@ -149,10 +147,10 @@ class TestOAuthTokenEndpoint:
         }
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
             "400 Bad Request",
-            request=AsyncMock(),
+            request=MagicMock(),
             response=mock_response,
         )
-        mock_client.post.return_value = mock_response
+        mock_client.post = AsyncMock(return_value=mock_response)
 
         token_manager = TokenManager(config=test_config, client=mock_client)
 
@@ -179,11 +177,11 @@ class TestAuthenticationFlow:
         4. Subsequent requests use cached token
         """
         mock_client = AsyncMock(spec=httpx.AsyncClient)
-        mock_response = AsyncMock()
+        mock_response = MagicMock()  # Use MagicMock for sync methods like json()
         mock_response.status_code = 200
         mock_response.json.return_value = mock_token_response
-        mock_response.raise_for_status = AsyncMock()
-        mock_client.post.return_value = mock_response
+        mock_response.raise_for_status = MagicMock()
+        mock_client.post = AsyncMock(return_value=mock_response)
 
         token_manager = TokenManager(config=test_config, client=mock_client)
 
@@ -210,7 +208,7 @@ class TestAuthenticationFlow:
         - Token is not stored
         """
         mock_client = AsyncMock(spec=httpx.AsyncClient)
-        mock_response = AsyncMock()
+        mock_response = MagicMock()  # Use MagicMock for sync methods like json()
         mock_response.status_code = 401
         mock_response.json.return_value = {
             "error": "invalid_client",
@@ -218,15 +216,15 @@ class TestAuthenticationFlow:
         }
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
             "401 Unauthorized",
-            request=AsyncMock(),
+            request=MagicMock(),
             response=mock_response,
         )
-        mock_client.post.return_value = mock_response
+        mock_client.post = AsyncMock(return_value=mock_response)
 
         token_manager = TokenManager(config=test_config, client=mock_client)
 
-        # Authentication should fail
-        with pytest.raises(httpx.HTTPStatusError):
+        # Authentication should fail with ValueError (transformed from 401)
+        with pytest.raises(ValueError, match="Invalid Hostaway credentials"):
             await token_manager.get_token()
 
         # Token should not be stored
@@ -243,7 +241,7 @@ class TestAuthenticationFlow:
         - Error response includes retry_after
         """
         mock_client = AsyncMock(spec=httpx.AsyncClient)
-        mock_response = AsyncMock()
+        mock_response = MagicMock()  # Use MagicMock for sync methods like json()
         mock_response.status_code = 429
         mock_response.json.return_value = {
             "error": "rate_limit_exceeded",
@@ -253,17 +251,16 @@ class TestAuthenticationFlow:
         }
         mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
             "429 Too Many Requests",
-            request=AsyncMock(),
+            request=MagicMock(),
             response=mock_response,
         )
-        mock_client.post.return_value = mock_response
+        mock_client.post = AsyncMock(return_value=mock_response)
 
         token_manager = TokenManager(config=test_config, client=mock_client)
 
-        with pytest.raises(httpx.HTTPStatusError) as exc_info:
+        # Rate limit error is transformed to RuntimeError
+        with pytest.raises(RuntimeError, match="Rate limit exceeded"):
             await token_manager.get_token()
-
-        assert exc_info.value.response.status_code == 429
 
 
 # T032: Integration test for token refresh flow
@@ -289,19 +286,19 @@ class TestTokenRefreshFlow:
 
         # Second response: fresh token with 24 months
         fresh_token_response = mock_token_response.copy()
-        fresh_token_response["access_token"] = "fresh_token_xyz"
+        fresh_token_response["access_token"] = "fresh_token_xyz_20_chars_minimum"
 
-        mock_response1 = AsyncMock()
+        mock_response1 = MagicMock()  # Use MagicMock for sync methods like json()
         mock_response1.status_code = 200
         mock_response1.json.return_value = expiring_token_response
-        mock_response1.raise_for_status = AsyncMock()
+        mock_response1.raise_for_status = MagicMock()
 
-        mock_response2 = AsyncMock()
+        mock_response2 = MagicMock()  # Use MagicMock for sync methods like json()
         mock_response2.status_code = 200
         mock_response2.json.return_value = fresh_token_response
-        mock_response2.raise_for_status = AsyncMock()
+        mock_response2.raise_for_status = MagicMock()
 
-        mock_client.post.side_effect = [mock_response1, mock_response2]
+        mock_client.post = AsyncMock(side_effect=[mock_response1, mock_response2])
 
         token_manager = TokenManager(config=test_config, client=mock_client)
 
@@ -311,7 +308,7 @@ class TestTokenRefreshFlow:
 
         # Second call: should auto-refresh
         token2 = await token_manager.get_token()
-        assert token2.access_token == "fresh_token_xyz"
+        assert token2.access_token == "fresh_token_xyz_20_chars_minimum"
         assert token2.access_token != token1.access_token
 
         # Verify two API calls were made
@@ -329,37 +326,37 @@ class TestTokenRefreshFlow:
         """
         mock_client = AsyncMock(spec=httpx.AsyncClient)
 
-        # Two different tokens
+        # Two different tokens (must be 20+ chars for validation)
         token_response1 = mock_token_response.copy()
-        token_response1["access_token"] = "token_1"
+        token_response1["access_token"] = "token_1_with_20_chars_min"
 
         token_response2 = mock_token_response.copy()
-        token_response2["access_token"] = "token_2"
+        token_response2["access_token"] = "token_2_with_20_chars_min"
 
-        mock_response1 = AsyncMock()
+        mock_response1 = MagicMock()  # Use MagicMock for sync methods like json()
         mock_response1.status_code = 200
         mock_response1.json.return_value = token_response1
-        mock_response1.raise_for_status = AsyncMock()
+        mock_response1.raise_for_status = MagicMock()
 
-        mock_response2 = AsyncMock()
+        mock_response2 = MagicMock()  # Use MagicMock for sync methods like json()
         mock_response2.status_code = 200
         mock_response2.json.return_value = token_response2
-        mock_response2.raise_for_status = AsyncMock()
+        mock_response2.raise_for_status = MagicMock()
 
-        mock_client.post.side_effect = [mock_response1, mock_response2]
+        mock_client.post = AsyncMock(side_effect=[mock_response1, mock_response2])
 
         token_manager = TokenManager(config=test_config, client=mock_client)
 
         # Get first token
         token1 = await token_manager.get_token()
-        assert token1.access_token == "token_1"
+        assert token1.access_token == "token_1_with_20_chars_min"
 
         # Invalidate token
         await token_manager.invalidate_token()
 
         # Get token again - should fetch new token
         token2 = await token_manager.get_token()
-        assert token2.access_token == "token_2"
+        assert token2.access_token == "token_2_with_20_chars_min"
 
         # Verify two API calls
         assert mock_client.post.call_count == 2
@@ -375,11 +372,11 @@ class TestTokenRefreshFlow:
         - Cached token is reused
         """
         mock_client = AsyncMock(spec=httpx.AsyncClient)
-        mock_response = AsyncMock()
+        mock_response = MagicMock()  # Use MagicMock for sync methods like json()
         mock_response.status_code = 200
         mock_response.json.return_value = mock_token_response
-        mock_response.raise_for_status = AsyncMock()
-        mock_client.post.return_value = mock_response
+        mock_response.raise_for_status = MagicMock()
+        mock_client.post = AsyncMock(return_value=mock_response)
 
         token_manager = TokenManager(config=test_config, client=mock_client)
 
