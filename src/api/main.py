@@ -108,6 +108,10 @@ async def root() -> dict[str, str]:
 from src.api.routes import auth
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 
+# Register listings routes
+from src.api.routes import listings
+app.include_router(listings.router, prefix="/api", tags=["Listings"])
+
 # Initialize MCP server (wraps the FastAPI app)
 # This must come AFTER all routes are registered
 mcp = initialize_mcp(app)

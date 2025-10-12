@@ -253,6 +253,74 @@ class HostawayClient:
             # Re-raise other HTTP errors
             raise
 
+    # Listings API methods
+
+    async def get_listings(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[dict[str, Any]]:
+        """Retrieve property listings with pagination.
+
+        Args:
+            limit: Maximum number of results to return (default: 100)
+            offset: Number of results to skip for pagination (default: 0)
+
+        Returns:
+            List of listing dictionaries from API response
+
+        Raises:
+            httpx.HTTPStatusError: If API returns error status code
+        """
+        response = await self.get(
+            "/listings",
+            params={"limit": limit, "offset": offset},
+        )
+        # Hostaway wraps results in a "result" field
+        return response.get("result", [])
+
+    async def get_listing(self, listing_id: int) -> dict[str, Any]:
+        """Retrieve detailed information for a specific property listing.
+
+        Args:
+            listing_id: Unique identifier for the listing
+
+        Returns:
+            Listing details dictionary from API response
+
+        Raises:
+            httpx.HTTPStatusError: If API returns error status code (e.g., 404 not found)
+        """
+        response = await self.get(f"/listings/{listing_id}")
+        # Hostaway wraps result in a "result" field
+        return response.get("result", {})
+
+    async def get_listing_availability(
+        self,
+        listing_id: int,
+        start_date: str,
+        end_date: str,
+    ) -> list[dict[str, Any]]:
+        """Retrieve availability calendar for a listing.
+
+        Args:
+            listing_id: Unique identifier for the listing
+            start_date: Start date in ISO format (YYYY-MM-DD)
+            end_date: End date in ISO format (YYYY-MM-DD)
+
+        Returns:
+            List of availability records for each date in range
+
+        Raises:
+            httpx.HTTPStatusError: If API returns error status code
+        """
+        response = await self.get(
+            f"/listings/{listing_id}/calendar",
+            params={"startDate": start_date, "endDate": end_date},
+        )
+        # Hostaway wraps results in a "result" field
+        return response.get("result", [])
+
     async def aclose(self) -> None:
         """Close the HTTP client and cleanup resources.
 

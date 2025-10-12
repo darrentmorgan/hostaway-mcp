@@ -109,28 +109,28 @@
 
 ### Tests for User Story 2 (TDD - Write FIRST, ensure FAIL before implementation)
 
-- [ ] T039 [P] [US2] Contract test for GET /listings endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_listings_api.py` - verify pagination works
-- [ ] T040 [P] [US2] Contract test for GET /listings/{id} endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_listings_api.py` - verify property details
-- [ ] T041 [P] [US2] Contract test for GET /listings/{id}/calendar endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_listings_api.py` - verify availability
-- [ ] T042 [P] [US2] Integration test for property listing flow in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_listings_api.py` - auth → list → details
-- [ ] T043 [P] [US2] MCP protocol test for listing tools invocation in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/mcp/test_tool_invocation.py`
+- [X] T039 [P] [US2] Contract test for GET /listings endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_listings_api.py` - verify pagination works
+- [X] T040 [P] [US2] Contract test for GET /listings/{id} endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_listings_api.py` - verify property details
+- [X] T041 [P] [US2] Contract test for GET /listings/{id}/calendar endpoint in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_listings_api.py` - verify availability
+- [X] T042 [P] [US2] Integration test for property listing flow in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_listings_api.py` - auth → list → details
+- [X] T043 [P] [US2] Unit test for listings models in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/unit/test_listings.py`
 
 ### Implementation for User Story 2
 
-- [ ] T044 [P] [US2] Create Listing model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/listings.py` with full property details per data-model.md
-- [ ] T045 [P] [US2] Create ListingSummary model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/listings.py` for abbreviated list responses
-- [ ] T046 [P] [US2] Create PricingInfo model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/listings.py` with rates and fees
-- [ ] T047 [P] [US2] Create AvailabilityInfo model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/listings.py` with calendar data
-- [ ] T048 [US2] Add `get_listings()` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T044, T045)
-- [ ] T049 [US2] Add `get_listing_by_id(listing_id)` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T044)
-- [ ] T050 [US2] Add `get_listing_availability(listing_id, check_in, check_out)` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T047)
-- [ ] T051 [US2] Create FastAPI route `GET /listings` in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/listings.py` with pagination and filters (depends on T048)
-- [ ] T052 [US2] Create FastAPI route `GET /listings/{id}` in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/listings.py` (depends on T049)
-- [ ] T053 [US2] Create FastAPI route `GET /listings/{id}/availability` in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/listings.py` (depends on T050)
-- [ ] T054 [US2] Register `list_all_properties` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/mcp/server.py` (depends on T051)
-- [ ] T055 [US2] Register `get_property_details` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/mcp/server.py` (depends on T052)
-- [ ] T056 [US2] Register `check_property_availability` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/mcp/server.py` (depends on T053)
-- [ ] T057 [US2] Add error handling for empty property lists and 404 not found in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/listings.py`
+- [X] T044 [P] [US2] Create Listing model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/listings.py` with full property details per data-model.md
+- [X] T045 [P] [US2] Create ListingSummary model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/listings.py` for abbreviated list responses
+- [X] T046 [P] [US2] Create PricingInfo model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/listings.py` with rates and fees
+- [X] T047 [P] [US2] Create AvailabilityInfo model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/listings.py` with calendar data
+- [X] T048 [US2] Add `get_listings()` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T044, T045)
+- [X] T049 [US2] Add `get_listing_by_id(listing_id)` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T044)
+- [X] T050 [US2] Add `get_listing_availability(listing_id, check_in, check_out)` method to HostawayClient in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/services/hostaway_client.py` (depends on T047)
+- [X] T051 [US2] Create FastAPI route `GET /listings` in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/listings.py` with pagination and filters (depends on T048)
+- [X] T052 [US2] Create FastAPI route `GET /listings/{id}` in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/listings.py` (depends on T049)
+- [X] T053 [US2] Create FastAPI route `GET /listings/{id}/availability` in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/listings.py` (depends on T050)
+- [X] T054 [US2] Register `list_all_properties` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/main.py` - routes auto-exposed as tools (depends on T051)
+- [X] T055 [US2] Register `get_property_details` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/main.py` - routes auto-exposed as tools (depends on T052)
+- [X] T056 [US2] Register `check_property_availability` MCP tool in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/main.py` - routes auto-exposed as tools (depends on T053)
+- [X] T057 [US2] Add error handling for empty property lists and 404 not found in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/routes/listings.py`
 
 **Checkpoint**: User Stories 1 AND 2 complete - authentication + property access both work independently
 
