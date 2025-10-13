@@ -3,7 +3,7 @@
 **Input**: Design documents from `/specs/003-we-need-to/`
 **Prerequisites**: plan.md ✅, spec.md ✅, research.md ✅, data-model.md ✅, quickstart.md ✅
 
-**Tests**: Not explicitly requested in spec - test tasks excluded per template guidance
+**Tests**: Phase 9 added to meet Constitution Principle IV (80% coverage requirement)
 
 **Organization**: Tasks grouped by user story (P1-P5) to enable independent implementation
 
@@ -71,6 +71,9 @@
 - [ ] T023 [P] [US1] Create HostawayCredentials React component: `dashboard/components/settings/HostawayCredentials.tsx` with connect form, validation feedback, credential status display
 - [ ] T024 [US1] Add auth guard middleware to dashboard layout: `dashboard/app/(dashboard)/layout.tsx` to redirect unauthenticated users to /login
 - [ ] T025 [US1] Update FastAPI organization context to verify Hostaway credentials are valid before allowing MCP tool access (check credentials_valid flag)
+- [ ] T025a [P] [US1] Create credential expiration detection in `src/services/credential_service.py`: Add check_credential_validity() method to test Hostaway API with stored credentials, return expiration status
+- [ ] T025b [P] [US1] Create credential re-entry form in `dashboard/components/settings/HostawayCredentials.tsx`: Add "Reconnect" button when credentials_valid=false, show re-authentication modal with account_id and secret_key inputs
+- [ ] T025c [US1] Create credential expiration email notification: Configure Supabase Auth email template to send notification when credentials marked invalid, include dashboard reconnect link
 
 **Checkpoint**: User Story 1 complete - users can signup, login, connect Hostaway account, and data is isolated per organization
 
@@ -112,6 +115,7 @@
 - [ ] T038 [P] [US3] Create Supabase Edge Function: `supabase/functions/stripe-webhook/index.ts` to handle invoice.payment_failed (suspend API keys), invoice.payment_succeeded (restore API keys), customer.subscription.updated (update subscriptions table), customer.subscription.deleted (mark canceled)
 - [ ] T039 [US3] Add webhook signature verification in Stripe webhook Edge Function using Stripe SDK
 - [ ] T040 [P] [US3] Create daily listing count sync cron job: `supabase/functions/daily-sync/index.ts` to fetch listing count from Hostaway for all orgs, compare with subscriptions.current_quantity, update Stripe subscription if changed
+- [ ] T040a [P] [US3] Add audit logging to daily-sync Edge Function: In `supabase/functions/daily-sync/index.ts`, when listing count changes, insert record into audit_logs table with action='listing_sync', details={old_count, new_count, difference, timestamp}, org_id for compliance tracking
 - [ ] T041 [P] [US3] Create billing page: `dashboard/app/(dashboard)/billing/page.tsx` to display current subscription status, listing count, monthly cost, billing period
 - [ ] T042 [P] [US3] Create manual sync Server Action: `dashboard/app/api/billing/sync/route.ts` to trigger immediate listing count sync from Hostaway, update Stripe subscription
 - [ ] T043 [P] [US3] Create SubscriptionCard React component: `dashboard/components/billing/SubscriptionCard.tsx` to show subscription details, listing count, cost
@@ -180,6 +184,40 @@
 
 ---
 
+## Phase 9: Testing & Quality Assurance (Constitution Principle IV)
+
+**Purpose**: Achieve 80% test coverage per Constitution Principle IV - Test-Driven Development
+
+**Coverage Target**: 80% line coverage across backend services, frontend components, database policies, and MCP integrations
+
+### Backend Unit Tests
+
+- [ ] T071 [P] [TEST] Create unit tests for `src/services/credential_service.py`: Test encrypt_credentials(), decrypt_credentials(), validate_hostaway_credentials() with mock Supabase Vault
+- [ ] T072 [P] [TEST] Create unit tests for `src/services/billing_service.py`: Test create_subscription(), update_subscription_quantity(), handle_payment_failure() with mock Stripe SDK
+- [ ] T073 [P] [TEST] Create unit tests for `src/api/dependencies.py`: Test get_organization_context() with valid/invalid/expired API keys, verify org_id isolation
+- [ ] T074 [P] [TEST] Create unit tests for `src/api/middleware/usage_tracking.py`: Test increment_usage_metrics() RPC call, verify tool tracking, test failure handling
+
+### Database Tests
+
+- [ ] T075 [P] [TEST] Create RLS policy tests in `tests/database/test_rls_policies.sql`: Verify organization_members RLS blocks cross-org access, test hostaway_credentials isolation, test api_keys row-level filtering
+- [ ] T076 [P] [TEST] Create database function tests in `tests/database/test_functions.sql`: Test increment_usage_metrics RPC with concurrent calls, test check_api_key_limit trigger enforces max 5 keys
+
+### Integration Tests
+
+- [ ] T077 [P] [TEST] Create multi-tenant isolation integration test: Create 2 orgs with API keys, verify GET /api/listings returns only org's listings, verify POST /api/listings scopes by org
+- [ ] T078 [P] [TEST] Create API key lifecycle integration test: Generate key, use for MCP request, regenerate key, verify old key rejected, verify last_used_at updated
+- [ ] T079 [P] [TEST] Create billing integration test: Connect Hostaway account with 5 listings, verify Stripe subscription created with quantity=5, simulate listing count change, verify Stripe subscription updated with proration
+
+### End-to-End Tests
+
+- [ ] T080 [P] [TEST] Create E2E onboarding test using Playwright: Signup → Email confirmation → Login → Connect Hostaway → Generate API key → MCP request with Claude Desktop config, verify successful response
+- [ ] T081 [P] [TEST] Create E2E payment failure test: Simulate Stripe invoice.payment_failed webhook, verify API keys deactivated, verify dashboard shows suspended status, verify email notification sent
+- [ ] T082 [P] [TEST] Create E2E listing sync test: Connect Hostaway account, add 3 listings via Hostaway UI, trigger manual sync from dashboard, verify Stripe subscription quantity updated, verify billing page reflects new count
+
+**Checkpoint**: Testing phase complete - 80% coverage achieved per Constitution Principle IV, all critical flows validated
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -192,6 +230,7 @@
 - **User Story 4 (Phase 6)**: Depends on Foundational + US2 (needs API keys for usage tracking) - Can start after Phase 4
 - **User Story 5 (Phase 7)**: Depends on Foundational + US1 (needs org Hostaway credentials) - Can start after Phase 3
 - **Polish (Phase 8)**: Depends on all desired user stories being complete
+- **Testing (Phase 9)**: Can start after Foundational - runs in parallel with user story development (Constitution Principle IV)
 
 ### User Story Dependencies
 
@@ -299,24 +338,25 @@ Then sequential:
 
 ## Task Summary
 
-- **Total Tasks**: 70
+- **Total Tasks**: 86
 - **Setup Phase**: 6 tasks
 - **Foundational Phase** (BLOCKER): 11 tasks
-- **User Story 1** (P1 - MVP): 8 tasks
+- **User Story 1** (P1 - MVP): 11 tasks (includes credential expiration handling)
 - **User Story 2** (P2 - MVP): 9 tasks
-- **User Story 3** (P3 - Billing): 11 tasks
+- **User Story 3** (P3 - Billing): 12 tasks (includes audit logging)
 - **User Story 4** (P4 - Metrics): 7 tasks
 - **User Story 5** (P5 - AI Ops): 6 tasks
 - **Polish Phase**: 12 tasks
+- **Testing Phase** (Constitution IV): 12 tasks
 
 **Parallel Opportunities**: 35 tasks marked [P] can run in parallel within their phase
 
 **MVP Scope** (Recommended First Delivery):
 - Phase 1: Setup (6 tasks)
 - Phase 2: Foundational (11 tasks)
-- Phase 3: User Story 1 (8 tasks)
+- Phase 3: User Story 1 (11 tasks)
 - Phase 4: User Story 2 (9 tasks)
-- **Total MVP**: 34 tasks → Delivers working multi-tenant platform without billing
+- **Total MVP**: 37 tasks → Delivers working multi-tenant platform without billing
 
 ---
 
@@ -327,6 +367,6 @@ Then sequential:
 - Each user story is independently testable after its phase completes
 - Foundational phase (Phase 2) **MUST** complete before any user story work begins
 - Stop at any checkpoint to validate story works independently
-- Tests excluded per spec (no explicit TDD requirement)
+- Phase 9 testing achieves Constitution Principle IV (TDD with 80% coverage)
 - Commit after each task or logical group
 - Use quickstart.md as validation checklist after each story phase
