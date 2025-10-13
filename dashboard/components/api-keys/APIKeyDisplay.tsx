@@ -62,12 +62,12 @@ export default function APIKeyDisplay({ apiKey }: APIKeyDisplayProps) {
           </div>
           <div className="ml-3">
             <h3 className="text-sm font-medium text-red-800">
-              This is the only time you'll see this key
+              This is the only time you&apos;ll see this key
             </h3>
             <div className="mt-2 text-sm text-red-700">
               <p>
-                Please copy and save this API key in a secure location now. You won't be able to view it again.
-                If you lose this key, you'll need to regenerate it.
+                Please copy and save this API key in a secure location now. You won&apos;t be able to view it again.
+                If you lose this key, you&apos;ll need to regenerate it.
               </p>
             </div>
           </div>

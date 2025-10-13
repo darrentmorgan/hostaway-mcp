@@ -114,7 +114,7 @@ export async function generateApiKey(): Promise<ActionResult<{ apiKey: string; k
 /**
  * Server Action: Delete (soft delete) an API key
  */
-export async function deleteApiKey(keyId: number): Promise<ActionResult<{}>> {
+export async function deleteApiKey(keyId: number): Promise<ActionResult<Record<string, never>>> {
   try {
     const supabase = await createClient()
 
