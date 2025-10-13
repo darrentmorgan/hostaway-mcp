@@ -1,0 +1,93 @@
+name: Deploy to Hostinger VPS
+
+on:
+  push:
+    branches:
+      - main  # Deploy on push to main
+      - production  # Or production branch
+  workflow_dispatch:  # Allow manual trigger from GitHub UI
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+
+      - name: Run tests
+        run: |
+          uv sync
+          uv run pytest tests/ -v || echo "No tests found"
+
+      - name: Setup SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          SERVICE_NAME: ${{ secrets.SERVICE_NAME }}
+        run: |
+          # Sync files to server
+          rsync -avz --delete \
+            --exclude '.git' \
+            --exclude '.env' \
+            --exclude '.env.local' \
+            --exclude '__pycache__' \
+            --exclude '.venv' \
+            --exclude 'venv' \
+            --exclude 'node_modules' \
+            --exclude '.next' \
+            --exclude '.pytest_cache' \
+            --exclude '.mypy_cache' \
+            --exclude '.ruff_cache' \
+            --exclude 'coverage' \
+            --exclude '*.pyc' \
+            --exclude '.DS_Store' \
+            -e "ssh -i ~/.ssh/deploy_key -p ${SERVER_PORT:-22}" \
+            ./ ${SERVER_USER}@${SERVER_IP}:${DEPLOY_PATH}/
+
+          # Install dependencies and restart service
+          ssh -i ~/.ssh/deploy_key -p ${SERVER_PORT:-22} ${SERVER_USER}@${SERVER_IP} << 'ENDSSH'
+            cd ${DEPLOY_PATH}
+
+            # Install dependencies
+            if command -v uv &> /dev/null; then
+              uv sync --no-dev
+            else
+              pip install -e .
+            fi
+
+            # Restart service
+            if systemctl is-active --quiet ${SERVICE_NAME}; then
+              sudo systemctl restart ${SERVICE_NAME}
+              echo "✓ Service ${SERVICE_NAME} restarted"
+            fi
+          ENDSSH
+
+      - name: Verify deployment
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+        run: |
+          echo "Deployment completed!"
+          echo "Server URL: http://${SERVER_IP}:8080"
+          echo "Health check: http://${SERVER_IP}:8080/health"

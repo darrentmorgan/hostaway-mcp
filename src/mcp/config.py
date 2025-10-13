@@ -27,6 +27,7 @@ class HostawayConfig(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
+        extra="ignore",  # Allow extra fields from .env for multi-tenant system
     )
 
     account_id: str = Field(
@@ -78,4 +79,10 @@ class HostawayConfig(BaseSettings):
         ge=1,
         le=30,
         alias="TOKEN_REFRESH_THRESHOLD_DAYS",
+    )
+
+    mcp_api_key: SecretStr | None = Field(
+        default=None,
+        description="API key for MCP endpoint authentication (optional, but recommended for production)",
+        alias="MCP_API_KEY",
     )
