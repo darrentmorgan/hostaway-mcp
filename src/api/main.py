@@ -132,6 +132,44 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
 app.add_middleware(CorrelationIdMiddleware)
 
 
+# MCP API Key Authentication Middleware
+class MCPAuthMiddleware(BaseHTTPMiddleware):
+    """Middleware to enforce API key authentication for MCP endpoints."""
+
+    async def dispatch(self, request: Request, call_next):  # type: ignore[no-untyped-def]
+        """Check API key for MCP endpoint access.
+
+        Args:
+            request: Incoming HTTP request
+            call_next: Next middleware/handler in chain
+
+        Returns:
+            HTTP response or 401 if authentication fails
+        """
+        # Only protect MCP endpoints
+        if request.url.path.startswith("/mcp"):
+            from src.mcp.security import verify_api_key
+
+            try:
+                await verify_api_key(request)
+            except Exception as e:
+                # Authentication failed, return error response
+                from fastapi.responses import JSONResponse
+
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": str(e)},
+                    headers={"WWW-Authenticate": "ApiKey"},
+                )
+
+        # Continue with request
+        response = await call_next(request)
+        return response
+
+
+app.add_middleware(MCPAuthMiddleware)
+
+
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     """Health check endpoint for monitoring and deployment verification.

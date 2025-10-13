@@ -1,0 +1,222 @@
+openapi: 3.0.3
+info:
+  title: Hostaway MCP - Batch Operations API
+  description: Partial failure response schemas and batch endpoints (v1.1)
+  version: 1.1.0
+
+components:
+  schemas:
+    BatchFailure:
+      type: object
+      required:
+        - item_id
+        - error_type
+        - error_message
+        - remediation
+      properties:
+        item_id:
+          type: string
+          description: Identifier of failed item
+        error_type:
+          $ref: '#/components/schemas/ErrorType'
+        error_message:
+          type: string
+          minLength: 1
+          description: Human-readable error description
+        remediation:
+          type: string
+          minLength: 1
+          description: Actionable guidance for resolution
+      example:
+        item_id: "property_999"
+        error_type: "not_found"
+        error_message: "Property with ID 999 does not exist in Hostaway"
+        remediation: "Verify the property ID exists. Use GET /api/listings to see available properties."
+
+    BatchSummary:
+      type: object
+      required:
+        - total_attempted
+        - succeeded
+        - failed
+        - success_rate
+      properties:
+        total_attempted:
+          type: integer
+          minimum: 0
+          description: Total items in batch
+        succeeded:
+          type: integer
+          minimum: 0
+          description: Successfully processed items
+        failed:
+          type: integer
+          minimum: 0
+          description: Failed items
+        success_rate:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+          description: Succeeded / Total (0.0 to 1.0)
+      example:
+        total_attempted: 10
+        succeeded: 8
+        failed: 2
+        success_rate: 0.8
+
+    ErrorType:
+      type: string
+      enum:
+        - not_found
+        - unauthorized
+        - validation_error
+        - rate_limit
+        - timeout
+        - internal_error
+      description: Categorized error type
+
+    PartialFailureResponse_Property:
+      type: object
+      required:
+        - successful_results
+        - failed_items
+        - summary
+      properties:
+        successful_results:
+          type: array
+          items:
+            type: object  # Property schema from v1.0
+          description: Successfully retrieved properties
+        failed_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchFailure'
+          description: Failed items with error details
+        summary:
+          $ref: '#/components/schemas/BatchSummary'
+      example:
+        successful_results:
+          - id: 101
+            name: "Beach House A"
+            city: "Miami"
+          - id: 102
+            name: "Mountain Cabin B"
+            city: "Aspen"
+        failed_items:
+          - item_id: "999"
+            error_type: "not_found"
+            error_message: "Property 999 not found"
+            remediation: "Verify property ID exists in Hostaway"
+        summary:
+          total_attempted: 3
+          succeeded: 2
+          failed: 1
+          success_rate: 0.6667
+
+    PartialFailureResponse_Booking:
+      type: object
+      required:
+        - successful_results
+        - failed_items
+        - summary
+      properties:
+        successful_results:
+          type: array
+          items:
+            type: object  # Booking schema from v1.0
+          description: Successfully retrieved bookings
+        failed_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BatchFailure'
+          description: Failed items with error details
+        summary:
+          $ref: '#/components/schemas/BatchSummary'
+
+paths:
+  /api/batch/properties:
+    get:
+      summary: Batch get properties
+      description: |
+        Retrieve multiple properties with partial failure support.
+        Returns successful results alongside detailed failure information.
+      operationId: batch_get_properties
+      tags:
+        - batch
+        - properties
+      parameters:
+        - name: property_ids
+          in: query
+          required: true
+          description: Comma-separated list of property IDs
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: integer
+              minimum: 1
+            minItems: 1
+            maxItems: 50
+      responses:
+        '200':
+          description: Batch operation completed (may include partial failures)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialFailureResponse_Property'
+        '401':
+          description: Missing or invalid API key
+        '422':
+          description: Invalid request parameters
+        '429':
+          description: Rate limit exceeded
+      security:
+        - ApiKeyAuth: []
+
+  /api/batch/bookings:
+    get:
+      summary: Batch get bookings
+      description: |
+        Retrieve multiple bookings with partial failure support.
+        Returns successful results alongside detailed failure information.
+      operationId: batch_get_bookings
+      tags:
+        - batch
+        - bookings
+      parameters:
+        - name: booking_ids
+          in: query
+          required: true
+          description: Comma-separated list of booking IDs
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: integer
+              minimum: 1
+            minItems: 1
+            maxItems: 50
+      responses:
+        '200':
+          description: Batch operation completed (may include partial failures)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialFailureResponse_Booking'
+        '401':
+          description: Missing or invalid API key
+        '422':
+          description: Invalid request parameters
+        '429':
+          description: Rate limit exceeded
+      security:
+        - ApiKeyAuth: []
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: MCP API key for authentication

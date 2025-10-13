@@ -1,0 +1,359 @@
+openapi: 3.0.3
+info:
+  title: Hostaway MCP - Messages API
+  description: Message retrieval endpoints for guest communication (v1.1)
+  version: 1.1.0
+  contact:
+    name: Hostaway MCP Server
+    url: https://github.com/your-org/hostaway-mcp
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: http://72.60.233.157:8080
+    description: Production server (Hostinger VPS)
+
+paths:
+  /api/messages:
+    get:
+      summary: Search messages
+      description: |
+        Search messages across all communication channels with flexible filters.
+        Supports partial failures when searching across multiple channels.
+      operationId: search_messages
+      tags:
+        - messages
+      parameters:
+        - name: booking_id
+          in: query
+          description: Filter messages by booking ID
+          schema:
+            type: integer
+            minimum: 1
+        - name: guest_name
+          in: query
+          description: Partial match search on guest name
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: start_date
+          in: query
+          description: Filter messages from this date (inclusive, YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          description: Filter messages until this date (inclusive, YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: channels
+          in: query
+          description: Filter by specific channels (comma-separated)
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [email, sms, in_app, platform]
+        - name: limit
+          in: query
+          description: Page size (1-1000, default 50)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 50
+        - name: offset
+          in: query
+          description: Pagination offset (default 0)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Successful search (may include partial failures)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialFailureResponse_Message'
+              example:
+                successful_results:
+                  - id: msg_abc123
+                    booking_id: 12345
+                    content: "What time is check-in?"
+                    timestamp: "2025-10-13T14:30:00Z"
+                    channel: platform
+                    sender_type: guest
+                    sender_id: guest_xyz
+                    recipient_id: pm_789
+                    delivery_status: delivered
+                failed_items: []
+                summary:
+                  total_attempted: 1
+                  succeeded: 1
+                  failed: 0
+                  success_rate: 1.0
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /api/messages/conversation/{booking_id}:
+    get:
+      summary: Get conversation history
+      description: |
+        Retrieve complete conversation history for a booking, ordered chronologically.
+        Consolidates messages from all channels into a unified timeline.
+      operationId: get_conversation_history
+      tags:
+        - messages
+      parameters:
+        - name: booking_id
+          in: path
+          required: true
+          description: Booking identifier
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          description: Page size (1-1000, default 50)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 50
+        - name: offset
+          in: query
+          description: Pagination offset (default 0)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Conversation history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationThread'
+              example:
+                booking_id: 12345
+                messages:
+                  - id: msg_1
+                    booking_id: 12345
+                    content: "What time is check-in?"
+                    timestamp: "2025-10-10T10:00:00Z"
+                    channel: email
+                    sender_type: guest
+                    sender_id: guest_123
+                    recipient_id: pm_456
+                    delivery_status: read
+                  - id: msg_2
+                    booking_id: 12345
+                    content: "Check-in is at 3 PM"
+                    timestamp: "2025-10-10T12:00:00Z"
+                    channel: email
+                    sender_type: property_manager
+                    sender_id: pm_456
+                    recipient_id: guest_123
+                    delivery_status: delivered
+                total_count: 2
+                channels_used: [email]
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+components:
+  schemas:
+    Message:
+      type: object
+      required:
+        - id
+        - booking_id
+        - content
+        - timestamp
+        - channel
+        - sender_type
+        - sender_id
+        - recipient_id
+      properties:
+        id:
+          type: string
+          description: Unique message identifier from Hostaway
+        booking_id:
+          type: integer
+          minimum: 1
+          description: Associated booking/reservation ID
+        content:
+          type: string
+          minLength: 1
+          description: Message text content
+        timestamp:
+          type: string
+          format: date-time
+          description: When message was sent (UTC)
+        channel:
+          $ref: '#/components/schemas/MessageChannel'
+        sender_type:
+          $ref: '#/components/schemas/SenderType'
+        sender_id:
+          type: string
+          description: Sender identifier (guest_id, pm_id, system)
+        recipient_id:
+          type: string
+          description: Recipient identifier
+        delivery_status:
+          $ref: '#/components/schemas/DeliveryStatus'
+
+    ConversationThread:
+      type: object
+      required:
+        - booking_id
+        - messages
+        - total_count
+        - channels_used
+      properties:
+        booking_id:
+          type: integer
+          minimum: 1
+          description: Booking identifier
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+          description: Messages ordered chronologically (oldest first)
+        total_count:
+          type: integer
+          minimum: 0
+          description: Total messages in thread
+        channels_used:
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageChannel'
+          uniqueItems: true
+          description: Unique channels present in conversation
+
+    PartialFailureResponse_Message:
+      type: object
+      required:
+        - successful_results
+        - failed_items
+        - summary
+      properties:
+        successful_results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+          description: Successfully retrieved messages
+        failed_items:
+          type: array
+          items:
+            $ref: 'batch.yaml#/components/schemas/BatchFailure'
+          description: Failed items with error details
+        summary:
+          $ref: 'batch.yaml#/components/schemas/BatchSummary'
+
+    MessageChannel:
+      type: string
+      enum:
+        - email
+        - sms
+        - in_app
+        - platform
+      description: Communication channel type
+
+    SenderType:
+      type: string
+      enum:
+        - guest
+        - system
+        - property_manager
+      description: Message sender classification
+
+    DeliveryStatus:
+      type: string
+      enum:
+        - sent
+        - delivered
+        - failed
+        - read
+      description: Message delivery status
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid API key
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: "Missing API key. Provide X-API-Key header."
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: "Booking 12345 not found"
+
+    ValidationError:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    loc:
+                      type: array
+                      items:
+                        type: string
+                    msg:
+                      type: string
+                    type:
+                      type: string
+
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: "Rate limit exceeded: 20 req/10s"
+              retry_after:
+                type: integer
+                example: 5
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: MCP API key for authentication
+
+security:
+  - ApiKeyAuth: []

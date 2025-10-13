@@ -1,0 +1,186 @@
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/service-role'
+import Stripe from 'stripe'
+import { redirect } from 'next/navigation'
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2024-12-18.acacia',
+})
+
+/**
+ * Create a billing portal session for the current user's organization
+ */
+export async function createBillingPortalSession() {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { error: 'Not authenticated' }
+    }
+
+    // Get user's organization
+    const { data: membership } = await supabase
+      .from('organization_members')
+      .select('organization_id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!membership) {
+      return { error: 'No organization found' }
+    }
+
+    // Get organization with Stripe customer ID
+    const { data: organization } = await supabase
+      .from('organizations')
+      .select('stripe_customer_id')
+      .eq('id', membership.organization_id)
+      .single()
+
+    if (!organization?.stripe_customer_id) {
+      return { error: 'No Stripe customer found' }
+    }
+
+    // Create billing portal session
+    const session = await stripe.billingPortal.sessions.create({
+      customer: organization.stripe_customer_id,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/billing`,
+    })
+
+    return { url: session.url }
+  } catch (error) {
+    console.error('Error creating billing portal session:', error)
+    return { error: 'Failed to create billing portal session' }
+  }
+}
+
+/**
+ * Create a subscription checkout session
+ */
+export async function createCheckoutSession(priceId: string) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { error: 'Not authenticated' }
+    }
+
+    // Get user's organization
+    const { data: membership } = await supabase
+      .from('organization_members')
+      .select('organization_id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!membership) {
+      return { error: 'No organization found' }
+    }
+
+    // Get organization with Stripe customer ID
+    const { data: organization } = await supabase
+      .from('organizations')
+      .select('stripe_customer_id, name')
+      .eq('id', membership.organization_id)
+      .single()
+
+    if (!organization?.stripe_customer_id) {
+      return { error: 'No Stripe customer found' }
+    }
+
+    // Create checkout session
+    const session = await stripe.checkout.sessions.create({
+      customer: organization.stripe_customer_id,
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/billing?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/billing?canceled=true`,
+      metadata: {
+        organization_id: membership.organization_id,
+      },
+    })
+
+    return { url: session.url }
+  } catch (error) {
+    console.error('Error creating checkout session:', error)
+    return { error: 'Failed to create checkout session' }
+  }
+}
+
+/**
+ * Get current subscription status for user's organization
+ */
+export async function getSubscriptionStatus() {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { status: 'unauthenticated' as const }
+    }
+
+    // Get user's organization
+    const { data: membership } = await supabase
+      .from('organization_members')
+      .select('organization_id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!membership) {
+      return { status: 'no_organization' as const }
+    }
+
+    // Get organization with Stripe customer ID
+    const { data: organization } = await supabase
+      .from('organizations')
+      .select('stripe_customer_id, name')
+      .eq('id', membership.organization_id)
+      .single()
+
+    if (!organization?.stripe_customer_id) {
+      return { status: 'no_customer' as const, organization }
+    }
+
+    // Get subscriptions from Stripe
+    const subscriptions = await stripe.subscriptions.list({
+      customer: organization.stripe_customer_id,
+      status: 'all',
+      limit: 1,
+    })
+
+    if (subscriptions.data.length === 0) {
+      return {
+        status: 'no_subscription' as const,
+        organization,
+        customerId: organization.stripe_customer_id,
+      }
+    }
+
+    const subscription = subscriptions.data[0]
+
+    return {
+      status: 'active' as const,
+      organization,
+      subscription: {
+        id: subscription.id,
+        status: subscription.status,
+        current_period_end: subscription.current_period_end,
+        cancel_at_period_end: subscription.cancel_at_period_end,
+        plan_name: subscription.items.data[0]?.price.nickname || 'Subscription',
+        amount: subscription.items.data[0]?.price.unit_amount || 0,
+        currency: subscription.items.data[0]?.price.currency || 'usd',
+      },
+    }
+  } catch (error) {
+    console.error('Error getting subscription status:', error)
+    return { status: 'error' as const, error: 'Failed to get subscription status' }
+  }
+}
