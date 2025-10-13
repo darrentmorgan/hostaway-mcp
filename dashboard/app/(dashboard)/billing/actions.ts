@@ -6,7 +6,7 @@ import Stripe from 'stripe'
 import { redirect } from 'next/navigation'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia',
+  apiVersion: '2025-09-30.clover',
 })
 
 /**
@@ -154,6 +154,7 @@ export async function getSubscriptionStatus() {
       customer: organization.stripe_customer_id,
       status: 'all',
       limit: 1,
+      expand: ['data.items.data.price'],
     })
 
     if (subscriptions.data.length === 0) {
@@ -165,18 +166,21 @@ export async function getSubscriptionStatus() {
     }
 
     const subscription = subscriptions.data[0]
+    // Type assertion needed due to Stripe API version changes
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sub = subscription as any
 
     return {
       status: 'active' as const,
       organization,
       subscription: {
-        id: subscription.id,
-        status: subscription.status,
-        current_period_end: subscription.current_period_end,
-        cancel_at_period_end: subscription.cancel_at_period_end,
-        plan_name: subscription.items.data[0]?.price.nickname || 'Subscription',
-        amount: subscription.items.data[0]?.price.unit_amount || 0,
-        currency: subscription.items.data[0]?.price.currency || 'usd',
+        id: sub.id,
+        status: sub.status,
+        current_period_end: sub.current_period_end,
+        cancel_at_period_end: sub.cancel_at_period_end,
+        plan_name: sub.items.data[0]?.price.nickname || 'Subscription',
+        amount: sub.items.data[0]?.price.unit_amount || 0,
+        currency: sub.items.data[0]?.price.currency || 'usd',
       },
     }
   } catch (error) {
