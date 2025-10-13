@@ -4,12 +4,11 @@ Tests financial reporting and revenue/expense tracking endpoints.
 Following TDD: These tests should FAIL until implementation is complete.
 """
 
-import httpx
-import pytest
-from datetime import date
 from unittest.mock import AsyncMock, MagicMock
 
-from src.mcp.auth import TokenManager
+import httpx
+import pytest
+
 from src.mcp.config import HostawayConfig
 
 
@@ -36,7 +35,7 @@ def mock_financial_report_response() -> dict:
             "airbnb": 6000.00,
             "vrbo": 2500.00,
             "bookingCom": 1000.00,
-            "other": 0.00
+            "other": 0.00,
         },
         "expenses": {
             "totalExpenses": 3250.00,
@@ -45,14 +44,14 @@ def mock_financial_report_response() -> dict:
             "utilities": 300.00,
             "platformFees": 1000.00,
             "supplies": 200.00,
-            "other": 50.00
+            "other": 50.00,
         },
         "netIncome": 9250.00,
         "totalBookings": 15,
         "totalNightsBooked": 75,
         "averageDailyRate": 166.67,
         "occupancyRate": 80.65,
-        "currency": "USD"
+        "currency": "USD",
     }
 
 
@@ -71,7 +70,7 @@ def mock_property_financial_response() -> dict:
             "airbnb": 2500.00,
             "vrbo": 500.00,
             "bookingCom": 0.00,
-            "other": 0.00
+            "other": 0.00,
         },
         "expenses": {
             "totalExpenses": 1200.00,
@@ -80,14 +79,14 @@ def mock_property_financial_response() -> dict:
             "utilities": 150.00,
             "platformFees": 200.00,
             "supplies": 50.00,
-            "other": 0.00
+            "other": 0.00,
         },
         "netIncome": 3300.00,
         "totalBookings": 6,
         "totalNightsBooked": 28,
         "averageDailyRate": 160.71,
         "occupancyRate": 90.32,
-        "currency": "USD"
+        "currency": "USD",
     }
 
 
@@ -181,9 +180,7 @@ class TestFinancialReportsEndpoint:
         # )
 
     @pytest.mark.asyncio
-    async def test_get_financial_report_invalid_dates(
-        self, test_config: HostawayConfig
-    ) -> None:
+    async def test_get_financial_report_invalid_dates(self, test_config: HostawayConfig) -> None:
         """Test GET /financialReports returns 400 for invalid date range.
 
         Verifies:
@@ -320,4 +317,3 @@ class TestFinancialMCPProtocol:
         - get_property_financials tool is registered
         """
         # TODO: Implement MCP protocol tests after routes are created
-        pass

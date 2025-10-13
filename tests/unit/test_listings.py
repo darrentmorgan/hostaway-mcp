@@ -4,12 +4,6 @@ Tests Listing, ListingSummary, PricingInfo, and AvailabilityInfo models.
 Following TDD: These tests should FAIL until models are implemented.
 """
 
-from datetime import date
-from decimal import Decimal
-
-import pytest
-from pydantic import ValidationError
-
 
 # T043: Unit tests for listings models
 class TestListingModels:
@@ -55,7 +49,6 @@ class TestListingModels:
         # assert listing.name == "Cozy Downtown Apartment"
         # assert listing.capacity == 4
         # assert listing.bathrooms == Decimal("1.5")
-        pass
 
     def test_listing_summary_creation(self) -> None:
         """Test ListingSummary model for abbreviated listing info."""
@@ -74,7 +67,6 @@ class TestListingModels:
         # assert summary.id == 12345
         # assert summary.name == "Cozy Downtown Apartment"
         # assert summary.base_price == Decimal("150.00")
-        pass
 
     def test_pricing_info_model(self) -> None:
         """Test PricingInfo model for listing pricing details."""
@@ -94,7 +86,6 @@ class TestListingModels:
         # assert pricing.currency == "USD"
         # assert pricing.cleaning_fee == Decimal("50.00")
         # assert pricing.min_stay_nights == 2
-        pass
 
     def test_availability_info_model(self) -> None:
         """Test AvailabilityInfo model for listing availability."""
@@ -113,7 +104,6 @@ class TestListingModels:
         # assert availability.available_from == date(2024, 1, 15)
         # assert len(availability.blocked_dates) == 1
         # assert len(availability.booked_dates) == 2
-        pass
 
     def test_listing_validation_required_fields(self) -> None:
         """Test that Listing model requires essential fields."""
@@ -127,7 +117,6 @@ class TestListingModels:
         # error_fields = {err["loc"][0] for err in exc_info.value.errors()}
         # assert "name" in error_fields
         # assert "city" in error_fields
-        pass
 
     def test_pricing_info_validation_positive_amounts(self) -> None:
         """Test that PricingInfo validates positive amounts."""
@@ -144,7 +133,6 @@ class TestListingModels:
         #     )
         #
         # assert "base_price" in str(exc_info.value)
-        pass
 
     def test_pricing_info_validation_currency_code(self) -> None:
         """Test that PricingInfo validates currency code."""
@@ -161,7 +149,6 @@ class TestListingModels:
         #     )
         #
         # assert "currency" in str(exc_info.value)
-        pass
 
     def test_availability_info_date_range_validation(self) -> None:
         """Test that AvailabilityInfo validates date ranges."""
@@ -179,7 +166,6 @@ class TestListingModels:
         #     )
         #
         # assert "date" in str(exc_info.value).lower()
-        pass
 
     def test_listing_summary_derived_from_full_listing(self) -> None:
         """Test that ListingSummary can be derived from full Listing."""
@@ -229,4 +215,3 @@ class TestListingModels:
         #
         # assert summary.id == full_listing.id
         # assert summary.name == full_listing.name
-        pass

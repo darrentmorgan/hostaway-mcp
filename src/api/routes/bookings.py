@@ -4,8 +4,6 @@ Provides endpoints to search and retrieve booking/reservation information.
 These endpoints are automatically exposed as MCP tools via FastAPI-MCP.
 """
 
-from typing import List, Optional
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
@@ -18,7 +16,7 @@ router = APIRouter()
 class BookingsResponse(BaseModel):
     """Response model for bookings search."""
 
-    bookings: List[dict] = Field(..., description="List of bookings/reservations")
+    bookings: list[dict] = Field(..., description="List of bookings/reservations")
     count: int = Field(..., description="Total number of bookings returned")
     limit: int = Field(..., description="Page size limit")
     offset: int = Field(..., description="Pagination offset")
@@ -32,39 +30,39 @@ class BookingsResponse(BaseModel):
     tags=["Bookings"],
 )
 async def search_bookings(
-    listing_id: Optional[int] = Query(None, description="Filter by property ID"),
-    check_in_from: Optional[str] = Query(
+    listing_id: int | None = Query(None, description="Filter by property ID"),
+    check_in_from: str | None = Query(
         None,
         description="Filter bookings with check-in on or after this date (YYYY-MM-DD)",
         regex=r"^\d{4}-\d{2}-\d{2}$",
     ),
-    check_in_to: Optional[str] = Query(
+    check_in_to: str | None = Query(
         None,
         description="Filter bookings with check-in on or before this date (YYYY-MM-DD)",
         regex=r"^\d{4}-\d{2}-\d{2}$",
     ),
-    check_out_from: Optional[str] = Query(
+    check_out_from: str | None = Query(
         None,
         description="Filter bookings with check-out on or after this date (YYYY-MM-DD)",
         regex=r"^\d{4}-\d{2}-\d{2}$",
     ),
-    check_out_to: Optional[str] = Query(
+    check_out_to: str | None = Query(
         None,
         description="Filter bookings with check-out on or before this date (YYYY-MM-DD)",
         regex=r"^\d{4}-\d{2}-\d{2}$",
     ),
-    status: Optional[str] = Query(
+    status: str | None = Query(
         None,
         description="Filter by booking status (comma-separated for multiple: confirmed,pending)",
     ),
-    guest_email: Optional[str] = Query(None, description="Filter by guest email address"),
-    booking_source: Optional[str] = Query(
+    guest_email: str | None = Query(None, description="Filter by guest email address"),
+    booking_source: str | None = Query(
         None, description="Filter by booking channel (airbnb, vrbo, etc.)"
     ),
-    min_guests: Optional[int] = Query(
+    min_guests: int | None = Query(
         None, ge=1, description="Filter bookings with at least this many guests"
     ),
-    max_guests: Optional[int] = Query(
+    max_guests: int | None = Query(
         None, ge=1, description="Filter bookings with at most this many guests"
     ),
     limit: int = Query(default=100, ge=1, le=1000, description="Maximum results to return"),

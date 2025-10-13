@@ -4,7 +4,7 @@ This module provides Pydantic models for OAuth token management, including
 AccessToken with expiration tracking and token refresh request/response models.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from pydantic import BaseModel, Field
 
@@ -35,7 +35,7 @@ class AccessToken(BaseModel):
     )
 
     issued_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="Timestamp when token was issued (UTC)",
     )
 
@@ -52,12 +52,12 @@ class AccessToken(BaseModel):
     @property
     def is_expired(self) -> bool:
         """Check if token is currently expired."""
-        return datetime.now(timezone.utc) >= self.expires_at
+        return datetime.now(UTC) >= self.expires_at
 
     @property
     def days_until_expiration(self) -> int:
         """Calculate days remaining until token expires."""
-        delta = self.expires_at - datetime.now(timezone.utc)
+        delta = self.expires_at - datetime.now(UTC)
         return max(0, delta.days)
 
     def should_refresh(self, threshold_days: int = 7) -> bool:

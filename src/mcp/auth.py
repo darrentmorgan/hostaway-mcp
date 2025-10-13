@@ -6,8 +6,8 @@ Handles OAuth token exchange, automatic refresh, and thread-safe token storage.
 import asyncio
 import json
 import logging
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 import httpx
 
@@ -31,7 +31,7 @@ class TokenManager:
     - Proactive refresh based on configurable threshold
     """
 
-    def __init__(self, config: HostawayConfig, client: Optional[httpx.AsyncClient] = None):
+    def __init__(self, config: HostawayConfig, client: httpx.AsyncClient | None = None):
         """Initialize token manager.
 
         Args:
@@ -43,7 +43,7 @@ class TokenManager:
             base_url=config.api_base_url,
             timeout=httpx.Timeout(connect=5.0, read=30.0, write=10.0, pool=5.0),
         )
-        self._token: Optional[AccessToken] = None
+        self._token: AccessToken | None = None
         self._lock = asyncio.Lock()
 
     async def get_token(self) -> AccessToken:
@@ -67,10 +67,12 @@ class TokenManager:
                 # Log token refresh event
                 if self._token is not None:
                     logger.info(
-                        json.dumps({
-                            "event": "token_refresh",
-                            "timestamp": datetime.now(timezone.utc).isoformat(),
-                        })
+                        json.dumps(
+                            {
+                                "event": "token_refresh",
+                                "timestamp": datetime.now(UTC).isoformat(),
+                            }
+                        )
                     )
                 await self._refresh_token()
 
@@ -110,11 +112,13 @@ class TokenManager:
 
             # Log successful authentication
             logger.info(
-                json.dumps({
-                    "event": "auth_success",
-                    "account_id": self.config.account_id,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                })
+                json.dumps(
+                    {
+                        "event": "auth_success",
+                        "account_id": self.config.account_id,
+                        "timestamp": datetime.now(UTC).isoformat(),
+                    }
+                )
             )
 
         except httpx.HTTPStatusError as e:
@@ -122,22 +126,21 @@ class TokenManager:
             log_data = {
                 "event": "auth_failed",
                 "reason": f"HTTP {e.response.status_code}",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
             logger.error(json.dumps(log_data))
 
             # Handle specific HTTP status codes with appropriate exceptions
             if e.response.status_code == 401:
                 raise ValueError("Invalid Hostaway credentials") from e
-            elif e.response.status_code == 403:
+            if e.response.status_code == 403:
                 raise PermissionError("Insufficient API permissions") from e
-            elif e.response.status_code == 429:
+            if e.response.status_code == 429:
                 raise RuntimeError("Rate limit exceeded") from e
-            elif 500 <= e.response.status_code < 600:
+            if 500 <= e.response.status_code < 600:
                 raise ConnectionError("Hostaway API unavailable") from e
-            else:
-                # Re-raise for other status codes
-                raise
+            # Re-raise for other status codes
+            raise
 
     async def invalidate_token(self) -> None:
         """Invalidate current token, forcing refresh on next request.

@@ -4,12 +4,11 @@ Tests booking search, retrieval, and guest information endpoints.
 Following TDD: These tests should FAIL until implementation is complete.
 """
 
-import httpx
-import pytest
-from datetime import date
 from unittest.mock import AsyncMock, MagicMock
 
-from src.mcp.auth import TokenManager
+import httpx
+import pytest
+
 from src.mcp.config import HostawayConfig
 
 
@@ -46,7 +45,7 @@ def mock_booking_response() -> dict:
         "channelName": "airbnb",
         "confirmationCode": "ABCD1234",
         "createdAt": "2025-10-01T14:30:00Z",
-        "specialRequests": "Early check-in if possible"
+        "specialRequests": "Early check-in if possible",
     }
 
 
@@ -63,7 +62,7 @@ def mock_guest_response() -> dict:
         "country": "USA",
         "city": "New York",
         "totalBookings": 3,
-        "createdAt": "2024-01-15T10:00:00Z"
+        "createdAt": "2024-01-15T10:00:00Z",
     }
 
 
@@ -196,9 +195,7 @@ class TestBookingDetailsEndpoint:
         # mock_client.get.assert_called_once_with(f"/reservations/{booking_id}")
 
     @pytest.mark.asyncio
-    async def test_get_booking_not_found(
-        self, test_config: HostawayConfig
-    ) -> None:
+    async def test_get_booking_not_found(self, test_config: HostawayConfig) -> None:
         """Test GET /reservations/{id} returns 404 for invalid ID.
 
         Verifies:
@@ -385,4 +382,3 @@ class TestBookingsMCPProtocol:
         - get_booking_guest_info tool is registered
         """
         # TODO: Implement MCP protocol tests after routes are created
-        pass

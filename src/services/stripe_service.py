@@ -20,20 +20,16 @@ class StripeServiceError(Exception):
     """Base exception for Stripe service errors."""
 
 
-
 class CustomerCreationError(StripeServiceError):
     """Raised when Stripe customer creation fails."""
-
 
 
 class SubscriptionError(StripeServiceError):
     """Raised when subscription operations fail."""
 
 
-
 class BillingPortalError(StripeServiceError):
     """Raised when billing portal operations fail."""
-
 
 
 class StripeService:

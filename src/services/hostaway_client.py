@@ -4,7 +4,7 @@ Provides a singleton AsyncClient configured for optimal performance and reliabil
 when communicating with Hostaway API endpoints.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 from tenacity import (
@@ -36,7 +36,7 @@ class HostawayClient:
         self,
         config: HostawayConfig,
         token_manager: TokenManager,
-        rate_limiter: Optional[RateLimiter] = None,
+        rate_limiter: RateLimiter | None = None,
     ) -> None:
         """Initialize Hostaway API client.
 
@@ -80,7 +80,7 @@ class HostawayClient:
     async def get(
         self,
         endpoint: str,
-        params: Optional[dict[str, Any]] = None,
+        params: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Make GET request to Hostaway API.
@@ -103,8 +103,8 @@ class HostawayClient:
     async def post(
         self,
         endpoint: str,
-        json: Optional[dict[str, Any]] = None,
-        data: Optional[dict[str, Any]] = None,
+        json: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Make POST request to Hostaway API.
@@ -128,7 +128,7 @@ class HostawayClient:
     async def put(
         self,
         endpoint: str,
-        json: Optional[dict[str, Any]] = None,
+        json: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Make PUT request to Hostaway API.
@@ -325,16 +325,16 @@ class HostawayClient:
 
     async def search_bookings(
         self,
-        listing_id: Optional[int] = None,
-        check_in_from: Optional[str] = None,
-        check_in_to: Optional[str] = None,
-        check_out_from: Optional[str] = None,
-        check_out_to: Optional[str] = None,
-        status: Optional[list[str]] = None,
-        guest_email: Optional[str] = None,
-        booking_source: Optional[str] = None,
-        min_guests: Optional[int] = None,
-        max_guests: Optional[int] = None,
+        listing_id: int | None = None,
+        check_in_from: str | None = None,
+        check_in_to: str | None = None,
+        check_out_from: str | None = None,
+        check_out_to: str | None = None,
+        status: list[str] | None = None,
+        guest_email: str | None = None,
+        booking_source: str | None = None,
+        min_guests: int | None = None,
+        max_guests: int | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[dict[str, Any]]:
