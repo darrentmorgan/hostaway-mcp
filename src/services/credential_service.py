@@ -28,15 +28,12 @@ class CredentialServiceError(Exception):
     """Base exception for credential service errors."""
 
 
-
 class EncryptionError(CredentialServiceError):
     """Raised when credential encryption fails."""
 
 
-
 class DecryptionError(CredentialServiceError):
     """Raised when credential decryption fails."""
-
 
 
 class CredentialService:

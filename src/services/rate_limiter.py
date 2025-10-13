@@ -5,8 +5,8 @@ plus semaphore-based concurrency control.
 """
 
 import asyncio
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
 
 from aiolimiter import AsyncLimiter
 
@@ -45,9 +45,7 @@ class RateLimiter:
 
         # Token bucket limiters
         self._ip_limiter = AsyncLimiter(max_rate=ip_rate_limit, time_period=time_period)
-        self._account_limiter = AsyncLimiter(
-            max_rate=account_rate_limit, time_period=time_period
-        )
+        self._account_limiter = AsyncLimiter(max_rate=account_rate_limit, time_period=time_period)
 
         # Concurrency control
         self._semaphore = asyncio.Semaphore(max_concurrent)

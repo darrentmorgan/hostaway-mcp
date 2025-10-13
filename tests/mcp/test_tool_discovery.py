@@ -90,7 +90,9 @@ class TestAuthenticationToolDiscovery:
 
         # Tool should require no input parameters
         input_schema = tool.input_schema
-        assert len(input_schema.get("properties", {})) == 0 or input_schema.get("properties") is None
+        assert (
+            len(input_schema.get("properties", {})) == 0 or input_schema.get("properties") is None
+        )
 
     def test_authentication_tools_have_proper_schemas(self) -> None:
         """Test authentication tools have valid JSON schemas.
@@ -150,7 +152,7 @@ class TestAuthenticationToolDiscovery:
         # This test verifies that the dependency injection for
         # get_authenticated_client() properly guards tool access
         # Implementation will depend on how tools are protected
-        pass  # TODO: Implement after tools are registered
+        # TODO: Implement after tools are registered
 
     def test_tool_descriptions_are_ai_friendly(self) -> None:
         """Test tool descriptions are clear and helpful for AI agents.

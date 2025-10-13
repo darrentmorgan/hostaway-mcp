@@ -7,7 +7,6 @@ payment information, search filters, and booking status enums.
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -86,13 +85,13 @@ class PaymentInfo(BaseModel):
         description="Current payment status",
     )
 
-    payment_method: Optional[str] = Field(
+    payment_method: str | None = Field(
         None,
         description="Payment method (credit_card, bank_transfer, etc.)",
         max_length=50,
     )
 
-    paid_at: Optional[datetime] = Field(
+    paid_at: datetime | None = Field(
         None,
         description="Timestamp when payment was completed (UTC)",
     )
@@ -135,7 +134,7 @@ class Booking(BaseModel):
         gt=0,
     )
 
-    listing_name: Optional[str] = Field(
+    listing_name: str | None = Field(
         None,
         description="Name of the booked property",
         max_length=200,
@@ -159,7 +158,7 @@ class Booking(BaseModel):
         description="Guest email address",
     )
 
-    guest_phone: Optional[str] = Field(
+    guest_phone: str | None = Field(
         None,
         description="Guest phone number",
         max_length=50,
@@ -182,13 +181,13 @@ class Booking(BaseModel):
         le=50,
     )
 
-    num_adults: Optional[int] = Field(
+    num_adults: int | None = Field(
         None,
         description="Number of adult guests",
         ge=0,
     )
 
-    num_children: Optional[int] = Field(
+    num_children: int | None = Field(
         None,
         description="Number of child guests",
         ge=0,
@@ -216,7 +215,7 @@ class Booking(BaseModel):
         max_length=100,
     )
 
-    confirmation_code: Optional[str] = Field(
+    confirmation_code: str | None = Field(
         None,
         description="Booking confirmation code",
         max_length=50,
@@ -227,12 +226,12 @@ class Booking(BaseModel):
         description="Booking creation timestamp (UTC)",
     )
 
-    updated_at: Optional[datetime] = Field(
+    updated_at: datetime | None = Field(
         None,
         description="Last update timestamp (UTC)",
     )
 
-    special_requests: Optional[str] = Field(
+    special_requests: str | None = Field(
         None,
         description="Guest special requests or notes",
         max_length=1000,
@@ -295,55 +294,55 @@ class BookingSearchFilters(BaseModel):
     All filters are optional and combined with AND logic.
     """
 
-    listing_id: Optional[int] = Field(
+    listing_id: int | None = Field(
         None,
         description="Filter by specific property",
         gt=0,
     )
 
-    check_in_from: Optional[date] = Field(
+    check_in_from: date | None = Field(
         None,
         description="Filter bookings with check-in on or after this date",
     )
 
-    check_in_to: Optional[date] = Field(
+    check_in_to: date | None = Field(
         None,
         description="Filter bookings with check-in on or before this date",
     )
 
-    check_out_from: Optional[date] = Field(
+    check_out_from: date | None = Field(
         None,
         description="Filter bookings with check-out on or after this date",
     )
 
-    check_out_to: Optional[date] = Field(
+    check_out_to: date | None = Field(
         None,
         description="Filter bookings with check-out on or before this date",
     )
 
-    status: Optional[List[BookingStatus]] = Field(
+    status: list[BookingStatus] | None = Field(
         None,
         description="Filter by booking status (multiple allowed)",
     )
 
-    guest_email: Optional[EmailStr] = Field(
+    guest_email: EmailStr | None = Field(
         None,
         description="Filter by guest email address",
     )
 
-    booking_source: Optional[str] = Field(
+    booking_source: str | None = Field(
         None,
         description="Filter by booking channel (airbnb, vrbo, etc.)",
         max_length=100,
     )
 
-    min_guests: Optional[int] = Field(
+    min_guests: int | None = Field(
         None,
         description="Filter bookings with at least this many guests",
         ge=1,
     )
 
-    max_guests: Optional[int] = Field(
+    max_guests: int | None = Field(
         None,
         description="Filter bookings with at most this many guests",
         ge=1,

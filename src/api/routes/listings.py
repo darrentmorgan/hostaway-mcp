@@ -4,13 +4,10 @@ Provides endpoints to retrieve property listings, details, and availability.
 These endpoints are automatically exposed as MCP tools via FastAPI-MCP.
 """
 
-from typing import List, Optional
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from src.mcp.auth import get_authenticated_client
-from src.models.listings import Listing, ListingSummary
 from src.services.hostaway_client import HostawayClient
 
 router = APIRouter()
@@ -21,14 +18,14 @@ class AvailabilityRecord(BaseModel):
 
     date: str = Field(..., description="Date in ISO format (YYYY-MM-DD)")
     status: str = Field(..., description="Availability status (available, blocked, booked)")
-    price: Optional[float] = Field(None, description="Price for this date")
-    min_stay: Optional[int] = Field(None, description="Minimum stay in nights")
+    price: float | None = Field(None, description="Price for this date")
+    min_stay: int | None = Field(None, description="Minimum stay in nights")
 
 
 class ListingsResponse(BaseModel):
     """Response model for listings list."""
 
-    listings: List[dict] = Field(..., description="List of property listings")
+    listings: list[dict] = Field(..., description="List of property listings")
     count: int = Field(..., description="Total number of listings")
     limit: int = Field(..., description="Page size limit")
     offset: int = Field(..., description="Pagination offset")
@@ -40,7 +37,7 @@ class AvailabilityResponse(BaseModel):
     listing_id: int = Field(..., description="Listing ID")
     start_date: str = Field(..., description="Start date of availability range")
     end_date: str = Field(..., description="End date of availability range")
-    availability: List[AvailabilityRecord] = Field(..., description="Availability records")
+    availability: list[AvailabilityRecord] = Field(..., description="Availability records")
 
 
 @router.get(
@@ -141,7 +138,9 @@ async def get_listing(
 )
 async def get_listing_availability(
     listing_id: int,
-    start_date: str = Query(..., description="Start date (YYYY-MM-DD)", regex=r"^\d{4}-\d{2}-\d{2}$"),
+    start_date: str = Query(
+        ..., description="Start date (YYYY-MM-DD)", regex=r"^\d{4}-\d{2}-\d{2}$"
+    ),
     end_date: str = Query(..., description="End date (YYYY-MM-DD)", regex=r"^\d{4}-\d{2}-\d{2}$"),
     client: HostawayClient = Depends(get_authenticated_client),
 ) -> AvailabilityResponse:

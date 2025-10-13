@@ -4,8 +4,6 @@ Provides endpoints to retrieve financial reports and analytics.
 These endpoints are automatically exposed as MCP tools via FastAPI-MCP.
 """
 
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
@@ -39,7 +37,7 @@ async def get_financial_report(
         description="Report end date (YYYY-MM-DD)",
         pattern=r"^\d{4}-\d{2}-\d{2}$",
     ),
-    listing_id: Optional[int] = Query(
+    listing_id: int | None = Query(
         None,
         description="Optional: Get report for specific property (default: all properties)",
         gt=0,
@@ -86,7 +84,7 @@ async def get_financial_report(
         except ValueError as e:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid date format: {str(e)}",
+                detail=f"Invalid date format: {e!s}",
             )
 
         # Get report based on whether listing_id is provided

@@ -16,10 +16,8 @@ class SupabaseClientError(Exception):
     """Base exception for Supabase client errors."""
 
 
-
 class MissingEnvironmentVariableError(SupabaseClientError):
     """Raised when required environment variables are not set."""
-
 
 
 @lru_cache

@@ -5,15 +5,15 @@ TokenRefreshResponse to AccessToken conversion, and TokenManager OAuth flow.
 """
 
 import asyncio
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, patch
+from datetime import UTC, datetime, timedelta
+from unittest.mock import patch
 
 import httpx
 import pytest
 import respx
 
-from src.mcp.config import HostawayConfig
 from src.mcp.auth import TokenManager
+from src.mcp.config import HostawayConfig
 from src.models.auth import AccessToken, TokenRefreshRequest, TokenRefreshResponse
 
 
@@ -35,7 +35,7 @@ class TestAccessToken:
 
     def test_access_token_expires_at_calculation(self) -> None:
         """Test that expires_at is calculated correctly."""
-        issued_at = datetime.now(timezone.utc)
+        issued_at = datetime.now(UTC)
         expires_in = 3600  # 1 hour
 
         token = AccessToken(
@@ -58,7 +58,7 @@ class TestAccessToken:
 
     def test_access_token_is_expired_true(self) -> None:
         """Test that is_expired returns True for expired token."""
-        issued_at = datetime.now(timezone.utc) - timedelta(hours=2)
+        issued_at = datetime.now(UTC) - timedelta(hours=2)
 
         token = AccessToken(
             access_token="test_token_abc123_xyz789",
@@ -80,7 +80,7 @@ class TestAccessToken:
 
     def test_access_token_days_until_expiration_expired(self) -> None:
         """Test days_until_expiration returns 0 for expired token."""
-        issued_at = datetime.now(timezone.utc) - timedelta(hours=2)
+        issued_at = datetime.now(UTC) - timedelta(hours=2)
 
         token = AccessToken(
             access_token="test_token_abc123_xyz789",
@@ -125,7 +125,7 @@ class TestAccessToken:
 
     def test_access_token_should_refresh_expired(self) -> None:
         """Test should_refresh returns True for expired token."""
-        issued_at = datetime.now(timezone.utc) - timedelta(hours=2)
+        issued_at = datetime.now(UTC) - timedelta(hours=2)
 
         token = AccessToken(
             access_token="test_token_abc123_xyz789",
@@ -377,9 +377,7 @@ class TestTokenManager:
 
     @pytest.mark.asyncio
     @respx.mock
-    async def test_token_manager_invalidate_forces_refresh(
-        self, config: HostawayConfig
-    ) -> None:
+    async def test_token_manager_invalidate_forces_refresh(self, config: HostawayConfig) -> None:
         """Test that invalidate_token forces refresh on next get_token call."""
         # Mock returns different tokens on each call
         first_response = httpx.Response(
@@ -442,9 +440,7 @@ class TestTokenManager:
                 },
             )
 
-        respx.post(f"{config.api_base_url}/accessTokens").mock(
-            side_effect=mock_token_response
-        )
+        respx.post(f"{config.api_base_url}/accessTokens").mock(side_effect=mock_token_response)
 
         async with httpx.AsyncClient(base_url=config.api_base_url) as client:
             manager = TokenManager(config=config, client=client)
@@ -460,9 +456,7 @@ class TestTokenManager:
 
     @pytest.mark.asyncio
     @respx.mock
-    async def test_token_manager_get_token_runtime_error(
-        self, config: HostawayConfig
-    ) -> None:
+    async def test_token_manager_get_token_runtime_error(self, config: HostawayConfig) -> None:
         """Test that get_token raises RuntimeError if token acquisition fails silently."""
         # This tests the edge case where _refresh_token somehow doesn't set _token
         # In practice this shouldn't happen, but we test the safety check

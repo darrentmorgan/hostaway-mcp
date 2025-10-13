@@ -4,12 +4,6 @@ Tests Booking, BookingSearchFilters, PaymentInfo, and enum models.
 Following TDD: These tests should FAIL until models are implemented.
 """
 
-from datetime import date, datetime, timezone
-from decimal import Decimal
-
-import pytest
-from pydantic import ValidationError
-
 
 # T062: Unit tests for bookings models
 class TestBookingModels:
@@ -53,7 +47,6 @@ class TestBookingModels:
         # assert booking.guest_name == "John Smith"
         # assert booking.num_nights == 3
         # assert booking.status == BookingStatus.CONFIRMED
-        pass
 
     def test_payment_info_model(self) -> None:
         """Test PaymentInfo model for booking payment details."""
@@ -72,7 +65,6 @@ class TestBookingModels:
         # assert payment.total_price == Decimal("525.00")
         # assert payment.is_fully_paid is True
         # assert payment.payment_status == PaymentStatus.PAID
-        pass
 
     def test_booking_search_filters_model(self) -> None:
         """Test BookingSearchFilters model for search criteria."""
@@ -92,7 +84,6 @@ class TestBookingModels:
         # assert filters.listing_id == 12345
         # assert filters.limit == 50
         # assert BookingStatus.CONFIRMED in filters.status
-        pass
 
     def test_booking_status_enum(self) -> None:
         """Test BookingStatus enum values and methods."""
@@ -113,7 +104,6 @@ class TestBookingModels:
         # assert BookingStatus.CONFIRMED.is_finalized() is False
         # assert BookingStatus.COMPLETED.is_finalized() is True
         # assert BookingStatus.CANCELLED.is_finalized() is True
-        pass
 
     def test_payment_status_enum(self) -> None:
         """Test PaymentStatus enum values and methods."""
@@ -129,7 +119,6 @@ class TestBookingModels:
         # assert PaymentStatus.PAID.is_complete() is True
         # assert PaymentStatus.PARTIALLY_PAID.is_complete() is False
         # assert PaymentStatus.PENDING.is_complete() is False
-        pass
 
     def test_booking_validation_required_fields(self) -> None:
         """Test that Booking model requires essential fields."""
@@ -144,7 +133,6 @@ class TestBookingModels:
         # assert "guest_name" in error_fields
         # assert "check_in" in error_fields
         # assert "check_out" in error_fields
-        pass
 
     def test_payment_info_validation_positive_amounts(self) -> None:
         """Test that PaymentInfo validates positive amounts."""
@@ -161,7 +149,6 @@ class TestBookingModels:
         #     )
         #
         # assert "total_price" in str(exc_info.value)
-        pass
 
     def test_booking_date_properties(self) -> None:
         """Test Booking model date-related properties."""
@@ -191,7 +178,6 @@ class TestBookingModels:
         # assert future_booking.is_upcoming is True
         # assert future_booking.is_current is False
         # assert future_booking.is_past is False
-        pass
 
     def test_booking_search_filters_validation(self) -> None:
         """Test BookingSearchFilters validation rules."""
@@ -205,7 +191,6 @@ class TestBookingModels:
         # # Test offset validation
         # with pytest.raises(ValidationError):
         #     BookingSearchFilters(offset=-1)  # Negative offset
-        pass
 
     def test_payment_info_is_fully_paid_property(self) -> None:
         """Test PaymentInfo is_fully_paid property logic."""
@@ -229,4 +214,3 @@ class TestBookingModels:
         #     payment_status=PaymentStatus.PARTIALLY_PAID,
         # )
         # assert partial.is_fully_paid is False
-        pass

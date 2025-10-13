@@ -88,7 +88,7 @@ eggs/
 .eggs/
 *.egg
 *.whl
-uv.lock
+# uv.lock  # IMPORTANT: Keep uv.lock in version control for CI/CD reproducibility
 
 # OS
 .DS_Store

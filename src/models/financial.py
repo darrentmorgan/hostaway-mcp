@@ -7,7 +7,6 @@ revenue breakdown, expense tracking, and profitability metrics.
 from datetime import date
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -170,13 +169,13 @@ class FinancialReport(BaseModel):
         description="Type of reporting period",
     )
 
-    listing_id: Optional[int] = Field(
+    listing_id: int | None = Field(
         None,
         description="Specific listing ID (null for all properties)",
         gt=0,
     )
 
-    listing_name: Optional[str] = Field(
+    listing_name: str | None = Field(
         None,
         description="Listing name (if listing_id specified)",
         max_length=200,
