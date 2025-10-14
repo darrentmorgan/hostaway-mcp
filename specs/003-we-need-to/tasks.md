@@ -199,7 +199,7 @@
 
 ### Database Tests
 
-- [ ] T075 [P] [TEST] Create RLS policy tests in `tests/database/test_rls_policies.sql`: Verify organization_members RLS blocks cross-org access, test hostaway_credentials isolation, test api_keys row-level filtering
+- [X] T075 [P] [TEST] Create RLS policy tests in `tests/database/test_rls_policies.sql`: Verify organization_members RLS blocks cross-org access, test hostaway_credentials isolation, test api_keys row-level filtering
 - [ ] T076 [P] [TEST] Create database function tests in `tests/database/test_functions.sql`: Test increment_usage_metrics RPC with concurrent calls, test check_api_key_limit trigger enforces max 5 keys
 
 ### Integration Tests
