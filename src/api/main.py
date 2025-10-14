@@ -169,6 +169,11 @@ class MCPAuthMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(MCPAuthMiddleware)
 
+# Usage Tracking Middleware (T047: Track API usage for billing/metrics)
+from src.api.middleware.usage_tracking import UsageTrackingMiddleware
+
+app.add_middleware(UsageTrackingMiddleware)
+
 
 @app.get("/health")
 async def health_check() -> dict[str, str]:

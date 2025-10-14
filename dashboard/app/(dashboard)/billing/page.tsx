@@ -1,5 +1,6 @@
-import { getSubscriptionStatus, createBillingPortalSession, createCheckoutSession } from './actions'
+import { getSubscriptionStatus, createBillingPortalSession, createCheckoutSession, getInvoiceHistory } from './actions'
 import { redirect } from 'next/navigation'
+import InvoiceHistory from '@/components/billing/InvoiceHistory'
 
 // Define pricing plans (these should match your Stripe products)
 const PRICING_PLANS = [
@@ -66,6 +67,7 @@ export default async function BillingPage({
   searchParams: Promise<{ success?: string; canceled?: string }>
 }) {
   const subscriptionData = await getSubscriptionStatus()
+  const invoiceHistory = await getInvoiceHistory()
   const params = await searchParams
 
   return (
@@ -226,6 +228,13 @@ export default async function BillingPage({
               </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Invoice History (T052) */}
+      {subscriptionData.status === 'active' && invoiceHistory.invoices.length > 0 && (
+        <div className="mt-12">
+          <InvoiceHistory invoices={invoiceHistory.invoices} />
         </div>
       )}
     </div>

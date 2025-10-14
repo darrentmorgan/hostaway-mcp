@@ -188,3 +188,64 @@ export async function getSubscriptionStatus() {
     return { status: 'error' as const, error: 'Failed to get subscription status' }
   }
 }
+
+/**
+ * Get invoice history for user's organization (T049)
+ */
+export async function getInvoiceHistory() {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { error: 'Not authenticated', invoices: [] }
+    }
+
+    // Get user's organization
+    const { data: membership } = await supabase
+      .from('organization_members')
+      .select('organization_id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (!membership) {
+      return { error: 'No organization found', invoices: [] }
+    }
+
+    // Get organization with Stripe customer ID
+    const { data: organization } = await supabase
+      .from('organizations')
+      .select('stripe_customer_id')
+      .eq('id', membership.organization_id)
+      .single()
+
+    if (!organization?.stripe_customer_id) {
+      return { error: 'No Stripe customer found', invoices: [] }
+    }
+
+    // Fetch invoices from Stripe
+    const invoices = await stripe.invoices.list({
+      customer: organization.stripe_customer_id,
+      limit: 12, // Last 12 invoices (approximately 1 year)
+    })
+
+    const formattedInvoices = invoices.data.map(invoice => ({
+      id: invoice.id,
+      date: invoice.created,
+      amount: invoice.amount_paid,
+      currency: invoice.currency,
+      status: invoice.status,
+      invoice_pdf: invoice.invoice_pdf,
+      hosted_invoice_url: invoice.hosted_invoice_url,
+      period_start: invoice.period_start,
+      period_end: invoice.period_end,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      listing_count: (invoice.lines.data[0] as any)?.quantity || 0,
+    }))
+
+    return { invoices: formattedInvoices }
+  } catch (error) {
+    console.error('Error fetching invoice history:', error)
+    return { error: 'Failed to fetch invoice history', invoices: [] }
+  }
+}
