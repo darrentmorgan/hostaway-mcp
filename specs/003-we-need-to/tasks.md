@@ -194,7 +194,7 @@
 
 - [X] T071 [P] [TEST] Create unit tests for `src/services/credential_service.py`: Test encrypt_credentials(), decrypt_credentials(), validate_hostaway_credentials() with mock Supabase Vault
 - [X] T072 [P] [TEST] Create unit tests for `src/services/billing_service.py`: Test create_subscription(), update_subscription_quantity(), handle_payment_failure() with mock Stripe SDK
-- [ ] T073 [P] [TEST] Create unit tests for `src/api/dependencies.py`: Test get_organization_context() with valid/invalid/expired API keys, verify org_id isolation
+- [X] T073 [P] [TEST] Create unit tests for `src/api/dependencies.py`: Test get_organization_context() with valid/invalid/expired API keys, verify org_id isolation
 - [ ] T074 [P] [TEST] Create unit tests for `src/api/middleware/usage_tracking.py`: Test increment_usage_metrics() RPC call, verify tool tracking, test failure handling
 
 ### Database Tests

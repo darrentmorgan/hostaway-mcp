@@ -1,8 +1,16 @@
 """Hostaway credential validation and expiration detection"""
 
 from datetime import datetime
+from typing import NamedTuple
 
 import httpx
+
+
+class DecryptedCredentials(NamedTuple):
+    """Decrypted Hostaway credentials for API requests."""
+
+    account_id: str
+    secret_key: str
 
 
 async def check_credential_validity(account_id: str, secret_key: str) -> dict:
