@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Tables } from '@/lib/types/database'
 import APIKeyGenerateModal from './APIKeyGenerateModal'
-import { generateApiKey, deleteApiKey, regenerateApiKey } from '@/app/(dashboard)/api-keys/actions'
+import { generateApiKey, deleteApiKey, regenerateApiKey } from '@/app/dashboard/api-keys/actions'
 
 type ApiKey = Tables<'api_keys'>
 

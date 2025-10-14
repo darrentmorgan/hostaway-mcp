@@ -58,7 +58,11 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
       <div className="max-w-md w-full space-y-8">
-        <h2 className="text-center text-3xl font-extrabold text-gray-900">Create account</h2>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-blue-600">Hostaway MCP Dashboard</h1>
+          <h2 className="mt-4 text-3xl font-extrabold text-gray-900">Create your account</h2>
+          <p className="mt-2 text-sm text-gray-600">Get started with AI-powered property management</p>
+        </div>
         <form className="mt-8 space-y-6" onSubmit={handleSignup}>
           {error && <div className="rounded-md bg-red-50 p-4 text-sm text-red-700">{error}</div>}
           <div className="space-y-4">

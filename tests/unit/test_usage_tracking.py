@@ -1,5 +1,6 @@
 """Unit tests for src/api/middleware/usage_tracking.py"""
 
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -56,7 +57,7 @@ def test_extract_tool_name_malformed_path():
 
 @pytest.mark.asyncio
 @patch("src.api.middleware.usage_tracking.get_supabase_client")
-async def test_track_usage_success(mock_get_client):
+async def test_track_usage_success(mock_get_client, capsys):
     """Test successful usage tracking"""
     # Arrange
     mock_supabase = MagicMock()
@@ -66,6 +67,7 @@ async def test_track_usage_success(mock_get_client):
 
     organization_id = "org-123"
     tool_name = "properties"
+    expected_month = datetime.now().strftime("%Y-%m")
 
     # Act
     await UsageTrackingMiddleware._track_usage(
@@ -77,11 +79,20 @@ async def test_track_usage_success(mock_get_client):
     mock_supabase.rpc.assert_called_once_with(
         "increment_usage_metrics",
         {
-            "p_organization_id": organization_id,
-            "p_tool_name": tool_name,
+            "org_id": organization_id,
+            "month": expected_month,
+            "tool": tool_name,
         },
     )
     mock_supabase.execute.assert_called_once()
+
+    # Check debug logging
+    captured = capsys.readouterr()
+    assert "Tracking usage - org:" in captured.out
+    assert organization_id in captured.out
+    assert expected_month in captured.out
+    assert tool_name in captured.out
+    assert "Usage tracked successfully" in captured.out
 
 
 @pytest.mark.asyncio
@@ -105,8 +116,12 @@ async def test_track_usage_no_data_returned(mock_get_client, capsys):
 
     # Assert
     captured = capsys.readouterr()
-    assert "Warning: Usage tracking returned no data" in captured.out
+    # Check for debug logging
+    assert "Tracking usage - org:" in captured.out
     assert organization_id in captured.out
+    assert tool_name in captured.out
+    # Check for warning
+    assert "Warning: Usage tracking returned no data" in captured.out
 
 
 @pytest.mark.asyncio
@@ -145,6 +160,7 @@ async def test_track_usage_multiple_tools(mock_get_client):
     mock_get_client.return_value = mock_supabase
 
     organization_id = "org-multi"
+    expected_month = datetime.now().strftime("%Y-%m")
 
     # Act
     await UsageTrackingMiddleware._track_usage(organization_id, "properties")
@@ -155,9 +171,17 @@ async def test_track_usage_multiple_tools(mock_get_client):
     assert mock_supabase.rpc.call_count == 3
     calls = list(mock_supabase.rpc.call_args_list)
 
-    assert calls[0][0][1]["p_tool_name"] == "properties"
-    assert calls[1][0][1]["p_tool_name"] == "reservations"
-    assert calls[2][0][1]["p_tool_name"] == "listings"
+    assert calls[0][0][1]["tool"] == "properties"
+    assert calls[0][0][1]["month"] == expected_month
+    assert calls[0][0][1]["org_id"] == organization_id
+
+    assert calls[1][0][1]["tool"] == "reservations"
+    assert calls[1][0][1]["month"] == expected_month
+    assert calls[1][0][1]["org_id"] == organization_id
+
+    assert calls[2][0][1]["tool"] == "listings"
+    assert calls[2][0][1]["month"] == expected_month
+    assert calls[2][0][1]["org_id"] == organization_id
 
 
 # === Test dispatch method ===

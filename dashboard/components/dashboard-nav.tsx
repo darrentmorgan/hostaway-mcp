@@ -21,11 +21,11 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/', label: 'Home', icon: '🏠' },
-  { href: '/usage', label: 'Usage', icon: '📊' },
-  { href: '/billing', label: 'Billing', icon: '💳' },
-  { href: '/api-keys', label: 'API Keys', icon: '🔑' },
-  { href: '/settings', label: 'Settings', icon: '⚙️' },
+  { href: '/dashboard', label: 'Home', icon: '🏠' },
+  { href: '/dashboard/usage', label: 'Usage', icon: '📊' },
+  { href: '/dashboard/billing', label: 'Billing', icon: '💳' },
+  { href: '/dashboard/api-keys', label: 'API Keys', icon: '🔑' },
+  { href: '/dashboard/settings', label: 'Settings', icon: '⚙️' },
 ]
 
 export function DashboardNav() {

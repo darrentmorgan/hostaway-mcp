@@ -6,6 +6,7 @@ and analytics. Logs API requests, tool names, and response status for audit trai
 
 import time
 from collections.abc import Callable
+from datetime import datetime
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -99,17 +100,28 @@ class UsageTrackingMiddleware(BaseHTTPMiddleware):
         try:
             supabase = get_supabase_client()
 
+            # Calculate current month in YYYY-MM format
+            month_year = datetime.now().strftime("%Y-%m")
+
+            # Debug logging
+            print(
+                f"Tracking usage - org: {organization_id}, month: {month_year}, tool: {tool_name}"
+            )
+
             # Call RPC function to increment usage metrics
-            # This function handles atomic updates and month_year tracking
+            # Parameters must match database function signature: org_id, month, tool
             result = supabase.rpc(
                 "increment_usage_metrics",
                 {
-                    "p_organization_id": organization_id,
-                    "p_tool_name": tool_name,
+                    "org_id": organization_id,
+                    "month": month_year,
+                    "tool": tool_name,
                 },
             ).execute()
 
-            if not result.data:
+            if result.data:
+                print(f"Usage tracked successfully for org {organization_id}")
+            else:
                 print(f"Warning: Usage tracking returned no data for org {organization_id}")
 
         except Exception as e:

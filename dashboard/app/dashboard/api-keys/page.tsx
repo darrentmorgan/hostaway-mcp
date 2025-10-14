@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import APIKeyList from '@/components/api-keys/APIKeyList'
+import ClaudeDesktopSetup from '@/components/api-keys/ClaudeDesktopSetup'
 import { Tables } from '@/lib/types/database'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
@@ -41,6 +42,10 @@ export default async function ApiKeysPage() {
   const keys = apiKeys || []
   const activeKeyCount = keys.filter(k => k.is_active).length
 
+  // Get the most recent active key for the setup guide
+  const mostRecentActiveKey = keys.find(k => k.is_active)
+  const serverUrl = process.env.NEXT_PUBLIC_MCP_SERVER_URL || 'https://your-server.com'
+
   return (
     <div className="space-y-8">
       {/* Page Header */}
@@ -65,6 +70,12 @@ export default async function ApiKeysPage() {
 
       {/* API Keys List */}
       <APIKeyList keys={keys} maxKeysReached={activeKeyCount >= 5} />
+
+      {/* Claude Desktop Setup Guide */}
+      <ClaudeDesktopSetup
+        apiKey={mostRecentActiveKey?.key_hash || null}
+        serverUrl={serverUrl}
+      />
 
       {/* Security Notice */}
       <Alert>

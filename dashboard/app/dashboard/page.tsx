@@ -31,6 +31,20 @@ export default async function DashboardPage() {
       : (membership.organizations as { name: string })?.name
     : null
 
+  // Get current month's usage metrics
+  const now = new Date()
+  const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+  const { data: metrics } = await supabase
+    .from('usage_metrics')
+    .select('listing_count_snapshot, total_api_requests')
+    .eq('organization_id', membership?.organization_id || 0)
+    .eq('month_year', monthYear)
+    .single()
+
+  const listingCount = metrics?.listing_count_snapshot || 0
+  const apiRequests = metrics?.total_api_requests || 0
+
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
@@ -54,7 +68,7 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">-</div>
+            <div className="text-3xl font-bold">{apiRequests.toLocaleString()}</div>
             <p className="mt-1 text-xs text-muted-foreground">
               This month
             </p>
@@ -68,7 +82,7 @@ export default async function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">-</div>
+            <div className="text-3xl font-bold">{listingCount.toLocaleString()}</div>
             <p className="mt-1 text-xs text-muted-foreground">
               Synced from Hostaway
             </p>
@@ -119,7 +133,7 @@ export default async function DashboardPage() {
                 <p className="mt-1 text-sm text-muted-foreground">
                   Add your Hostaway Account ID and Secret Key in Settings
                 </p>
-                <Link href="/settings">
+                <Link href="/dashboard/settings">
                   <Button variant="link" className="mt-2 h-auto p-0">
                     Go to Settings →
                   </Button>
@@ -136,7 +150,7 @@ export default async function DashboardPage() {
                 <p className="mt-1 text-sm text-muted-foreground">
                   Create an API key to authenticate your MCP client
                 </p>
-                <Link href="/api-keys">
+                <Link href="/dashboard/api-keys">
                   <Button variant="link" className="mt-2 h-auto p-0">
                     Manage API Keys →
                   </Button>
@@ -153,7 +167,7 @@ export default async function DashboardPage() {
                 <p className="mt-1 text-sm text-muted-foreground">
                   View API request metrics and billing projections
                 </p>
-                <Link href="/usage">
+                <Link href="/dashboard/usage">
                   <Button variant="link" className="mt-2 h-auto p-0">
                     View Usage →
                   </Button>
@@ -172,7 +186,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <Link
-              href="/api-keys"
+              href="/dashboard/api-keys"
               className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent"
             >
               <div className="flex items-center gap-3">
@@ -188,7 +202,7 @@ export default async function DashboardPage() {
             </Link>
 
             <Link
-              href="/billing"
+              href="/dashboard/billing"
               className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent"
             >
               <div className="flex items-center gap-3">
@@ -204,7 +218,7 @@ export default async function DashboardPage() {
             </Link>
 
             <Link
-              href="/settings"
+              href="/dashboard/settings"
               className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent"
             >
               <div className="flex items-center gap-3">

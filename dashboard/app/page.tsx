@@ -53,7 +53,8 @@ export default function HomePage() {
         </div>
 
         <div className="mt-8 text-sm text-gray-500">
-          <p>Powered by Supabase, Next.js, and FastAPI</p>
+          <p>Enterprise-grade property management automation platform</p>
+          <p className="mt-1">Built with Supabase, Next.js, and FastAPI</p>
         </div>
       </div>
     </div>

@@ -98,7 +98,7 @@ export default function APIKeyGenerateModal({
                       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                         <p className="text-sm text-yellow-800">
                           <strong>Important:</strong> The API key will be displayed only once.
-                          You won&apos;t be able to view it again after closing this dialog.
+                          {`You won't be able to view it again after closing this dialog.`}
                         </p>
                       </div>
                     </div>
@@ -169,7 +169,7 @@ export default function APIKeyGenerateModal({
                       className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                       onClick={handleClose}
                     >
-                      {state === 'success' ? "I&apos;ve saved my key" : 'Close'}
+                      {state === 'success' ? `I've saved my key` : 'Close'}
                     </button>
                   )}
                 </div>
