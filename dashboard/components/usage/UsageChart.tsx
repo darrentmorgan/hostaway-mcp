@@ -1,67 +1,122 @@
 'use client'
 
-interface UsageData {
-  month_year: string
-  total_api_requests: number
-}
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts'
+import { formatMonthYear } from '@/lib/utils/date'
 
 interface UsageChartProps {
-  data: UsageData[]
+  data: Array<{
+    monthYear: string
+    totalApiRequests: number
+  }>
+  loading?: boolean
 }
 
-export default function UsageChart({ data }: UsageChartProps) {
-  // Simple bar chart visualization (could be replaced with Chart.js or Recharts)
-  const maxValue = Math.max(...data.map(d => d.total_api_requests), 1)
+export default function UsageChart({ data, loading = false }: UsageChartProps) {
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Usage Trend</CardTitle>
+          <CardDescription>API requests over time</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Usage Trend</CardTitle>
+          <CardDescription>API requests over time</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-[300px] items-center justify-center text-center">
+            <div>
+              <p className="text-muted-foreground">
+                No usage data available yet.
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Make some API requests to see your usage trends.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Format data for Recharts
+  const chartData = data.map((item) => ({
+    month: formatMonthYear(item.monthYear),
+    requests: item.totalApiRequests,
+  }))
 
   return (
-    <div className="rounded-lg bg-white shadow p-6">
-      <h2 className="text-lg font-medium text-gray-900 mb-4">
-        API Request Volume (Last 30 Days)
-      </h2>
-
-      {data.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No usage data available yet.</p>
-          <p className="text-sm text-gray-400 mt-2">
-            Make some API requests to see your usage trends.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {data.map((item) => {
-            const percentage = (item.total_api_requests / maxValue) * 100
-            const monthLabel = new Date(item.month_year + '-01').toLocaleDateString('en-US', {
-              month: 'short',
-              year: 'numeric',
-            })
-
-            return (
-              <div key={item.month_year} className="flex items-center gap-4">
-                <div className="w-20 text-sm text-gray-600 text-right">
-                  {monthLabel}
-                </div>
-                <div className="flex-1">
-                  <div className="relative h-8 bg-gray-100 rounded">
-                    <div
-                      className="absolute top-0 left-0 h-full bg-blue-500 rounded transition-all duration-500"
-                      style={{ width: `${percentage}%` }}
-                    />
-                    <div className="absolute inset-0 flex items-center px-3 text-sm font-medium text-gray-700">
-                      {item.total_api_requests.toLocaleString()} requests
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <p className="text-xs text-gray-500">
-          Usage is tracked per calendar month. Chart shows cumulative requests for each month.
+    <Card>
+      <CardHeader>
+        <CardTitle>Usage Trend</CardTitle>
+        <CardDescription>
+          API request volume over the last {data.length} months
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <XAxis
+              dataKey="month"
+              tick={{ fontSize: 12 }}
+              tickMargin={10}
+              className="text-muted-foreground"
+            />
+            <YAxis
+              tick={{ fontSize: 12 }}
+              tickMargin={10}
+              className="text-muted-foreground"
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '6px',
+              }}
+              labelStyle={{ color: 'hsl(var(--foreground))' }}
+            />
+            <Line
+              type="monotone"
+              dataKey="requests"
+              stroke="hsl(var(--primary))"
+              strokeWidth={2}
+              dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+        <p className="mt-4 text-xs text-muted-foreground">
+          Usage is tracked per calendar month. Chart shows cumulative requests
+          for each month.
         </p>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

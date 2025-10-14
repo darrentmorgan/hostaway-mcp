@@ -1,6 +1,21 @@
-import { getSubscriptionStatus, createBillingPortalSession, createCheckoutSession, getInvoiceHistory } from './actions'
+import {
+  getSubscriptionStatus,
+  createBillingPortalSession,
+  createCheckoutSession,
+  getInvoiceHistory,
+} from './actions'
 import { redirect } from 'next/navigation'
 import InvoiceHistory from '@/components/billing/InvoiceHistory'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 
 // Define pricing plans (these should match your Stripe products)
 const PRICING_PLANS = [
@@ -71,164 +86,170 @@ export default async function BillingPage({
   const params = await searchParams
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8">
+    <div className="space-y-8">
       {/* Success/Cancel Messages */}
       {params.success && (
-        <div className="mb-6 rounded-md bg-green-50 p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-green-800">
-                Subscription activated successfully!
-              </h3>
-            </div>
-          </div>
-        </div>
+        <Alert>
+          <AlertTitle>Success!</AlertTitle>
+          <AlertDescription>
+            Subscription activated successfully!
+          </AlertDescription>
+        </Alert>
       )}
 
       {params.canceled && (
-        <div className="mb-6 rounded-md bg-yellow-50 p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">
-                Checkout canceled. No changes were made.
-              </h3>
-            </div>
-          </div>
-        </div>
+        <Alert variant="destructive">
+          <AlertTitle>Checkout Canceled</AlertTitle>
+          <AlertDescription>
+            Checkout canceled. No changes were made.
+          </AlertDescription>
+        </Alert>
       )}
 
-      <div className="sm:flex sm:items-center">
-        <div className="sm:flex-auto">
-          <h1 className="text-2xl font-semibold text-gray-900">Billing & Subscription</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            Manage your subscription and billing information.
-          </p>
-        </div>
+      {/* Page Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Billing & Subscription
+        </h1>
+        <p className="mt-2 text-muted-foreground">
+          Manage your subscription and billing information.
+        </p>
       </div>
 
       {/* Current Subscription Status */}
-      {subscriptionData.status === 'active' && subscriptionData.subscription && (
-        <div className="mt-8 rounded-lg bg-white shadow px-6 py-5">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Current Subscription</h2>
-          <div className="space-y-3">
-            <div>
-              <span className="text-sm font-medium text-gray-500">Plan: </span>
-              <span className="text-sm text-gray-900">{subscriptionData.subscription.plan_name}</span>
-            </div>
-            <div>
-              <span className="text-sm font-medium text-gray-500">Status: </span>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                subscriptionData.subscription.status === 'active'
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-yellow-100 text-yellow-800'
-              }`}>
-                {subscriptionData.subscription.status}
-              </span>
-            </div>
-            <div>
-              <span className="text-sm font-medium text-gray-500">Amount: </span>
-              <span className="text-sm text-gray-900">
-                ${(subscriptionData.subscription.amount / 100).toFixed(2)} / month
-              </span>
-            </div>
-            {subscriptionData.subscription.cancel_at_period_end && (
-              <div className="mt-2 p-3 bg-yellow-50 rounded-md">
-                <p className="text-sm text-yellow-800">
-                  Your subscription will be canceled at the end of the current billing period (
-                  {new Date(subscriptionData.subscription.current_period_end * 1000).toLocaleDateString()}
-                  )
-                </p>
+      {subscriptionData.status === 'active' &&
+        subscriptionData.subscription && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Current Subscription</CardTitle>
+              <CardDescription>
+                Your active subscription details
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Plan
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {subscriptionData.subscription.plan_name}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Status
+                  </p>
+                  <Badge
+                    variant={
+                      subscriptionData.subscription.status === 'active'
+                        ? 'default'
+                        : 'secondary'
+                    }
+                  >
+                    {subscriptionData.subscription.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Amount
+                  </p>
+                  <p className="text-lg font-semibold">
+                    ${(subscriptionData.subscription.amount / 100).toFixed(2)}{' '}
+                    / month
+                  </p>
+                </div>
               </div>
-            )}
-          </div>
-          <div className="mt-6">
-            <form action={handleBillingPortal}>
-              <button
-                type="submit"
-                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Manage Subscription
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+
+              {subscriptionData.subscription.cancel_at_period_end && (
+                <Alert variant="destructive">
+                  <AlertDescription>
+                    Your subscription will be canceled at the end of the
+                    current billing period (
+                    {new Date(
+                      subscriptionData.subscription.current_period_end * 1000
+                    ).toLocaleDateString()}
+                    )
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <form action={handleBillingPortal} className="pt-4">
+                <Button type="submit" variant="outline">
+                  Manage Subscription
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
       {/* Pricing Plans */}
       {subscriptionData.status !== 'active' && (
-        <div className="mt-12">
-          <h2 className="text-lg font-medium text-gray-900 mb-6">Choose a Plan</h2>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-bold">Choose a Plan</h2>
+            <p className="mt-2 text-muted-foreground">
+              Select the plan that best fits your needs
+            </p>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {PRICING_PLANS.map((plan) => (
-              <div
-                key={plan.id}
-                className="flex flex-col rounded-lg shadow-lg overflow-hidden border border-gray-200"
-              >
-                <div className="px-6 py-8 bg-white">
-                  <div>
-                    <h3 className="text-2xl font-semibold text-gray-900">{plan.name}</h3>
-                    <div className="mt-4 flex items-baseline">
-                      <span className="text-4xl font-extrabold text-gray-900">${plan.price}</span>
-                      <span className="ml-1 text-xl font-semibold text-gray-500">/month</span>
-                    </div>
-                    <ul className="mt-6 space-y-4">
-                      {plan.features.map((feature) => (
-                        <li key={feature} className="flex items-start">
-                          <svg
-                            className="flex-shrink-0 h-5 w-5 text-green-500"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          <span className="ml-3 text-sm text-gray-700">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
+              <Card key={plan.id} className="flex flex-col">
+                <CardHeader>
+                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                  <div className="mt-4 flex items-baseline">
+                    <span className="text-4xl font-bold">${plan.price}</span>
+                    <span className="ml-2 text-xl text-muted-foreground">
+                      /month
+                    </span>
                   </div>
+                </CardHeader>
+                <CardContent className="flex flex-1 flex-col">
+                  <ul className="space-y-3 flex-1">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-3">
+                        <svg
+                          className="h-5 w-5 shrink-0 text-primary"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span className="text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                   <div className="mt-8">
                     {plan.priceId ? (
                       <form action={handleCheckout.bind(null, plan.priceId)}>
-                        <button
-                          type="submit"
-                          className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
+                        <Button type="submit" className="w-full">
                           Subscribe
-                        </button>
+                        </Button>
                       </form>
                     ) : (
-                      <button
-                        disabled
-                        className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white cursor-not-allowed"
-                      >
+                      <Button disabled variant="outline" className="w-full">
                         Current Plan
-                      </button>
+                      </Button>
                     )}
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
       )}
 
       {subscriptionData.status === 'error' && (
-        <div className="mt-8 rounded-md bg-red-50 p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">
-                Error loading subscription information
-              </h3>
-              <p className="mt-2 text-sm text-red-700">
-                {subscriptionData.error || 'Please try again later'}
-              </p>
-            </div>
-          </div>
-        </div>
+        <Alert variant="destructive">
+          <AlertTitle>Error Loading Subscription</AlertTitle>
+          <AlertDescription>
+            {subscriptionData.error || 'Please try again later'}
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Invoice History (T052) */}

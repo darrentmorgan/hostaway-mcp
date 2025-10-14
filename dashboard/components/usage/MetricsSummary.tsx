@@ -1,8 +1,18 @@
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { formatCurrency } from '@/lib/utils/billing'
+
 interface MetricsSummaryProps {
   totalRequests: number
   listingCount: number
   projectedBill: number
   uniqueTools: number
+  loading?: boolean
 }
 
 export default function MetricsSummary({
@@ -10,56 +20,70 @@ export default function MetricsSummary({
   listingCount,
   projectedBill,
   uniqueTools,
+  loading = false,
 }: MetricsSummaryProps) {
   const metrics = [
     {
-      name: 'API Requests (This Month)',
+      name: 'API Requests',
       value: totalRequests.toLocaleString(),
       icon: '📊',
-      description: 'Total MCP API calls made',
+      description: 'This month',
     },
     {
       name: 'Active Listings',
       value: listingCount.toLocaleString(),
       icon: '🏠',
-      description: 'Current Hostaway listings',
+      description: 'From Hostaway',
     },
     {
-      name: 'Projected Monthly Bill',
-      value: `$${projectedBill.toFixed(2)}`,
+      name: 'Projected Bill',
+      value: formatCurrency(projectedBill),
       icon: '💰',
-      description: 'Based on current listing count',
+      description: 'This month',
     },
     {
-      name: 'Unique Tools Used',
+      name: 'Unique Tools',
       value: uniqueTools.toString(),
       icon: '🔧',
-      description: 'Different MCP endpoints accessed',
+      description: 'MCP endpoints used',
     },
   ]
 
+  if (loading) {
+    return (
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i}>
+            <CardHeader className="pb-3">
+              <Skeleton className="h-4 w-24" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-16" />
+              <Skeleton className="mt-2 h-3 w-20" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       {metrics.map((metric) => (
-        <div
-          key={metric.name}
-          className="relative overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:px-6 sm:py-6"
-        >
-          <dt>
-            <div className="absolute rounded-md bg-blue-500 p-3">
-              <span className="text-2xl">{metric.icon}</span>
-            </div>
-            <p className="ml-16 truncate text-sm font-medium text-gray-500">
+        <Card key={metric.name}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               {metric.name}
+            </CardTitle>
+            <span className="text-2xl">{metric.icon}</span>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{metric.value}</div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {metric.description}
             </p>
-          </dt>
-          <dd className="ml-16 flex items-baseline">
-            <p className="text-2xl font-semibold text-gray-900">{metric.value}</p>
-          </dd>
-          <dd className="ml-16 mt-1">
-            <p className="text-xs text-gray-500">{metric.description}</p>
-          </dd>
-        </div>
+          </CardContent>
+        </Card>
       ))}
     </div>
   )

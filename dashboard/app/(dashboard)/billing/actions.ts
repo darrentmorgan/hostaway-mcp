@@ -235,8 +235,8 @@ export async function getInvoiceHistory() {
       amount: invoice.amount_paid,
       currency: invoice.currency,
       status: invoice.status,
-      invoice_pdf: invoice.invoice_pdf,
-      hosted_invoice_url: invoice.hosted_invoice_url,
+      invoice_pdf: invoice.invoice_pdf || null,
+      hosted_invoice_url: invoice.hosted_invoice_url || null,
       period_start: invoice.period_start,
       period_end: invoice.period_end,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

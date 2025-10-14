@@ -1,6 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import HostawayCredentials from '@/components/settings/HostawayCredentials'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -28,12 +35,27 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">Settings</h1>
-      <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Hostaway Connection</h2>
-        <HostawayCredentials initialCredentials={credentials} />
+    <div className="space-y-8">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+        <p className="mt-2 text-muted-foreground">
+          Manage your account and integration settings
+        </p>
       </div>
+
+      {/* Hostaway Connection Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Hostaway Connection</CardTitle>
+          <CardDescription>
+            Configure your Hostaway credentials to sync listings and data
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <HostawayCredentials initialCredentials={credentials} />
+        </CardContent>
+      </Card>
     </div>
   )
 }

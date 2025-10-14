@@ -2,8 +2,13 @@
 import { useState } from 'react'
 import { connectHostaway } from '@/app/(dashboard)/settings/actions'
 
+interface HostawayCredential {
+  account_id: string
+  last_validated_at: string
+}
+
 interface Props {
-  initialCredentials: any
+  initialCredentials: HostawayCredential | null
 }
 
 export default function HostawayCredentials({ initialCredentials }: Props) {

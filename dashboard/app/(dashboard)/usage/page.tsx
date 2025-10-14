@@ -1,103 +1,131 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { fetchUsageData } from '@/lib/data/usage'
 import MetricsSummary from '@/components/usage/MetricsSummary'
 import UsageChart from '@/components/usage/UsageChart'
+import EmptyState from '@/components/usage/EmptyState'
+import ErrorState from '@/components/usage/ErrorState'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 export default async function UsagePage() {
-  const supabase = await createClient()
+  // Fetch all usage data
+  const { currentMonthMetrics, historicalData, error } = await fetchUsageData()
 
-  // Check if user is authenticated
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-  if (userError || !user) {
-    redirect('/login')
-  }
-
-  // Get user's organization membership
-  const { data: membership, error: membershipError } = await supabase
-    .from('organization_members')
-    .select('organization_id')
-    .eq('user_id', user.id)
-    .single()
-
-  if (membershipError || !membership) {
-    redirect('/login')
-  }
-
-  // Get current month metrics
-  const currentMonth = new Date().toISOString().substring(0, 7) // YYYY-MM format
-  const { data: metrics } = await supabase
-    .from('usage_metrics')
-    .select('*')
-    .eq('organization_id', membership.organization_id)
-    .eq('month_year', currentMonth)
-    .single()
-
-  // Get subscription for listing count
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('current_quantity, status')
-    .eq('organization_id', membership.organization_id)
-    .eq('status', 'active')
-    .single()
-
-  // Get last 30 days of metrics for chart
-  const thirtyDaysAgo = new Date()
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-  const startMonth = thirtyDaysAgo.toISOString().substring(0, 7)
-
-  const { data: historicalMetrics } = await supabase
-    .from('usage_metrics')
-    .select('month_year, total_api_requests')
-    .eq('organization_id', membership.organization_id)
-    .gte('month_year', startMonth)
-    .order('month_year', { ascending: true })
-
-  const totalRequests = metrics?.total_api_requests || 0
-  const listingCount = subscription?.current_quantity || 0
-  const uniqueTools = metrics?.unique_tools_used?.length || 0
-
-  // Calculate projected bill (example: $5/listing/month)
-  const pricePerListing = 5
-  const projectedBill = listingCount * pricePerListing
-
-  return (
-    <div className="px-4 sm:px-6 lg:px-8">
-      {/* Page Header */}
-      <div className="sm:flex sm:items-center">
-        <div className="sm:flex-auto">
-          <h1 className="text-3xl font-bold text-gray-900">Usage & Metrics</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            Monitor your API usage, listing count, and billing projections.
+  // Handle error state
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Usage & Metrics</h1>
+          <p className="mt-2 text-muted-foreground">
+            Monitor your API usage, listing count, and billing projections
           </p>
         </div>
+        <ErrorState error={error} />
       </div>
+    )
+  }
 
-      {/* Metrics Summary Cards */}
-      <div className="mt-8">
-        <MetricsSummary
-          totalRequests={totalRequests}
-          listingCount={listingCount}
-          projectedBill={projectedBill}
-          uniqueTools={uniqueTools}
+  // Handle empty state (no metrics data)
+  if (!currentMonthMetrics) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Usage & Metrics</h1>
+          <p className="mt-2 text-muted-foreground">
+            Monitor your API usage, listing count, and billing projections
+          </p>
+        </div>
+        <EmptyState
+          title="No Usage Data Yet"
+          description="Start using the Hostaway MCP Server to see your usage metrics and analytics here."
+          actionLabel="Configure API Keys"
+          actionHref="/api-keys"
         />
       </div>
+    )
+  }
+
+  // Extract metrics for display
+  const { totalApiRequests, listingCount, projectedBill, uniqueTools } =
+    currentMonthMetrics
+
+  // Check if user has no listings configured
+  const hasNoListings = listingCount === 0
+
+  return (
+    <div className="space-y-8">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Usage & Metrics</h1>
+        <p className="mt-2 text-muted-foreground">
+          Monitor your API usage, listing count, and billing projections
+        </p>
+      </div>
+
+      {/* Warning for no listings */}
+      {hasNoListings && (
+        <Alert>
+          <AlertTitle>No Listings Found</AlertTitle>
+          <AlertDescription>
+            Connect your Hostaway account in Settings to sync your property
+            listings and enable full usage tracking.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Metrics Summary Cards */}
+      <MetricsSummary
+        totalRequests={totalApiRequests}
+        listingCount={listingCount}
+        projectedBill={projectedBill}
+        uniqueTools={uniqueTools}
+      />
 
       {/* Usage Chart */}
-      <div className="mt-8">
-        <UsageChart data={historicalMetrics || []} />
-      </div>
+      <UsageChart data={historicalData} />
 
-      {/* Sync Notice */}
-      <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="text-sm font-medium text-blue-900 mb-2">About Usage Metrics</h3>
-        <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-          <li>API requests are tracked in real-time as you use MCP tools.</li>
-          <li>Listing count syncs daily from your Hostaway account.</li>
-          <li>Projected bill is based on current listing count at ${pricePerListing}/listing/month.</li>
-          <li>Unique tools shows how many different MCP endpoints you've used this month.</li>
-        </ul>
-      </div>
+      {/* Info Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>About Usage Metrics</CardTitle>
+          <CardDescription>
+            How your usage data is tracked and calculated
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <span className="mt-0.5">•</span>
+              <span>
+                API requests are tracked in real-time as you use MCP tools
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-0.5">•</span>
+              <span>Listing count syncs daily from your Hostaway account</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-0.5">•</span>
+              <span>
+                Projected bill is calculated based on your current listing count
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-0.5">•</span>
+              <span>
+                Unique tools shows how many different MCP endpoints you&apos;ve
+                used this month
+              </span>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
     </div>
   )
 }
