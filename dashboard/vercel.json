@@ -1,33 +1,6 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
   "framework": "nextjs",
+  "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "devCommand": "npm run dev",
-  "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": {
-      "description": "Your Supabase project URL",
-      "required": true
-    },
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": {
-      "description": "Your Supabase anon/public key",
-      "required": true
-    },
-    "SUPABASE_SERVICE_ROLE_KEY": {
-      "description": "Your Supabase service role key (keep secret!)",
-      "required": true
-    },
-    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": {
-      "description": "Your Stripe publishable key",
-      "required": true
-    },
-    "STRIPE_SECRET_KEY": {
-      "description": "Your Stripe secret key (keep secret!)",
-      "required": true
-    },
-    "NEXT_PUBLIC_APP_URL": {
-      "description": "Your application URL (will be set automatically by Vercel)",
-      "required": false
-    }
-  }
+  "outputDirectory": ".next"
 }

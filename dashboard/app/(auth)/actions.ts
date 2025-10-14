@@ -1,12 +1,7 @@
 'use server'
 
+import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
-import Stripe from 'stripe'
-
-// Initialize Stripe with secret key
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-09-30.clover',
-})
 
 /**
  * Create organization and organization member after user signup
@@ -16,7 +11,7 @@ export async function createOrganization(userId: string, userEmail: string) {
   try {
     const supabase = createServiceRoleClient()
 
-    // Extract organization name from email (e.g., "john@company.com" -> "Company")
+    // Extract organization name from email domain
     const emailDomain = userEmail.split('@')[1]
     const orgName = emailDomain.split('.')[0].charAt(0).toUpperCase() + emailDomain.split('.')[0].slice(1)
 
@@ -35,36 +30,7 @@ export async function createOrganization(userId: string, userEmail: string) {
       throw new Error('Failed to create organization')
     }
 
-    // 2. Create Stripe customer
-    let stripeCustomerId: string | null = null
-    try {
-      const customer = await stripe.customers.create({
-        email: userEmail,
-        name: organization.name,
-        metadata: {
-          organization_id: organization.id,
-          user_id: userId,
-        },
-      })
-      stripeCustomerId = customer.id
-
-      // Update organization with Stripe customer ID
-      const { error: stripeUpdateError } = await supabase
-        .from('organizations')
-        .update({ stripe_customer_id: stripeCustomerId })
-        .eq('id', organization.id)
-
-      if (stripeUpdateError) {
-        console.error('Error updating organization with Stripe customer ID:', stripeUpdateError)
-        // Don't fail signup if Stripe update fails - we can add it later
-      }
-    } catch (stripeError) {
-      console.error('Error creating Stripe customer:', stripeError)
-      // Don't fail signup if Stripe customer creation fails
-      // The customer can be created later when they add payment info
-    }
-
-    // 3. Create organization member (owner role)
+    // 2. Create organization member (owner role)
     const { error: memberError } = await supabase
       .from('organization_members')
       .insert({

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { createOrganization } from '@/app/(auth)/actions'
 
 /**
  * Auth Callback Route Handler
@@ -16,12 +17,26 @@ export async function GET(request: Request) {
     const supabase = await createClient()
 
     // Exchange the code for a session
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (error) {
       console.error('Error exchanging code for session:', error)
-      // Redirect to login with error message
       return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, requestUrl.origin))
+    }
+
+    // Create organization for new users (T020)
+    if (data.user) {
+      // Check if organization already exists
+      const { data: existing } = await supabase
+        .from('organization_members')
+        .select('organization_id')
+        .eq('user_id', data.user.id)
+        .single()
+
+      if (!existing) {
+        // Create organization for new user
+        await createOrganization(data.user.id, data.user.email!)
+      }
     }
   }
 
