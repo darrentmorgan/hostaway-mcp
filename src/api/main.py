@@ -228,6 +228,11 @@ from src.api.routes import financial
 
 app.include_router(financial.router, prefix="/api", tags=["Financial"])
 
+# Register analytics routes (T057: AI-powered MCP operations)
+from src.api.routes import analytics
+
+app.include_router(analytics.router, prefix="/api", tags=["Analytics"])
+
 # Initialize MCP server (wraps the FastAPI app)
 # This must come AFTER all routes are registered
 mcp = initialize_mcp(app)
