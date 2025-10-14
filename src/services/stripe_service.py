@@ -4,16 +4,16 @@ Provides Stripe customer creation, subscription management, and billing portal
 integration for multi-tenant SaaS billing.
 """
 
+import os
 from typing import Any
 
 import stripe
 
-from src.config import settings
 from src.services.supabase_client import SupabaseClientError, get_supabase_client
 from supabase import Client
 
-# Initialize Stripe with API key from settings
-stripe.api_key = settings.STRIPE_SECRET_KEY
+# Initialize Stripe with API key from environment
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
 
 
 class StripeServiceError(Exception):
@@ -113,7 +113,7 @@ class StripeService:
 
             return customer.id
 
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             raise CustomerCreationError(f"Stripe API error: {e!s}") from e
         except SupabaseClientError as e:
             raise CustomerCreationError(f"Database error: {e!s}") from e
@@ -170,7 +170,7 @@ class StripeService:
                 else None,
             }
 
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             raise SubscriptionError(f"Stripe API error: {e!s}") from e
         except Exception as e:
             raise SubscriptionError(f"Unexpected error: {e!s}") from e
@@ -210,7 +210,7 @@ class StripeService:
 
             return session.url
 
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             raise BillingPortalError(f"Stripe API error: {e!s}") from e
         except Exception as e:
             raise BillingPortalError(f"Unexpected error: {e!s}") from e
@@ -281,7 +281,7 @@ class StripeService:
                 "canceled_at": subscription.canceled_at,
             }
 
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             raise SubscriptionError(f"Stripe API error: {e!s}") from e
         except Exception as e:
             raise SubscriptionError(f"Unexpected error: {e!s}") from e

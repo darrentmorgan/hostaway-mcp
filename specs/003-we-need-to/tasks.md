@@ -169,11 +169,11 @@
 
 **Purpose**: Production readiness, documentation, and deployment
 
-- [ ] T059 [P] [POLISH] Add error handling to all dashboard pages: use Next.js error boundaries, display user-friendly error messages
-- [ ] T060 [P] [POLISH] Add loading states to all dashboard pages: use React Suspense, skeleton loaders for data fetching
-- [ ] T061 [P] [POLISH] Update quickstart.md with actual deployment URLs (replace placeholder URLs with production Vercel URL)
-- [ ] T062 [P] [POLISH] Create environment variable documentation: `.env.example` for backend with SUPABASE_URL, SUPABASE_SERVICE_KEY, STRIPE_SECRET_KEY
-- [ ] T063 [P] [POLISH] Create environment variable documentation: `dashboard/.env.local.example` with NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, STRIPE_PUBLISHABLE_KEY
+- [X] T059 [P] [POLISH] Add error handling to all dashboard pages: use Next.js error boundaries, display user-friendly error messages
+- [X] T060 [P] [POLISH] Add loading states to all dashboard pages: use React Suspense, skeleton loaders for data fetching
+- [X] T061 [P] [POLISH] Update quickstart.md with actual deployment URLs (replace placeholder URLs with production Vercel URL)
+- [X] T062 [P] [POLISH] Create environment variable documentation: `.env.example` for backend with SUPABASE_URL, SUPABASE_SERVICE_KEY, STRIPE_SECRET_KEY
+- [X] T063 [P] [POLISH] Create environment variable documentation: `dashboard/.env.local.example` with NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, STRIPE_PUBLISHABLE_KEY
 - [ ] T064 [POLISH] Run Supabase migrations on production Supabase project (`supabase db push`)
 - [ ] T065 [POLISH] Deploy Next.js dashboard to Vercel: `vercel --prod`, configure environment variables in Vercel dashboard
 - [ ] T066 [POLISH] Deploy Supabase Edge Functions: `supabase functions deploy stripe-webhook`, `supabase functions deploy daily-sync`
@@ -192,8 +192,8 @@
 
 ### Backend Unit Tests
 
-- [ ] T071 [P] [TEST] Create unit tests for `src/services/credential_service.py`: Test encrypt_credentials(), decrypt_credentials(), validate_hostaway_credentials() with mock Supabase Vault
-- [ ] T072 [P] [TEST] Create unit tests for `src/services/billing_service.py`: Test create_subscription(), update_subscription_quantity(), handle_payment_failure() with mock Stripe SDK
+- [X] T071 [P] [TEST] Create unit tests for `src/services/credential_service.py`: Test encrypt_credentials(), decrypt_credentials(), validate_hostaway_credentials() with mock Supabase Vault
+- [X] T072 [P] [TEST] Create unit tests for `src/services/billing_service.py`: Test create_subscription(), update_subscription_quantity(), handle_payment_failure() with mock Stripe SDK
 - [ ] T073 [P] [TEST] Create unit tests for `src/api/dependencies.py`: Test get_organization_context() with valid/invalid/expired API keys, verify org_id isolation
 - [ ] T074 [P] [TEST] Create unit tests for `src/api/middleware/usage_tracking.py`: Test increment_usage_metrics() RPC call, verify tool tracking, test failure handling
 
