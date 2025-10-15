@@ -101,5 +101,12 @@ Thumbs.db
 *_dsa
 *_ecdsa
 *_ed25519
+
+# Security sensitive files
 secrets-to-replace.txt
 clean-git-history.sh
+deploy_with_password.exp
+deploy-to-hostinger.sh
+production.env
+*.exp
+!deploy_with_password.exp.template
