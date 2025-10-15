@@ -26,6 +26,7 @@ repos:
         name: bandit security scan
         description: "Security vulnerability scanner"
         args: ['-ll', '-r', 'src/', '--skip', 'B113']  # Skip httpx timeout warnings (handled in code)
+        pass_filenames: false  # Don't pass individual files, scan whole src/ directory
 
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks

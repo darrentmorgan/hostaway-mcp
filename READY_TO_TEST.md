@@ -43,7 +43,7 @@ http://localhost:3001
 - Navigate to: http://localhost:3001/settings
 - Enter credentials:
   - Account ID: `161051`
-  - Secret Key: `***REMOVED***`
+  - Secret Key: `d30de835efb31482e0a3b8d4e920b4e2c7484485c65d54d90e28653855d7f8b6`
 - Click "Connect Hostaway"
 
 **Expected**: ✅ "Hostaway credentials connected successfully!"

@@ -21,7 +21,7 @@ supabase test db
 
 ```bash
 # Test RLS policies
-psql ***REMOVED*** < tests/database/test_rls_policies.sql
+psql postgresql://postgres:postgres@localhost:54322/postgres < tests/database/test_rls_policies.sql
 
 # Or with Supabase CLI
 supabase db test --file tests/database/test_rls_policies.sql

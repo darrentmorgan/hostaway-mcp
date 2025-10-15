@@ -64,7 +64,7 @@ Add this configuration:
 ```bash
 # Hostaway API Configuration
 HOSTAWAY_ACCOUNT_ID=161051
-HOSTAWAY_SECRET_KEY=***REMOVED***
+HOSTAWAY_SECRET_KEY=d30de835efb31482e0a3b8d4e920b4e2c7484485c65d54d90e28653855d7f8b6
 HOSTAWAY_API_BASE_URL=https://api.hostaway.com/v1
 
 # MCP Security - REQUIRED for production

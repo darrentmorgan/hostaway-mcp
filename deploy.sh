@@ -91,7 +91,7 @@ cd /opt/hostaway-mcp
 if [ ! -f ".env" ]; then
     echo -e "\033[1;33m[WARN]\033[0m .env file not found. Creating template..."
     cat > .env << 'ENVEOF'
-***REMOVED***
+# Hostaway API Credentials
 HOSTAWAY_ACCOUNT_ID=your_account_id_here
 HOSTAWAY_SECRET_KEY=your_secret_key_here
 HOSTAWAY_API_BASE_URL=https://api.hostaway.com/v1

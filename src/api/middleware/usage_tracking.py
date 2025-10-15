@@ -36,8 +36,13 @@ class UsageTrackingMiddleware(BaseHTTPMiddleware):
         Returns:
             Response from the next handler
         """
-        # Only track /api/* routes (MCP endpoints)
-        if not request.url.path.startswith("/api/"):
+        # Track both /api/* routes and /mcp endpoints
+        # MCP endpoints are the actual tool calls from Claude Desktop
+        # /api/* routes are REST API endpoints
+        path = request.url.path
+        is_tracked = path.startswith(("/api/", "/mcp"))
+
+        if not is_tracked:
             return await call_next(request)
 
         # Start timing
@@ -55,11 +60,22 @@ class UsageTrackingMiddleware(BaseHTTPMiddleware):
         # Track usage if organization is identified
         if organization_id:
             try:
+                # Debug logging to file for production debugging
+                import logging
+
+                # Hardcoded /tmp is acceptable for production debug logs
+                file_handler = logging.FileHandler("/tmp/usage_tracking.log")  # nosec B108
+                file_handler.setLevel(logging.DEBUG)
+                logger = logging.getLogger("usage_tracking")
+                logger.addHandler(file_handler)
+                logger.info(f"Tracking usage for org {organization_id}, path: {path}")
+
                 await self._track_usage(
                     organization_id=organization_id,
                     tool_name=self._extract_tool_name(request.url.path),
                 )
             except Exception as e:
+                logger.error(f"Usage tracking failed: {e}")
                 # Don't fail the request if tracking fails
                 print(f"Usage tracking error: {e}")
 
@@ -75,8 +91,15 @@ class UsageTrackingMiddleware(BaseHTTPMiddleware):
         Returns:
             Tool name like 'properties'
         """
+        # Handle MCP endpoints specially
+        if path.startswith("/mcp"):
+            # MCP paths are like /mcp or /mcp/tool_name
+            parts = path.strip("/").split("/")
+            if len(parts) > 1:
+                return parts[1]
+            return "mcp_root"
+        # API paths: /api/v1/resource_name/...
         parts = path.strip("/").split("/")
-        # Path format: /api/v1/resource_name/...
         if len(parts) >= 3:
             return parts[2]  # Extract resource name
         return "unknown"

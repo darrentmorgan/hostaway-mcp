@@ -79,7 +79,7 @@
 
 2. **Enter Hostaway Credentials**:
    - Account ID: `161051` (from your .env)
-   - Secret Key: `***REMOVED***` (from your .env)
+   - Secret Key: `d30de835efb31482e0a3b8d4e920b4e2c7484485c65d54d90e28653855d7f8b6` (from your .env)
 
 3. **Click "Connect Hostaway"**
 

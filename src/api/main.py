@@ -146,12 +146,16 @@ class MCPAuthMiddleware(BaseHTTPMiddleware):
         Returns:
             HTTP response or 401 if authentication fails
         """
-        # Only protect MCP endpoints
-        if request.url.path.startswith("/mcp"):
+        # Protect both MCP and API endpoints that need authentication
+        if request.url.path.startswith("/mcp") or request.url.path.startswith("/api/"):
             from src.mcp.security import verify_api_key
 
+            # Extract API key from header manually since we're not using dependency injection
+            x_api_key = request.headers.get("X-API-Key")
+
             try:
-                await verify_api_key(request)
+                # Call with extracted header value
+                await verify_api_key(request, x_api_key)
             except Exception as e:
                 # Authentication failed, return error response
                 from fastapi.responses import JSONResponse
@@ -167,12 +171,14 @@ class MCPAuthMiddleware(BaseHTTPMiddleware):
         return response
 
 
-app.add_middleware(MCPAuthMiddleware)
-
-# Usage Tracking Middleware (T047: Track API usage for billing/metrics)
 from src.api.middleware.usage_tracking import UsageTrackingMiddleware
 
 app.add_middleware(UsageTrackingMiddleware)
+
+
+app.add_middleware(MCPAuthMiddleware)
+
+# Usage Tracking Middleware (T047: Track API usage for billing/metrics)
 
 
 @app.get("/health")
