@@ -45,3 +45,78 @@ repos:
         name: check for merge conflicts
       - id: detect-private-key
         name: detect private keys
+      - id: detect-aws-credentials
+        name: detect AWS credentials
+
+  # Gitleaks secret scanner (with custom config)
+  - repo: https://github.com/zricethezav/gitleaks
+    rev: v8.18.2
+    hooks:
+      - id: gitleaks
+        name: detect secrets and keys
+        description: Detect secrets and sensitive information in code
+        args: ['--config', '.gitleaks.toml', '--verbose']
+
+  # Safety - Check Python dependencies for security vulnerabilities
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
+    rev: v1.3.3
+    hooks:
+      - id: python-safety-dependencies-check
+        name: check Python dependencies
+        description: Check Python dependencies for known security vulnerabilities
+        files: (requirements.*\.txt$|pyproject\.toml$)
+
+  # Semgrep - Advanced static analysis for security patterns
+  - repo: https://github.com/returntocorp/semgrep
+    rev: v1.97.0
+    hooks:
+      - id: semgrep
+        name: semgrep security scan
+        description: Static analysis for security vulnerabilities
+        args: [
+          '--config=auto',  # Use default security rules
+          '--error',        # Exit with error on findings
+          '--metrics=off',  # Disable telemetry
+          '--timeout=30',   # 30 second timeout per rule
+        ]
+        exclude: |
+          (?x)^(
+            tests/.*|
+            .*\.min\.js|
+            .*\.min\.css|
+            node_modules/.*|
+            \.next/.*|
+            dist/.*|
+            build/.*
+          )$
+
+  # Check for hardcoded passwords
+  - repo: local
+    hooks:
+      - id: check-hardcoded-credentials
+        name: check for hardcoded credentials
+        description: Check for hardcoded passwords and API keys
+        entry: bash -c 'grep -r -E "(password|passwd|pwd|secret|api[_-]?key|token|credential)[[:space:]]*[=:][[:space:]]*[\"'\''][^\"'\'']{8,}[\"'\'']" --include="*.py" --include="*.js" --include="*.ts" --include="*.tsx" --include="*.env*" --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist --exclude-dir=.next --exclude="*.test.*" --exclude="*.spec.*" . || true | grep -v "example\|placeholder\|your[_-]api\|test[_-]api" | if grep .; then exit 1; else exit 0; fi'
+        language: system
+        pass_filenames: false
+
+  # TypeScript/JavaScript specific security checks
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.16.0
+    hooks:
+      - id: eslint
+        name: eslint security check
+        files: \.(js|jsx|ts|tsx)$
+        args: ['--config', '.eslintrc.security.json', '--fix', '--max-warnings=0']
+        additional_dependencies:
+          - eslint@9.16.0
+          - eslint-plugin-security@3.0.1
+          - '@typescript-eslint/eslint-plugin@8.18.2'
+          - '@typescript-eslint/parser@8.18.2'
+        exclude: |
+          (?x)^(
+            node_modules/.*|
+            \.next/.*|
+            dist/.*|
+            build/.*
+          )$

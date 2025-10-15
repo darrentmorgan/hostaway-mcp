@@ -1,0 +1,65 @@
+# MCP Server Context Window Protection Configuration
+#
+# This file configures automatic pagination, summarization, and token budgets
+# for the Hostaway MCP Server. Changes to this file are automatically detected
+# and applied without server restart (hot-reload).
+
+context_protection:
+  # Global token budget settings
+  output_token_threshold: 4000  # Trigger summarization above this token count
+  hard_output_token_cap: 12000  # Absolute maximum (force preview above this)
+
+  # Pagination defaults
+  default_page_size: 50   # Default items per page
+  max_page_size: 200      # Maximum allowed page size
+
+  # Feature flags
+  enable_summarization: true  # Enable automatic response summarization
+  enable_pagination: true     # Enable automatic pagination for list endpoints
+
+  # Per-endpoint overrides (optional)
+  # Allows customizing behavior for specific endpoints
+  endpoints:
+    # Listings endpoint - smaller pages due to large objects
+    /api/v1/listings:
+      page_size: 50
+      pagination_enabled: true
+      summarization_enabled: true
+      threshold: 4000
+
+    # Bookings endpoint - larger pages for smaller objects
+    /api/v1/bookings:
+      page_size: 100
+      pagination_enabled: true
+      summarization_enabled: true
+      threshold: 4000
+
+    # Analytics endpoint - disable summarization to preserve full data
+    /api/v1/analytics:
+      summarization_enabled: false
+      pagination_enabled: true
+      page_size: 50
+
+    # Financial transactions - strict token limits
+    /api/v1/financial/transactions:
+      threshold: 3000
+      hard_cap: 10000
+      page_size: 75
+      pagination_enabled: true
+      summarization_enabled: true
+
+# Example: Minimal configuration (uses all defaults)
+# context_protection:
+#   output_token_threshold: 4000
+
+# Example: Disable all optimizations
+# context_protection:
+#   enable_summarization: false
+#   enable_pagination: false
+
+# Example: Custom global settings only
+# context_protection:
+#   output_token_threshold: 6000
+#   hard_output_token_cap: 15000
+#   default_page_size: 100
+#   max_page_size: 500

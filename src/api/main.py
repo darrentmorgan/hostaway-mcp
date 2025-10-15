@@ -182,19 +182,33 @@ app.add_middleware(MCPAuthMiddleware)
 
 
 @app.get("/health")
-async def health_check() -> dict[str, str]:
+async def health_check() -> dict:
     """Health check endpoint for monitoring and deployment verification.
 
     Returns:
-        Status message with timestamp and version for health monitoring
+        Status message with timestamp, version, and context protection metrics
     """
     from datetime import datetime
+
+    from src.services.telemetry_service import get_telemetry_service
+
+    telemetry = get_telemetry_service()
+    metrics = telemetry.get_metrics()
 
     return {
         "status": "healthy",
         "timestamp": datetime.now(UTC).isoformat(),
         "version": "0.1.0",
         "service": "hostaway-mcp",
+        "context_protection": {
+            "total_requests": metrics["total_requests"],
+            "pagination_adoption": metrics["pagination_adoption"],
+            "summarization_adoption": metrics["summarization_adoption"],
+            "avg_response_size_bytes": metrics["avg_response_size"],
+            "avg_latency_ms": metrics["avg_latency_ms"],
+            "oversized_events": metrics["oversized_events"],
+            "uptime_seconds": metrics["uptime_seconds"],
+        },
     }
 
 

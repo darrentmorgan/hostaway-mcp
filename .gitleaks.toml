@@ -1,0 +1,102 @@
+# Gitleaks Configuration
+# Security scanning for secrets and sensitive information
+
+[allowlist]
+description = "Allowlist for known safe patterns"
+
+# Paths to exclude from scanning (regex patterns)
+paths = [
+  '''^\.gitleaks\.toml$''',
+  '''.*\.lock$''',
+  '''.*\.svg$''',
+  '''.*\.png$''',
+  '''.*\.jpg$''',
+  '''.*\.jpeg$''',
+  '''.*\.gif$''',
+  '''.*\.ico$''',
+  '''.*/node_modules/.*''',
+  '''.*/dist/.*''',
+  '''.*/build/.*''',
+  '''.*/.next/.*''',
+  '''.*/coverage/.*''',
+  '''.*/\.pytest_cache/.*''',
+  '''.*/__pycache__/.*''',
+  '''.*/\.git/.*''',
+  '''.*/tests/.*''',
+]
+
+# Regexes for allowed patterns
+regexes = [
+  # Allow example/placeholder API keys in documentation
+  '''example[_\-]?api[_\-]?key''',
+  '''placeholder[_\-]?key''',
+  '''your[_\-]?api[_\-]?key''',
+  '''<your[_\-]?api[_\-]?key>''',
+  # Allow test keys that are clearly marked as test
+  '''test[_\-]?api[_\-]?key[_\-]?123''',
+  # Allow placeholder database URLs
+  '''postgresql://\.\.\.''',
+  '''postgres://\.\.\.''',
+  '''https://\.\.\.''',
+  # Allow Supabase public anon keys (these are meant to be public)
+  '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9\.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0''',
+]
+
+# Custom rules for Hostaway-specific patterns
+[[rules]]
+id = "hostaway-api-key"
+description = "Hostaway API Key Detection"
+regex = '''(?i)(hostaway[_\-]?api[_\-]?key|HOSTAWAY_API_KEY|hostaway[_\-]?token|HOSTAWAY_TOKEN)[\s]*[=:]\s*["']?([a-zA-Z0-9]{32,})["']?'''
+tags = ["key", "hostaway", "api"]
+secretGroup = 2
+
+[[rules]]
+id = "hostaway-client-secret"
+description = "Hostaway Client Secret Detection"
+regex = '''(?i)(hostaway[_\-]?client[_\-]?secret|HOSTAWAY_CLIENT_SECRET)[\s]*[=:]\s*["']?([a-zA-Z0-9]{32,})["']?'''
+tags = ["secret", "hostaway", "oauth"]
+secretGroup = 2
+
+[[rules]]
+id = "supabase-service-key"
+description = "Supabase Service Role Key Detection"
+regex = '''(?i)(supabase[_\-]?service[_\-]?role[_\-]?key|SUPABASE_SERVICE_ROLE_KEY)[\s]*[=:]\s*["']?(eyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+)["']?'''
+tags = ["key", "supabase", "jwt"]
+secretGroup = 2
+
+[[rules]]
+id = "database-url-with-password"
+description = "Database URL with Password"
+regex = '''(?i)(database[_\-]?url|DATABASE_URL|postgres[_\-]?url|POSTGRES_URL)[\s]*[=:]\s*["']?(postgres(?:ql)?:\/\/[^:]+:([^@]+)@[^\/]+\/[^"'\s]+)["']?'''
+tags = ["database", "password", "url"]
+secretGroup = 2
+
+[[rules]]
+id = "jwt-secret"
+description = "JWT Secret Key Detection"
+regex = '''(?i)(jwt[_\-]?secret|JWT_SECRET|auth[_\-]?secret|AUTH_SECRET)[\s]*[=:]\s*["']?([a-zA-Z0-9_\-]{32,})["']?'''
+tags = ["secret", "jwt", "auth"]
+secretGroup = 2
+
+[[rules]]
+id = "stripe-secret-key"
+description = "Stripe Secret Key"
+regex = '''(?i)(stripe[_\-]?secret[_\-]?key|STRIPE_SECRET_KEY)[\s]*[=:]\s*["']?(sk_[a-zA-Z0-9]{32,})["']?'''
+tags = ["key", "stripe", "payment"]
+secretGroup = 2
+
+[[rules]]
+id = "webhook-secret"
+description = "Webhook Secret Detection"
+regex = '''(?i)(webhook[_\-]?secret|WEBHOOK_SECRET|webhook[_\-]?signing[_\-]?secret)[\s]*[=:]\s*["']?([a-zA-Z0-9_\-]{32,})["']?'''
+tags = ["secret", "webhook"]
+secretGroup = 2
+
+# Generic patterns already covered by default gitleaks rules:
+# - AWS credentials
+# - Google API keys
+# - GitHub tokens
+# - Generic API keys
+# - Private keys (RSA, DSA, EC, PGP)
+# - Slack tokens
+# - Generic passwords in URLs

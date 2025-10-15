@@ -7,9 +7,11 @@ These endpoints are automatically exposed as MCP tools via FastAPI-MCP.
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from src.api.dependencies import OrganizationContext, get_organization_context
 from src.mcp.auth import get_authenticated_client
+from src.models.pagination import PageMetadata, PaginatedResponse
 from src.services.hostaway_client import HostawayClient
-from src.api.dependencies import get_organization_context, OrganizationContext
+from src.utils.cursor_codec import decode_cursor, encode_cursor
 
 router = APIRouter()
 
@@ -43,45 +45,91 @@ class AvailabilityResponse(BaseModel):
 
 @router.get(
     "/listings",
-    response_model=ListingsResponse,
+    response_model=PaginatedResponse[dict],
     summary="Get all property listings",
-    description="Retrieve all property listings with pagination support",
+    description="Retrieve all property listings with cursor-based pagination support",
     tags=["Listings"],
 )
 async def get_listings(
-    limit: int = Query(default=100, ge=1, le=1000, description="Maximum results to return"),
-    offset: int = Query(default=0, ge=0, description="Number of results to skip"),
+    limit: int = Query(default=50, ge=1, le=200, description="Maximum results per page"),
+    cursor: str | None = Query(None, description="Pagination cursor from previous response"),
     client: HostawayClient = Depends(get_authenticated_client),
-) -> ListingsResponse:
+) -> PaginatedResponse[dict]:
     """
-    Get all property listings with pagination.
+    Get all property listings with cursor-based pagination.
 
     This tool retrieves a paginated list of all property listings from Hostaway.
+    Supports cursor-based pagination for efficient navigation through large result sets.
+
     Useful for:
     - Browsing all available properties
     - Building property catalogs
     - Searching across properties
 
     Args:
-        limit: Maximum number of listings to return (1-1000, default: 100)
-        offset: Number of listings to skip for pagination (default: 0)
+        limit: Maximum number of listings per page (1-200, default: 50)
+        cursor: Optional cursor from previous response for fetching next page
         client: Authenticated Hostaway client (injected)
 
     Returns:
-        ListingsResponse with listings array and pagination metadata
+        PaginatedResponse with items, nextCursor, and metadata
 
     Raises:
-        HTTPException: If API request fails
+        HTTPException: If API request fails or cursor is invalid
+
+    Example:
+        # First page
+        GET /listings?limit=50
+        # Response includes nextCursor
+
+        # Next page
+        GET /listings?cursor=eyJvZmZzZXQiOjUwLCJ0cyI6MTY5NzQ1MjgwMC4wfQ==
     """
     try:
-        listings = await client.get_listings(limit=limit, offset=offset)
+        # Parse cursor if provided
+        offset = 0
+        if cursor:
+            try:
+                cursor_data = decode_cursor(cursor, secret="hostaway-cursor-secret")
+                offset = cursor_data["offset"]
+            except Exception as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid cursor: {e}",
+                )
 
-        return ListingsResponse(
-            listings=listings,
-            count=len(listings),
-            limit=limit,
-            offset=offset,
+        # Clamp limit to max
+        page_size = min(limit, 200)
+
+        # Fetch listings from Hostaway API
+        listings = await client.get_listings(limit=page_size, offset=offset)
+
+        # Get total count (for this demo, we'll estimate based on results)
+        # In production, you'd query the total from the API
+        total_count = offset + len(listings) + (100 if len(listings) == page_size else 0)
+        has_more = len(listings) == page_size
+
+        # Create next cursor if more pages available
+        next_cursor = None
+        if has_more:
+            next_cursor = encode_cursor(
+                offset=offset + len(listings),
+                secret="hostaway-cursor-secret",
+            )
+
+        # Build paginated response
+        return PaginatedResponse[dict](
+            items=listings,
+            nextCursor=next_cursor,
+            meta=PageMetadata(
+                totalCount=total_count,
+                pageSize=len(listings),
+                hasMore=has_more,
+            ),
         )
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -311,7 +359,10 @@ async def create_listing(
             listing_id=created_listing["id"],
             name=listing_data.name,
             status="created",
-            message=f"Successfully created listing '{listing_data.name}' with ID {created_listing['id']}",
+            message=(
+                f"Successfully created listing '{listing_data.name}' "
+                f"with ID {created_listing['id']}"
+            ),
         )
 
     except HTTPException:
@@ -417,7 +468,10 @@ async def batch_update_listings(
                     UpdateResult(
                         listing_id=update.listing_id,
                         success=False,
-                        message=f"Listing {update.listing_id} not found (may not belong to your organization)",
+                        message=(
+                            f"Listing {update.listing_id} not found "
+                            "(may not belong to your organization)"
+                        ),
                     )
                 )
                 failed_count += 1
