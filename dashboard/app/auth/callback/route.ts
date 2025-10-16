@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/navigation'
 import { createOrganization } from '@/app/(auth)/actions'
 
 /**
