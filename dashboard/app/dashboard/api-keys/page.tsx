@@ -35,8 +35,10 @@ export default async function ApiKeysPage() {
     .eq('organization_id', membership.organization_id)
     .order('created_at', { ascending: false })
 
-  if (keysError) {
+  if (keysError && keysError.code !== 'PGRST116') {
+    // PGRST116 = no rows returned, which is fine for users without API keys yet
     console.error('Error fetching API keys:', keysError)
+    throw new Error('Failed to load API keys')
   }
 
   const keys = apiKeys || []

@@ -51,11 +51,16 @@ export async function disconnectHostaway() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Not authenticated' }
 
-  const { data: membership } = await supabase
+  const { data: membership, error: memberError } = await supabase
     .from('organization_members')
     .select('organization_id')
     .eq('user_id', user.id)
     .single()
+
+  if (memberError) {
+    console.error('Failed to fetch organization membership:', memberError)
+    return { success: false, error: 'Failed to load organization. Please try again.' }
+  }
 
   if (!membership) return { success: false, error: 'No organization found' }
 
@@ -73,23 +78,33 @@ export async function refreshHostawayConnection() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Not authenticated' }
 
-  const { data: membership } = await supabase
+  const { data: membership, error: memberError } = await supabase
     .from('organization_members')
     .select('organization_id')
     .eq('user_id', user.id)
     .single()
 
+  if (memberError) {
+    console.error('Failed to fetch organization membership:', memberError)
+    return { success: false, error: 'Failed to load organization. Please try again.' }
+  }
+
   if (!membership) return { success: false, error: 'No organization found' }
 
   // Get existing credentials
-  const { data: credentials } = await supabase
+  const { data: credentials, error: credError } = await supabase
     .from('hostaway_credentials')
     .select('account_id, encrypted_secret_key')
     .eq('organization_id', membership.organization_id)
     .single()
 
+  if (credError && credError.code !== 'PGRST116') {
+    console.error('Failed to fetch Hostaway credentials:', credError)
+    return { success: false, error: 'Failed to load credentials. Please try again.' }
+  }
+
   if (!credentials) {
-    return { success: false, error: 'No existing credentials found' }
+    return { success: false, error: 'No existing credentials found. Please reconnect your Hostaway account.' }
   }
 
   // Re-validate and refresh using existing credentials
@@ -101,11 +116,16 @@ export async function connectHostaway(accountId: string, secretKey: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Not authenticated' }
 
-  const { data: membership } = await supabase
+  const { data: membership, error: memberError } = await supabase
     .from('organization_members')
     .select('organization_id')
     .eq('user_id', user.id)
     .single()
+
+  if (memberError) {
+    console.error('Failed to fetch organization membership:', memberError)
+    return { success: false, error: 'Failed to load organization. Please try again.' }
+  }
 
   if (!membership) return { success: false, error: 'No organization found' }
 

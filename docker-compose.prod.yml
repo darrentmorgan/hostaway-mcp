@@ -7,25 +7,8 @@ services:
     container_name: hostaway-mcp-server
     ports:
       - "8080:8080"  # Hostinger standard port
-    environment:
-      # Hostaway API Configuration
-      - HOSTAWAY_ACCOUNT_ID=${HOSTAWAY_ACCOUNT_ID}
-      - HOSTAWAY_SECRET_KEY=${HOSTAWAY_SECRET_KEY}
-      - HOSTAWAY_API_BASE_URL=${HOSTAWAY_API_BASE_URL:-https://api.hostaway.com/v1}
-
-      # MCP Security
-      - MCP_API_KEY=${MCP_API_KEY}
-
-      # Rate Limiting Configuration (Production values)
-      - RATE_LIMIT_IP=${RATE_LIMIT_IP:-15}
-      - RATE_LIMIT_ACCOUNT=${RATE_LIMIT_ACCOUNT:-20}
-      - MAX_CONCURRENT_REQUESTS=${MAX_CONCURRENT_REQUESTS:-100}
-
-      # Application Configuration (Production)
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - ENVIRONMENT=production
     env_file:
-      - .env
+      - /etc/hostaway-mcp/production.env  # Secure system location - contains all environment variables
     restart: always  # Always restart in production
     healthcheck:
       test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8080/health', timeout=5.0).raise_for_status()"]

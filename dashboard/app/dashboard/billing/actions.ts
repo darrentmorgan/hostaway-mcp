@@ -5,9 +5,21 @@ import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import Stripe from 'stripe'
 import { redirect } from 'next/navigation'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-09-30.clover',
-})
+// Lazy Stripe client initialization to prevent app crash if key is missing
+let stripeClient: Stripe | null = null
+
+function getStripeClient(): Stripe {
+  if (!stripeClient) {
+    const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY
+    if (!STRIPE_SECRET_KEY) {
+      throw new Error('Missing required environment variable: STRIPE_SECRET_KEY')
+    }
+    stripeClient = new Stripe(STRIPE_SECRET_KEY, {
+      apiVersion: '2025-09-30.clover',
+    })
+  }
+  return stripeClient
+}
 
 /**
  * Create a billing portal session for the current user's organization
@@ -22,28 +34,39 @@ export async function createBillingPortalSession() {
     }
 
     // Get user's organization
-    const { data: membership } = await supabase
+    const { data: membership, error: memberError } = await supabase
       .from('organization_members')
       .select('organization_id')
       .eq('user_id', user.id)
       .single()
+
+    if (memberError) {
+      console.error('Failed to fetch organization membership:', memberError)
+      return { error: 'Failed to load organization. Please try again.' }
+    }
 
     if (!membership) {
       return { error: 'No organization found' }
     }
 
     // Get organization with Stripe customer ID
-    const { data: organization } = await supabase
+    const { data: organization, error: orgError } = await supabase
       .from('organizations')
       .select('stripe_customer_id')
       .eq('id', membership.organization_id)
       .single()
+
+    if (orgError) {
+      console.error('Failed to fetch organization:', orgError)
+      return { error: 'Failed to load organization details. Please try again.' }
+    }
 
     if (!organization?.stripe_customer_id) {
       return { error: 'No Stripe customer found' }
     }
 
     // Create billing portal session
+    const stripe = getStripeClient()
     const session = await stripe.billingPortal.sessions.create({
       customer: organization.stripe_customer_id,
       return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/billing`,
@@ -52,6 +75,9 @@ export async function createBillingPortalSession() {
     return { url: session.url }
   } catch (error) {
     console.error('Error creating billing portal session:', error)
+    if (error instanceof Error && error.message.includes('STRIPE_SECRET_KEY')) {
+      return { error: 'Billing is not configured. Please contact support.' }
+    }
     return { error: 'Failed to create billing portal session' }
   }
 }
@@ -69,28 +95,39 @@ export async function createCheckoutSession(priceId: string) {
     }
 
     // Get user's organization
-    const { data: membership } = await supabase
+    const { data: membership, error: memberError } = await supabase
       .from('organization_members')
       .select('organization_id')
       .eq('user_id', user.id)
       .single()
+
+    if (memberError) {
+      console.error('Failed to fetch organization membership:', memberError)
+      return { error: 'Failed to load organization. Please try again.' }
+    }
 
     if (!membership) {
       return { error: 'No organization found' }
     }
 
     // Get organization with Stripe customer ID
-    const { data: organization } = await supabase
+    const { data: organization, error: orgError } = await supabase
       .from('organizations')
       .select('stripe_customer_id, name')
       .eq('id', membership.organization_id)
       .single()
+
+    if (orgError) {
+      console.error('Failed to fetch organization:', orgError)
+      return { error: 'Failed to load organization details. Please try again.' }
+    }
 
     if (!organization?.stripe_customer_id) {
       return { error: 'No Stripe customer found' }
     }
 
     // Create checkout session
+    const stripe = getStripeClient()
     const session = await stripe.checkout.sessions.create({
       customer: organization.stripe_customer_id,
       mode: 'subscription',
@@ -111,6 +148,9 @@ export async function createCheckoutSession(priceId: string) {
     return { url: session.url }
   } catch (error) {
     console.error('Error creating checkout session:', error)
+    if (error instanceof Error && error.message.includes('STRIPE_SECRET_KEY')) {
+      return { error: 'Billing is not configured. Please contact support.' }
+    }
     return { error: 'Failed to create checkout session' }
   }
 }
@@ -128,28 +168,39 @@ export async function getSubscriptionStatus() {
     }
 
     // Get user's organization
-    const { data: membership } = await supabase
+    const { data: membership, error: memberError } = await supabase
       .from('organization_members')
       .select('organization_id')
       .eq('user_id', user.id)
       .single()
+
+    if (memberError) {
+      console.error('Failed to fetch organization membership:', memberError)
+      return { status: 'error' as const, error: 'Failed to load organization' }
+    }
 
     if (!membership) {
       return { status: 'no_organization' as const }
     }
 
     // Get organization with Stripe customer ID
-    const { data: organization } = await supabase
+    const { data: organization, error: orgError } = await supabase
       .from('organizations')
       .select('stripe_customer_id, name')
       .eq('id', membership.organization_id)
       .single()
+
+    if (orgError) {
+      console.error('Failed to fetch organization:', orgError)
+      return { status: 'error' as const, error: 'Failed to load organization details' }
+    }
 
     if (!organization?.stripe_customer_id) {
       return { status: 'no_customer' as const, organization }
     }
 
     // Get subscriptions from Stripe
+    const stripe = getStripeClient()
     const subscriptions = await stripe.subscriptions.list({
       customer: organization.stripe_customer_id,
       status: 'all',
@@ -202,28 +253,39 @@ export async function getInvoiceHistory() {
     }
 
     // Get user's organization
-    const { data: membership } = await supabase
+    const { data: membership, error: memberError } = await supabase
       .from('organization_members')
       .select('organization_id')
       .eq('user_id', user.id)
       .single()
+
+    if (memberError) {
+      console.error('Failed to fetch organization membership:', memberError)
+      return { error: 'Failed to load organization', invoices: [] }
+    }
 
     if (!membership) {
       return { error: 'No organization found', invoices: [] }
     }
 
     // Get organization with Stripe customer ID
-    const { data: organization } = await supabase
+    const { data: organization, error: orgError } = await supabase
       .from('organizations')
       .select('stripe_customer_id')
       .eq('id', membership.organization_id)
       .single()
+
+    if (orgError) {
+      console.error('Failed to fetch organization:', orgError)
+      return { error: 'Failed to load organization details', invoices: [] }
+    }
 
     if (!organization?.stripe_customer_id) {
       return { error: 'No Stripe customer found', invoices: [] }
     }
 
     // Fetch invoices from Stripe
+    const stripe = getStripeClient()
     const invoices = await stripe.invoices.list({
       customer: organization.stripe_customer_id,
       limit: 12, // Last 12 invoices (approximately 1 year)

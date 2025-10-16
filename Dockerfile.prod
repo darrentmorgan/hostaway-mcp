@@ -22,8 +22,10 @@ RUN apt-get update && apt-get install -y \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:$PATH"
 
-# Copy dependency files and README (required by hatchling)
-COPY pyproject.toml uv.lock README.md ./
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+# Create minimal README if needed for build
+RUN echo "# Hostaway MCP Server" > README.md
 
 # Install dependencies using uv (creates .venv)
 RUN uv sync --frozen --no-dev
