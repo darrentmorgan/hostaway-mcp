@@ -1,5 +1,11 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
+import {
+  logError,
+  ErrorMessages,
+  createErrorResponse,
+  createSuccessResponse,
+} from '@/lib/utils/errors'
 
 /**
  * Get OAuth access token from Hostaway
@@ -49,7 +55,13 @@ async function getListingCount(accessToken: string): Promise<number> {
 export async function disconnectHostaway() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Not authenticated' }
+
+  if (!user) {
+    return createErrorResponse(
+      ErrorMessages.NOT_AUTHENTICATED,
+      logError('User not authenticated', new Error('No user session'))
+    )
+  }
 
   const { data: membership, error: memberError } = await supabase
     .from('organization_members')
@@ -58,25 +70,44 @@ export async function disconnectHostaway() {
     .single()
 
   if (memberError) {
-    console.error('Failed to fetch organization membership:', memberError)
-    return { success: false, error: 'Failed to load organization. Please try again.' }
+    const correlationId = logError('Failed to fetch organization membership', memberError, {
+      userId: user.id,
+    })
+    return createErrorResponse(ErrorMessages.ORGANIZATION_LOAD_FAILED, correlationId)
   }
 
-  if (!membership) return { success: false, error: 'No organization found' }
+  if (!membership) {
+    return createErrorResponse(
+      ErrorMessages.ORGANIZATION_NOT_FOUND,
+      logError('No organization found', new Error('Organization not found'), { userId: user.id })
+    )
+  }
 
   const { error } = await supabase
     .from('hostaway_credentials')
     .delete()
     .eq('organization_id', membership.organization_id)
 
-  if (error) return { success: false, error: error.message }
-  return { success: true }
+  if (error) {
+    const correlationId = logError('Failed to delete Hostaway credentials', error, {
+      organizationId: membership.organization_id,
+    })
+    return createErrorResponse(ErrorMessages.HOSTAWAY_CONNECTION_FAILED, correlationId)
+  }
+
+  return createSuccessResponse({})
 }
 
 export async function refreshHostawayConnection() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Not authenticated' }
+
+  if (!user) {
+    return createErrorResponse(
+      ErrorMessages.NOT_AUTHENTICATED,
+      logError('User not authenticated', new Error('No user session'))
+    )
+  }
 
   const { data: membership, error: memberError } = await supabase
     .from('organization_members')
@@ -85,11 +116,18 @@ export async function refreshHostawayConnection() {
     .single()
 
   if (memberError) {
-    console.error('Failed to fetch organization membership:', memberError)
-    return { success: false, error: 'Failed to load organization. Please try again.' }
+    const correlationId = logError('Failed to fetch organization membership', memberError, {
+      userId: user.id,
+    })
+    return createErrorResponse(ErrorMessages.ORGANIZATION_LOAD_FAILED, correlationId)
   }
 
-  if (!membership) return { success: false, error: 'No organization found' }
+  if (!membership) {
+    return createErrorResponse(
+      ErrorMessages.ORGANIZATION_NOT_FOUND,
+      logError('No organization found', new Error('Organization not found'), { userId: user.id })
+    )
+  }
 
   // Get existing credentials
   const { data: credentials, error: credError } = await supabase
@@ -99,12 +137,19 @@ export async function refreshHostawayConnection() {
     .single()
 
   if (credError && credError.code !== 'PGRST116') {
-    console.error('Failed to fetch Hostaway credentials:', credError)
-    return { success: false, error: 'Failed to load credentials. Please try again.' }
+    const correlationId = logError('Failed to fetch Hostaway credentials', credError, {
+      organizationId: membership.organization_id,
+    })
+    return createErrorResponse(ErrorMessages.DATABASE_ERROR, correlationId)
   }
 
   if (!credentials) {
-    return { success: false, error: 'No existing credentials found. Please reconnect your Hostaway account.' }
+    return createErrorResponse(
+      ErrorMessages.HOSTAWAY_NO_CREDENTIALS,
+      logError('No credentials found', new Error('Credentials not found'), {
+        organizationId: membership.organization_id,
+      })
+    )
   }
 
   // Re-validate and refresh using existing credentials
@@ -114,7 +159,13 @@ export async function refreshHostawayConnection() {
 export async function connectHostaway(accountId: string, secretKey: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'Not authenticated' }
+
+  if (!user) {
+    return createErrorResponse(
+      ErrorMessages.NOT_AUTHENTICATED,
+      logError('User not authenticated', new Error('No user session'))
+    )
+  }
 
   const { data: membership, error: memberError } = await supabase
     .from('organization_members')
@@ -123,11 +174,18 @@ export async function connectHostaway(accountId: string, secretKey: string) {
     .single()
 
   if (memberError) {
-    console.error('Failed to fetch organization membership:', memberError)
-    return { success: false, error: 'Failed to load organization. Please try again.' }
+    const correlationId = logError('Failed to fetch organization membership', memberError, {
+      userId: user.id,
+    })
+    return createErrorResponse(ErrorMessages.ORGANIZATION_LOAD_FAILED, correlationId)
   }
 
-  if (!membership) return { success: false, error: 'No organization found' }
+  if (!membership) {
+    return createErrorResponse(
+      ErrorMessages.ORGANIZATION_NOT_FOUND,
+      logError('No organization found', new Error('Organization not found'), { userId: user.id })
+    )
+  }
 
   try {
     // Validate credentials with Hostaway API
@@ -149,7 +207,12 @@ export async function connectHostaway(accountId: string, secretKey: string) {
         onConflict: 'organization_id'
       })
 
-    if (credError) return { success: false, error: credError.message }
+    if (credError) {
+      const correlationId = logError('Failed to save Hostaway credentials', credError, {
+        organizationId: membership.organization_id,
+      })
+      return createErrorResponse(ErrorMessages.CREDENTIALS_SAVE_FAILED, correlationId)
+    }
 
     // Store listing count in usage_metrics for current month
     const now = new Date()
@@ -167,17 +230,33 @@ export async function connectHostaway(accountId: string, secretKey: string) {
         onConflict: 'organization_id,month_year'
       })
 
+    // Log metrics failure but don't fail the connection - warn user instead
+    let warning: string | undefined
     if (metricsError) {
-      console.error('Failed to store listing count:', metricsError)
-      // Don't fail the whole operation if metrics storage fails
+      const correlationId = logError('Failed to store usage metrics', metricsError, {
+        organizationId: membership.organization_id,
+        monthYear,
+        listingCount,
+      })
+      warning = `Connection successful, but usage metrics could not be saved. Reference: ${correlationId}`
     }
 
-    return { success: true, listingCount }
+    return createSuccessResponse({ listingCount }, warning)
   } catch (error) {
-    console.error('Hostaway connection error:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to connect to Hostaway'
+    const correlationId = logError('Hostaway connection failed', error, {
+      organizationId: membership.organization_id,
+    })
+
+    // Provide specific error messages based on error type
+    if (error instanceof Error) {
+      if (error.message.includes('authentication failed')) {
+        return createErrorResponse(ErrorMessages.HOSTAWAY_AUTH_FAILED, correlationId)
+      }
+      if (error.message.includes('Failed to fetch')) {
+        return createErrorResponse(ErrorMessages.HOSTAWAY_CONNECTION_FAILED, correlationId)
+      }
     }
+
+    return createErrorResponse(ErrorMessages.HOSTAWAY_CONNECTION_FAILED, correlationId)
   }
 }
