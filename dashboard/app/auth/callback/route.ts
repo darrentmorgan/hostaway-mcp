@@ -27,15 +27,30 @@ export async function GET(request: Request) {
     // Create organization for new users (T020)
     if (data.user) {
       // Check if organization already exists
-      const { data: existing } = await supabase
+      const { data: existing, error: memberError } = await supabase
         .from('organization_members')
         .select('organization_id')
         .eq('user_id', data.user.id)
         .single()
 
+      if (memberError && memberError.code !== 'PGRST116') {
+        // PGRST116 = no rows returned, which is expected for new users
+        console.error('Error checking organization membership:', memberError)
+        return NextResponse.redirect(
+          new URL(`/login?error=${encodeURIComponent('Failed to verify organization membership')}`, requestUrl.origin)
+        )
+      }
+
       if (!existing) {
         // Create organization for new user
-        await createOrganization(data.user.id, data.user.email!)
+        try {
+          await createOrganization(data.user.id, data.user.email!)
+        } catch (orgError) {
+          console.error('Error creating organization:', orgError)
+          return NextResponse.redirect(
+            new URL(`/login?error=${encodeURIComponent('Failed to create organization')}`, requestUrl.origin)
+          )
+        }
       }
     }
   }

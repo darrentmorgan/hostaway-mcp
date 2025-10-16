@@ -50,7 +50,7 @@ eggs/
 .eggs/
 *.egg
 *.whl
-uv.lock
+# uv.lock  # IMPORTANT: Keep uv.lock for reproducible Docker builds
 
 # Node.js
 node_modules/

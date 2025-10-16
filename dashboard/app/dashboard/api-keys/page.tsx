@@ -37,6 +37,7 @@ export default async function ApiKeysPage() {
 
   if (keysError) {
     console.error('Error fetching API keys:', keysError)
+    throw new Error('Failed to load API keys')
   }
 
   const keys = apiKeys || []
