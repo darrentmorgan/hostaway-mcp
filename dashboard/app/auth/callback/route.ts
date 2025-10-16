@@ -42,13 +42,25 @@ export async function GET(request: Request) {
       }
 
       if (!existing) {
+        // Validate email exists
+        if (!data.user.email) {
+          console.error('User authenticated without email:', data.user.id)
+          // Sign out user to prevent broken state
+          await supabase.auth.signOut()
+          return NextResponse.redirect(
+            new URL(`/signup?error=${encodeURIComponent('Email address is required to create an account.')}`, requestUrl.origin)
+          )
+        }
+
         // Create organization for new user
         try {
-          await createOrganization(data.user.id, data.user.email!)
+          await createOrganization(data.user.id, data.user.email)
         } catch (orgError) {
-          console.error('Error creating organization:', orgError)
+          console.error('Error creating organization for user:', data.user.id, orgError)
+          // Sign out user to prevent broken state (user without organization)
+          await supabase.auth.signOut()
           return NextResponse.redirect(
-            new URL(`/login?error=${encodeURIComponent('Failed to create organization')}`, requestUrl.origin)
+            new URL(`/signup?error=${encodeURIComponent('Account created but organization setup failed. Please try signing up again or contact support.')}`, requestUrl.origin)
           )
         }
       }
