@@ -4,18 +4,16 @@ Tests OAuth 2.0 token exchange, authentication flow, and automatic token refresh
 Following TDD: These tests should FAIL until implementation is complete.
 """
 
-import json
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import httpx
 import pytest
 from fastapi.testclient import TestClient
 
 from src.api.main import app
-from src.models.auth import AccessToken, TokenRefreshResponse
 from src.mcp.auth import TokenManager
 from src.mcp.config import HostawayConfig
+from src.models.auth import AccessToken
 
 
 @pytest.fixture
@@ -94,9 +92,7 @@ class TestOAuthTokenEndpoint:
         assert call_args[1]["headers"]["Content-Type"] == "application/x-www-form-urlencoded"
 
     @pytest.mark.asyncio
-    async def test_token_exchange_invalid_credentials(
-        self, test_config: HostawayConfig
-    ) -> None:
+    async def test_token_exchange_invalid_credentials(self, test_config: HostawayConfig) -> None:
         """Test token exchange with invalid credentials returns 401.
 
         Verifies:
@@ -127,9 +123,7 @@ class TestOAuthTokenEndpoint:
             await token_manager.get_token()
 
     @pytest.mark.asyncio
-    async def test_token_exchange_missing_parameters(
-        self, test_config: HostawayConfig
-    ) -> None:
+    async def test_token_exchange_missing_parameters(self, test_config: HostawayConfig) -> None:
         """Test token exchange with missing required parameters returns 400.
 
         Verifies:

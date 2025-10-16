@@ -132,20 +132,83 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
 app.add_middleware(CorrelationIdMiddleware)
 
 
+# MCP API Key Authentication Middleware
+class MCPAuthMiddleware(BaseHTTPMiddleware):
+    """Middleware to enforce API key authentication for MCP endpoints."""
+
+    async def dispatch(self, request: Request, call_next):  # type: ignore[no-untyped-def]
+        """Check API key for MCP endpoint access.
+
+        Args:
+            request: Incoming HTTP request
+            call_next: Next middleware/handler in chain
+
+        Returns:
+            HTTP response or 401 if authentication fails
+        """
+        # Protect both MCP and API endpoints that need authentication
+        if request.url.path.startswith("/mcp") or request.url.path.startswith("/api/"):
+            from src.mcp.security import verify_api_key
+
+            # Extract API key from header manually since we're not using dependency injection
+            x_api_key = request.headers.get("X-API-Key")
+
+            try:
+                # Call with extracted header value
+                await verify_api_key(request, x_api_key)
+            except Exception as e:
+                # Authentication failed, return error response
+                from fastapi.responses import JSONResponse
+
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": str(e)},
+                    headers={"WWW-Authenticate": "ApiKey"},
+                )
+
+        # Continue with request
+        response = await call_next(request)
+        return response
+
+
+from src.api.middleware.usage_tracking import UsageTrackingMiddleware
+
+app.add_middleware(UsageTrackingMiddleware)
+
+
+app.add_middleware(MCPAuthMiddleware)
+
+# Usage Tracking Middleware (T047: Track API usage for billing/metrics)
+
+
 @app.get("/health")
-async def health_check() -> dict[str, str]:
+async def health_check() -> dict:
     """Health check endpoint for monitoring and deployment verification.
 
     Returns:
-        Status message with timestamp and version for health monitoring
+        Status message with timestamp, version, and context protection metrics
     """
     from datetime import datetime
+
+    from src.services.telemetry_service import get_telemetry_service
+
+    telemetry = get_telemetry_service()
+    metrics = telemetry.get_metrics()
 
     return {
         "status": "healthy",
         "timestamp": datetime.now(UTC).isoformat(),
         "version": "0.1.0",
         "service": "hostaway-mcp",
+        "context_protection": {
+            "total_requests": metrics["total_requests"],
+            "pagination_adoption": metrics["pagination_adoption"],
+            "summarization_adoption": metrics["summarization_adoption"],
+            "avg_response_size_bytes": metrics["avg_response_size"],
+            "avg_latency_ms": metrics["avg_latency_ms"],
+            "oversized_events": metrics["oversized_events"],
+            "uptime_seconds": metrics["uptime_seconds"],
+        },
     }
 
 
@@ -184,6 +247,11 @@ app.include_router(bookings.router, prefix="/api", tags=["Bookings"])
 from src.api.routes import financial
 
 app.include_router(financial.router, prefix="/api", tags=["Financial"])
+
+# Register analytics routes (T057: AI-powered MCP operations)
+from src.api.routes import analytics
+
+app.include_router(analytics.router, prefix="/api", tags=["Analytics"])
 
 # Initialize MCP server (wraps the FastAPI app)
 # This must come AFTER all routes are registered

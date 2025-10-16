@@ -88,8 +88,25 @@ eggs/
 .eggs/
 *.egg
 *.whl
-uv.lock
+# uv.lock  # IMPORTANT: Keep uv.lock in version control for CI/CD reproducibility
 
 # OS
 .DS_Store
 Thumbs.db
+*.pem
+*.key
+*.crt
+*.p12
+*_rsa
+*_dsa
+*_ecdsa
+*_ed25519
+
+# Security sensitive files
+secrets-to-replace.txt
+clean-git-history.sh
+deploy_with_password.exp
+deploy-to-hostinger.sh
+production.env
+*.exp
+!deploy_with_password.exp.template

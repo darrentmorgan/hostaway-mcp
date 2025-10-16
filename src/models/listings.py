@@ -6,7 +6,6 @@ pricing information, availability, and both full and abbreviated listing details
 
 from datetime import date
 from decimal import Decimal
-from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field, HttpUrl
 
@@ -27,7 +26,7 @@ class PricingInfo(BaseModel):
         pattern=r"^[A-Z]{3}$",
     )
 
-    weekend_price: Optional[Decimal] = Field(
+    weekend_price: Decimal | None = Field(
         None,
         description="Weekend nightly rate (if different)",
         ge=0,
@@ -48,7 +47,7 @@ class PricingInfo(BaseModel):
         decimal_places=2,
     )
 
-    extra_guest_fee: Optional[Decimal] = Field(
+    extra_guest_fee: Decimal | None = Field(
         None,
         description="Fee per additional guest beyond base capacity",
         ge=0,
@@ -84,22 +83,22 @@ class AvailabilityInfo(BaseModel):
         description="Whether property is currently available for booking",
     )
 
-    available_from: Optional[date] = Field(
+    available_from: date | None = Field(
         None,
         description="Date when property becomes available",
     )
 
-    blocked_dates: List[date] = Field(
+    blocked_dates: list[date] = Field(
         default_factory=list,
         description="Dates when property is unavailable",
     )
 
-    booked_dates: List[date] = Field(
+    booked_dates: list[date] = Field(
         default_factory=list,
         description="Dates with existing reservations",
     )
 
-    calendar_notes: Optional[str] = Field(
+    calendar_notes: str | None = Field(
         None,
         description="Notes about availability or scheduling",
         max_length=500,
@@ -151,7 +150,7 @@ class Listing(BaseModel):
         max_length=100,
     )
 
-    state: Optional[str] = Field(
+    state: str | None = Field(
         None,
         description="State/province",
         max_length=100,
@@ -164,13 +163,13 @@ class Listing(BaseModel):
         max_length=100,
     )
 
-    postal_code: Optional[str] = Field(
+    postal_code: str | None = Field(
         None,
         description="Postal/ZIP code",
         max_length=20,
     )
 
-    latitude: Optional[Decimal] = Field(
+    latitude: Decimal | None = Field(
         None,
         description="GPS latitude",
         ge=-90,
@@ -178,7 +177,7 @@ class Listing(BaseModel):
         decimal_places=6,
     )
 
-    longitude: Optional[Decimal] = Field(
+    longitude: Decimal | None = Field(
         None,
         description="GPS longitude",
         ge=-180,
@@ -228,7 +227,7 @@ class Listing(BaseModel):
         max_length=100,
     )
 
-    amenities: List[str] = Field(
+    amenities: list[str] = Field(
         default_factory=list,
         description="List of amenities (WiFi, parking, pool, etc.)",
     )
@@ -249,24 +248,24 @@ class Listing(BaseModel):
         max_length=100,
     )
 
-    check_in_time: Optional[str] = Field(
+    check_in_time: str | None = Field(
         None,
         description="Check-in time (e.g., '15:00')",
         pattern=r"^\d{2}:\d{2}$",
     )
 
-    check_out_time: Optional[str] = Field(
+    check_out_time: str | None = Field(
         None,
         description="Check-out time (e.g., '11:00')",
         pattern=r"^\d{2}:\d{2}$",
     )
 
-    images: List[HttpUrl] = Field(
+    images: list[HttpUrl] = Field(
         default_factory=list,
         description="URLs to property images",
     )
 
-    channel_ids: Dict[str, str] = Field(
+    channel_ids: dict[str, str] = Field(
         default_factory=dict,
         description="External platform listing IDs (airbnb, vrbo, booking_com)",
     )
@@ -276,7 +275,7 @@ class Listing(BaseModel):
         description="Whether listing is active and bookable",
     )
 
-    house_rules: Optional[str] = Field(
+    house_rules: str | None = Field(
         None,
         description="Property-specific rules for guests",
         max_length=2000,
@@ -346,7 +345,7 @@ class ListingSummary(BaseModel):
         description="City name",
     )
 
-    state: Optional[str] = Field(
+    state: str | None = Field(
         None,
         description="State/province",
     )
@@ -387,7 +386,7 @@ class ListingSummary(BaseModel):
         description="Type of property",
     )
 
-    thumbnail_url: Optional[HttpUrl] = Field(
+    thumbnail_url: HttpUrl | None = Field(
         None,
         description="URL to primary property image",
     )

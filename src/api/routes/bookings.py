@@ -4,13 +4,13 @@ Provides endpoints to search and retrieve booking/reservation information.
 These endpoints are automatically exposed as MCP tools via FastAPI-MCP.
 """
 
-from typing import List, Optional
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from src.mcp.auth import get_authenticated_client
+from src.models.pagination import PageMetadata, PaginatedResponse
 from src.services.hostaway_client import HostawayClient
+from src.utils.cursor_codec import decode_cursor, encode_cursor
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ router = APIRouter()
 class BookingsResponse(BaseModel):
     """Response model for bookings search."""
 
-    bookings: List[dict] = Field(..., description="List of bookings/reservations")
+    bookings: list[dict] = Field(..., description="List of bookings/reservations")
     count: int = Field(..., description="Total number of bookings returned")
     limit: int = Field(..., description="Page size limit")
     offset: int = Field(..., description="Pagination offset")
@@ -26,55 +26,57 @@ class BookingsResponse(BaseModel):
 
 @router.get(
     "/reservations",
-    response_model=BookingsResponse,
+    response_model=PaginatedResponse[dict],
     summary="Search bookings/reservations",
-    description="Search and filter bookings/reservations with various criteria",
+    description="Search and filter bookings/reservations with cursor-based pagination",
     tags=["Bookings"],
 )
 async def search_bookings(
-    listing_id: Optional[int] = Query(None, description="Filter by property ID"),
-    check_in_from: Optional[str] = Query(
+    listing_id: int | None = Query(None, description="Filter by property ID"),
+    check_in_from: str | None = Query(
         None,
         description="Filter bookings with check-in on or after this date (YYYY-MM-DD)",
         regex=r"^\d{4}-\d{2}-\d{2}$",
     ),
-    check_in_to: Optional[str] = Query(
+    check_in_to: str | None = Query(
         None,
         description="Filter bookings with check-in on or before this date (YYYY-MM-DD)",
         regex=r"^\d{4}-\d{2}-\d{2}$",
     ),
-    check_out_from: Optional[str] = Query(
+    check_out_from: str | None = Query(
         None,
         description="Filter bookings with check-out on or after this date (YYYY-MM-DD)",
         regex=r"^\d{4}-\d{2}-\d{2}$",
     ),
-    check_out_to: Optional[str] = Query(
+    check_out_to: str | None = Query(
         None,
         description="Filter bookings with check-out on or before this date (YYYY-MM-DD)",
         regex=r"^\d{4}-\d{2}-\d{2}$",
     ),
-    status: Optional[str] = Query(
+    status: str | None = Query(
         None,
         description="Filter by booking status (comma-separated for multiple: confirmed,pending)",
     ),
-    guest_email: Optional[str] = Query(None, description="Filter by guest email address"),
-    booking_source: Optional[str] = Query(
+    guest_email: str | None = Query(None, description="Filter by guest email address"),
+    booking_source: str | None = Query(
         None, description="Filter by booking channel (airbnb, vrbo, etc.)"
     ),
-    min_guests: Optional[int] = Query(
+    min_guests: int | None = Query(
         None, ge=1, description="Filter bookings with at least this many guests"
     ),
-    max_guests: Optional[int] = Query(
+    max_guests: int | None = Query(
         None, ge=1, description="Filter bookings with at most this many guests"
     ),
-    limit: int = Query(default=100, ge=1, le=1000, description="Maximum results to return"),
-    offset: int = Query(default=0, ge=0, description="Number of results to skip"),
+    limit: int = Query(default=100, ge=1, le=200, description="Maximum results per page"),
+    cursor: str | None = Query(None, description="Pagination cursor from previous response"),
     client: HostawayClient = Depends(get_authenticated_client),
-) -> BookingsResponse:
+) -> PaginatedResponse[dict]:
     """
-    Search and filter bookings/reservations.
+    Search and filter bookings/reservations with cursor-based pagination.
 
     This tool searches through bookings with various filter criteria.
+    Supports cursor-based pagination for efficient navigation through large result sets.
+
     Useful for:
     - Finding bookings for a specific date range
     - Checking reservations for a property
@@ -92,20 +94,44 @@ async def search_bookings(
         booking_source: Filter by booking channel (airbnb, vrbo, booking_com, direct)
         min_guests: Minimum number of guests
         max_guests: Maximum number of guests
-        limit: Maximum number of bookings to return (1-1000, default: 100)
-        offset: Number of bookings to skip for pagination (default: 0)
+        limit: Maximum number of bookings per page (1-200, default: 100)
+        cursor: Optional cursor from previous response for fetching next page
         client: Authenticated Hostaway client (injected)
 
     Returns:
-        BookingsResponse with bookings array and pagination metadata
+        PaginatedResponse with items, nextCursor, and metadata
 
     Raises:
-        HTTPException: If API request fails
+        HTTPException: If API request fails or cursor is invalid
+
+    Example:
+        # First page
+        GET /reservations?limit=100&status=confirmed
+        # Response includes nextCursor
+
+        # Next page
+        GET /reservations?cursor=eyJvZmZzZXQiOjEwMCwidHMiOjE2OTc0NTI4MDAuMH0=
     """
     try:
+        # Parse cursor if provided
+        offset = 0
+        if cursor:
+            try:
+                cursor_data = decode_cursor(cursor, secret="hostaway-cursor-secret")
+                offset = cursor_data["offset"]
+            except Exception as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid cursor: {e}",
+                )
+
+        # Clamp limit to max
+        page_size = min(limit, 200)
+
         # Convert comma-separated status string to list
         status_list = status.split(",") if status else None
 
+        # Search bookings via Hostaway API
         bookings = await client.search_bookings(
             listing_id=listing_id,
             check_in_from=check_in_from,
@@ -117,16 +143,35 @@ async def search_bookings(
             booking_source=booking_source,
             min_guests=min_guests,
             max_guests=max_guests,
-            limit=limit,
+            limit=page_size,
             offset=offset,
         )
 
-        return BookingsResponse(
-            bookings=bookings,
-            count=len(bookings),
-            limit=limit,
-            offset=offset,
+        # Estimate total and check for more pages
+        total_count = offset + len(bookings) + (100 if len(bookings) == page_size else 0)
+        has_more = len(bookings) == page_size
+
+        # Create next cursor if more pages available
+        next_cursor = None
+        if has_more:
+            next_cursor = encode_cursor(
+                offset=offset + len(bookings),
+                secret="hostaway-cursor-secret",
+            )
+
+        # Build paginated response
+        return PaginatedResponse[dict](
+            items=bookings,
+            nextCursor=next_cursor,
+            meta=PageMetadata(
+                totalCount=total_count,
+                pageSize=len(bookings),
+                hasMore=has_more,
+            ),
         )
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

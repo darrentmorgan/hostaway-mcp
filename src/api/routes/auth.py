@@ -7,9 +7,8 @@ These endpoints are automatically exposed as MCP tools via FastAPI-MCP.
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, SecretStr
 
-from src.mcp.auth import get_authenticated_client
+from src.mcp.auth import TokenManager, get_authenticated_client
 from src.mcp.config import HostawayConfig
-from src.mcp.auth import TokenManager
 from src.services.hostaway_client import HostawayClient
 
 router = APIRouter()
@@ -62,8 +61,7 @@ async def authenticate_hostaway(request: AuthenticateRequest) -> TokenResponse:
     # Create temporary config with provided credentials
     # Use env var aliases for constructor parameters
     config = HostawayConfig(
-        HOSTAWAY_ACCOUNT_ID=request.account_id,
-        HOSTAWAY_SECRET_KEY=SecretStr(request.secret_key)
+        HOSTAWAY_ACCOUNT_ID=request.account_id, HOSTAWAY_SECRET_KEY=SecretStr(request.secret_key)
     )
 
     # Create temporary token manager
@@ -74,9 +72,7 @@ async def authenticate_hostaway(request: AuthenticateRequest) -> TokenResponse:
         token = await token_manager.get_token()
 
         return TokenResponse(
-            access_token=token.access_token,
-            expires_in=token.expires_in,
-            token_type="Bearer"
+            access_token=token.access_token, expires_in=token.expires_in, token_type="Bearer"
         )
     finally:
         # Clean up resources
@@ -91,7 +87,7 @@ async def authenticate_hostaway(request: AuthenticateRequest) -> TokenResponse:
     tags=["Authentication"],
 )
 async def refresh_token(
-    client: HostawayClient = Depends(get_authenticated_client)
+    client: HostawayClient = Depends(get_authenticated_client),
 ) -> TokenResponse:
     """
     Manually refresh the Hostaway access token.
@@ -121,7 +117,5 @@ async def refresh_token(
     token = await client.token_manager.get_token()
 
     return TokenResponse(
-        access_token=token.access_token,
-        expires_in=token.expires_in,
-        token_type="Bearer"
+        access_token=token.access_token, expires_in=token.expires_in, token_type="Bearer"
     )

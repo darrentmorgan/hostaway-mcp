@@ -125,9 +125,7 @@ class TestHostawayConfig:
             with pytest.raises(ValidationError) as exc_info:
                 HostawayConfig()
 
-            assert "RATE_LIMIT_IP" in str(exc_info.value) or "rate_limit_ip" in str(
-                exc_info.value
-            )
+            assert "RATE_LIMIT_IP" in str(exc_info.value) or "rate_limit_ip" in str(exc_info.value)
 
     def test_config_validates_rate_limit_account_range(self) -> None:
         """Test that rate_limit_account must be between 1 and 20."""
@@ -157,10 +155,9 @@ class TestHostawayConfig:
             with pytest.raises(ValidationError) as exc_info:
                 HostawayConfig()
 
-            assert (
-                "MAX_CONCURRENT_REQUESTS" in str(exc_info.value)
-                or "max_concurrent_requests" in str(exc_info.value)
-            )
+            assert "MAX_CONCURRENT_REQUESTS" in str(
+                exc_info.value
+            ) or "max_concurrent_requests" in str(exc_info.value)
 
     def test_config_secret_key_is_protected(self) -> None:
         """Test that secret_key is a SecretStr and doesn't leak in repr."""

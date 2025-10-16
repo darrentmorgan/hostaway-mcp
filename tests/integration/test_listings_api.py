@@ -4,11 +4,11 @@ Tests property listing retrieval, details, and availability endpoints.
 Following TDD: These tests should FAIL until implementation is complete.
 """
 
-import httpx
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from src.mcp.auth import TokenManager
+import httpx
+import pytest
+
 from src.mcp.config import HostawayConfig
 
 
@@ -194,9 +194,7 @@ class TestListingDetailsEndpoint:
         # mock_client.get.assert_called_once_with(f"/listings/{listing_id}")
 
     @pytest.mark.asyncio
-    async def test_get_listing_not_found(
-        self, test_config: HostawayConfig
-    ) -> None:
+    async def test_get_listing_not_found(self, test_config: HostawayConfig) -> None:
         """Test GET /listings/{id} returns 404 for invalid ID.
 
         Verifies:

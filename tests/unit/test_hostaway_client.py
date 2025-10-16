@@ -4,16 +4,17 @@ Tests HTTP client functionality including connection pooling, retry logic,
 rate limiting integration, and token refresh on 401 errors.
 """
 
+from unittest.mock import patch
+
 import httpx
 import pytest
 import respx
-from unittest.mock import AsyncMock, Mock, patch
 
 from src.mcp.auth import TokenManager
 from src.mcp.config import HostawayConfig
+from src.models.auth import AccessToken
 from src.services.hostaway_client import HostawayClient
 from src.services.rate_limiter import RateLimiter
-from src.models.auth import AccessToken
 
 
 class TestHostawayClient:
@@ -176,9 +177,7 @@ class TestHostawayClient:
                 raise httpx.TimeoutException("Connection timeout")
             return httpx.Response(200, json={"success": True})
 
-        respx.get(f"{client.config.api_base_url}/listings").mock(
-            side_effect=timeout_then_success
-        )
+        respx.get(f"{client.config.api_base_url}/listings").mock(side_effect=timeout_then_success)
 
         result = await client.get("/listings")
 
@@ -257,9 +256,7 @@ class TestHostawayClient:
             # Second call succeeds
             return httpx.Response(200, json={"success": True})
 
-        respx.get(f"{config.api_base_url}/listings").mock(
-            side_effect=unauthorized_then_success
-        )
+        respx.get(f"{config.api_base_url}/listings").mock(side_effect=unauthorized_then_success)
 
         # Mock token refresh
         respx.post(f"{config.api_base_url}/accessTokens").mock(
@@ -302,9 +299,7 @@ class TestHostawayClient:
             rate_limiter=rate_limiter,
         )
 
-        respx.get(f"{config.api_base_url}/listings").mock(
-            return_value=httpx.Response(200, json={})
-        )
+        respx.get(f"{config.api_base_url}/listings").mock(return_value=httpx.Response(200, json={}))
 
         # Make 2 requests - should succeed
         await client.get("/listings")
