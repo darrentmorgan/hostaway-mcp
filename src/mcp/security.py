@@ -8,7 +8,7 @@ import hashlib
 import os
 import secrets
 
-from fastapi import Header, HTTPException, Request, status
+from fastapi import HTTPException, Request, status
 from fastapi.security import APIKeyHeader
 
 from src.mcp.logging import get_logger
@@ -61,13 +61,13 @@ def get_supabase_client() -> Client:
 
 async def verify_api_key(
     request: Request,
-    x_api_key: str | None = Header(None, alias="X-API-Key"),
+    x_api_key: str | None = None,
 ) -> dict:
     """Verify API key from request header against Supabase database.
 
     Args:
         request: The incoming request
-        x_api_key: API key from X-API-Key header
+        x_api_key: API key from X-API-Key header (extracted by middleware)
 
     Returns:
         Dictionary containing organization_id and api_key_id
