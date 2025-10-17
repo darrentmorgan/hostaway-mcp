@@ -476,6 +476,79 @@ class HostawayClient:
         # Hostaway wraps result in a "result" field
         return response.get("result", {})
 
+    async def execute_batch(
+        self,
+        operations: list,  # List of async callables
+        operation_ids: list[str] | None = None,
+    ):  # type: ignore[no-untyped-def]
+        """Execute multiple operations and return partial success results.
+
+        Executes all operations independently, capturing successes and failures.
+        Returns a PartialFailureResponse containing both successful and failed results.
+
+        Example:
+            >>> operations = [
+            ...     lambda: client.get_listing(1),
+            ...     lambda: client.get_listing(999),  # May fail
+            ...     lambda: client.get_listing(3),
+            ... ]
+            >>> result = await client.execute_batch(operations)
+            >>> result.success_count  # 2 (listings 1 and 3)
+            >>> result.failure_count  # 1 (listing 999 not found)
+
+        Args:
+            operations: List of async callables to execute
+            operation_ids: Optional IDs for tracking each operation
+
+        Returns:
+            PartialFailureResponse with successful and failed operations
+
+        Raises:
+            No exceptions - all failures are captured in the response
+        """
+        from src.mcp.logging import get_logger
+        from src.models.errors import OperationResult, PartialFailureResponse
+
+        logger = get_logger(__name__)
+
+        if operation_ids is None:
+            operation_ids = [f"op_{i}" for i in range(len(operations))]
+
+        successful: list[OperationResult[Any]] = []
+        failed: list[OperationResult[Any]] = []
+
+        # Execute all operations, capturing individual results
+        for op_id, operation in zip(operation_ids, operations, strict=False):
+            try:
+                result = await operation()
+                successful.append(
+                    OperationResult[Any](
+                        success=True,
+                        data=result,
+                        operation_id=op_id,
+                    )
+                )
+            except Exception as e:
+                logger.warning(
+                    f"Batch operation {op_id} failed",
+                    extra={"operation_id": op_id, "error": str(e), "error_type": type(e).__name__},
+                )
+                failed.append(
+                    OperationResult[Any](
+                        success=False,
+                        error=str(e),
+                        operation_id=op_id,
+                    )
+                )
+
+        return PartialFailureResponse[Any](
+            successful=successful,
+            failed=failed,
+            total_count=len(operations),
+            success_count=len(successful),
+            failure_count=len(failed),
+        )
+
     async def aclose(self) -> None:
         """Close the HTTP client and cleanup resources.
 

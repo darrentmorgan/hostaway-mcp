@@ -68,11 +68,11 @@
 
 **Purpose**: Implement partial failure handling and error recovery patterns
 
-- [ ] T029a [P] [FOUND] Create PartialFailureResponse model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/errors.py` with successful/failed operation tracking
-- [ ] T029b [P] [FOUND] Add error recovery middleware to FastAPI app in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/main.py` for graceful degradation
-- [ ] T029c [FOUND] Implement batch operation handler in HostawayClient for partial success scenarios (depends on T029a)
-- [ ] T029d [P] [FOUND] Unit test for partial failure response model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/unit/test_errors.py`
-- [ ] T029e [P] [FOUND] Integration test for batch operations with mixed success/failure in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_error_handling.py`
+- [X] T029a [P] [FOUND] Create PartialFailureResponse model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/models/errors.py` with successful/failed operation tracking
+- [X] T029b [P] [FOUND] Add error recovery middleware to FastAPI app in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/src/api/main.py` for graceful degradation
+- [X] T029c [FOUND] Implement batch operation handler in HostawayClient for partial success scenarios (depends on T029a)
+- [X] T029d [P] [FOUND] Unit test for partial failure response model in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/unit/test_errors.py`
+- [X] T029e [P] [FOUND] Integration test for batch operations with mixed success/failure in `/Users/darrenmorgan/AI_Projects/hostaway-mcp/tests/integration/test_error_handling.py`
 
 ---
 
