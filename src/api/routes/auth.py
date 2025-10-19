@@ -72,7 +72,9 @@ async def authenticate_hostaway(request: AuthenticateRequest) -> TokenResponse:
         token = await token_manager.get_token()
 
         return TokenResponse(
-            access_token=token.access_token, expires_in=token.expires_in, token_type="Bearer"
+            access_token=token.access_token,
+            expires_in=token.expires_in,
+            token_type="Bearer",  # nosec B106 - OAuth2 standard
         )
     finally:
         # Clean up resources
@@ -117,5 +119,7 @@ async def refresh_token(
     token = await client.token_manager.get_token()
 
     return TokenResponse(
-        access_token=token.access_token, expires_in=token.expires_in, token_type="Bearer"
+        access_token=token.access_token,
+        expires_in=token.expires_in,
+        token_type="Bearer",  # nosec B106 - OAuth2 standard
     )

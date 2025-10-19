@@ -117,7 +117,9 @@ async def search_bookings(
         offset = 0
         if cursor:
             try:
-                cursor_data = decode_cursor(cursor, secret="hostaway-cursor-secret")
+                cursor_data = decode_cursor(
+                    cursor, secret=client.config.cursor_secret.get_secret_value()
+                )
                 offset = cursor_data["offset"]
             except Exception as e:
                 raise HTTPException(
@@ -156,7 +158,7 @@ async def search_bookings(
         if has_more:
             next_cursor = encode_cursor(
                 offset=offset + len(bookings),
-                secret="hostaway-cursor-secret",
+                secret=client.config.cursor_secret.get_secret_value(),
             )
 
         # Build paginated response

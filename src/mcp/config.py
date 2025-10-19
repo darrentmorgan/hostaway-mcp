@@ -21,6 +21,7 @@ class HostawayConfig(BaseSettings):
     - RATE_LIMIT_ACCOUNT: Account-based rate limit (default: 20 req/10s)
     - MAX_CONCURRENT_REQUESTS: Max concurrent requests (default: 10)
     - TOKEN_REFRESH_THRESHOLD_DAYS: Days before expiration to refresh token (default: 7)
+    - CURSOR_SECRET: Secret for cursor encoding/decoding (should be set in production)
     """
 
     model_config = SettingsConfigDict(
@@ -85,4 +86,10 @@ class HostawayConfig(BaseSettings):
         default=None,
         description="API key for MCP endpoint authentication (optional, but recommended for production)",
         alias="MCP_API_KEY",
+    )
+
+    cursor_secret: SecretStr = Field(
+        default="hostaway-cursor-secret-change-in-production",
+        description="Secret key for cursor encoding/decoding (should be set in production)",
+        alias="CURSOR_SECRET",
     )
