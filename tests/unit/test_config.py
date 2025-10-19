@@ -56,8 +56,8 @@ class TestHostawayConfig:
     def test_config_uses_default_rate_limits(self) -> None:
         """Test that config uses default rate limit values.
 
-        Note: This test loads from .env file, so values may differ from code defaults.
-        Testing actual configured values rather than hardcoded defaults.
+        Note: pydantic-settings reads from .env file even when environ is cleared,
+        so this test verifies .env values are loaded correctly.
         """
         env_vars = {
             "HOSTAWAY_ACCOUNT_ID": "test_account_123",
@@ -69,7 +69,7 @@ class TestHostawayConfig:
 
             assert config.rate_limit_ip == 15
             assert config.rate_limit_account == 20
-            # .env file sets this to 50 for production configuration
+            # .env file sets this to 50 (pydantic-settings loads from .env)
             assert config.max_concurrent_requests == 50
             assert config.token_refresh_threshold_days == 7
 

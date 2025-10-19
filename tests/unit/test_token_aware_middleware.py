@@ -44,7 +44,7 @@ class TestTokenAwareMiddleware:
         return mock_service
 
     @pytest.fixture
-    def app(self, mock_config_service, mock_summarization_service):
+    def app(self):
         """Create test application with middleware."""
 
         async def endpoint_small(request: Request):
@@ -74,6 +74,15 @@ class TestTokenAwareMiddleware:
             ]
         )
 
+        # Add middleware without patches - patches will be applied in each test
+        app.add_middleware(TokenAwareMiddleware)
+
+        return app
+
+    def test_small_response_passes_through(
+        self, app, mock_config_service, mock_summarization_service
+    ):
+        """Test small response passes through without summarization."""
         with patch(
             "src.api.middleware.token_aware_middleware.get_config_service",
             return_value=mock_config_service,
@@ -82,37 +91,39 @@ class TestTokenAwareMiddleware:
                 "src.api.middleware.token_aware_middleware.get_summarization_service",
                 return_value=mock_summarization_service,
             ):
-                app.add_middleware(TokenAwareMiddleware)
+                client = TestClient(app)
+                response = client.get("/api/small")
 
-        return app
-
-    def test_small_response_passes_through(self, app, mock_summarization_service):
-        """Test small response passes through without summarization."""
-        client = TestClient(app)
-        response = client.get("/api/small")
-
-        assert response.status_code == 200
-        assert response.json() == {"message": "small response"}
-        # Summarization should not be called
-        mock_summarization_service.summarize_object.assert_not_called()
+                assert response.status_code == 200
+                assert response.json() == {"message": "small response"}
+                # Summarization should not be called
+                mock_summarization_service.summarize_object.assert_not_called()
 
     @patch("src.api.middleware.token_aware_middleware.estimate_tokens")
     def test_large_response_triggers_summarization(
-        self, mock_estimate, app, mock_summarization_service
+        self, mock_estimate, app, mock_config_service, mock_summarization_service
     ):
         """Test large response triggers summarization."""
         # Mock token estimation to exceed threshold
         mock_estimate.return_value = 5000  # Exceeds 4000 threshold
 
-        client = TestClient(app)
-        response = client.get("/api/large")
+        with patch(
+            "src.api.middleware.token_aware_middleware.get_config_service",
+            return_value=mock_config_service,
+        ):
+            with patch(
+                "src.api.middleware.token_aware_middleware.get_summarization_service",
+                return_value=mock_summarization_service,
+            ):
+                client = TestClient(app)
+                response = client.get("/api/large")
 
-        assert response.status_code == 200
-        data = response.json()
-        # Check if response was summarized (has summary field)
-        assert "summary" in data or "data" in data  # Could be original or summarized
-        # Summarization should be called
-        mock_summarization_service.summarize_object.assert_called_once()
+                assert response.status_code == 200
+                data = response.json()
+                # Check if response was summarized (has summary field)
+                assert "summary" in data or "data" in data  # Could be original or summarized
+                # Summarization should be called
+                mock_summarization_service.summarize_object.assert_called_once()
 
     def test_non_json_response_passes_through(self, app):
         """Test non-JSON response is not processed."""
@@ -122,18 +133,30 @@ class TestTokenAwareMiddleware:
         assert response.status_code == 200
         assert response.text == "plain text"
 
-    def test_error_response_passes_through(self, app, mock_summarization_service):
+    def test_error_response_passes_through(
+        self, app, mock_config_service, mock_summarization_service
+    ):
         """Test error responses (4xx, 5xx) are not processed."""
-        client = TestClient(app)
-        response = client.get("/api/error")
+        with patch(
+            "src.api.middleware.token_aware_middleware.get_config_service",
+            return_value=mock_config_service,
+        ):
+            with patch(
+                "src.api.middleware.token_aware_middleware.get_summarization_service",
+                return_value=mock_summarization_service,
+            ):
+                client = TestClient(app)
+                response = client.get("/api/error")
 
-        assert response.status_code == 500
-        assert response.json() == {"error": "something went wrong"}
-        # Summarization should not be called for errors
-        mock_summarization_service.summarize_object.assert_not_called()
+                assert response.status_code == 500
+                assert response.json() == {"error": "something went wrong"}
+                # Summarization should not be called for errors
+                mock_summarization_service.summarize_object.assert_not_called()
 
     @patch("src.api.middleware.token_aware_middleware.estimate_tokens")
-    def test_paginated_response_skipped(self, mock_estimate, app, mock_summarization_service):
+    def test_paginated_response_skipped(
+        self, mock_estimate, app, mock_config_service, mock_summarization_service
+    ):
         """Test paginated response is skipped (not summarized)."""
         mock_estimate.return_value = 5000  # Would normally trigger summarization
 
@@ -145,19 +168,27 @@ class TestTokenAwareMiddleware:
 
         app.routes.append(Route("/api/paginated", endpoint_paginated))
 
-        client = TestClient(app)
-        response = client.get("/api/paginated")
+        with patch(
+            "src.api.middleware.token_aware_middleware.get_config_service",
+            return_value=mock_config_service,
+        ):
+            with patch(
+                "src.api.middleware.token_aware_middleware.get_summarization_service",
+                return_value=mock_summarization_service,
+            ):
+                client = TestClient(app)
+                response = client.get("/api/paginated")
 
-        assert response.status_code == 200
-        data = response.json()
-        # Should not be summarized because it's already paginated
-        assert "items" in data
-        assert "meta" in data
-        mock_summarization_service.summarize_object.assert_not_called()
+                assert response.status_code == 200
+                data = response.json()
+                # Should not be summarized because it's already paginated
+                assert "items" in data
+                assert "meta" in data
+                mock_summarization_service.summarize_object.assert_not_called()
 
     @patch("src.api.middleware.token_aware_middleware.estimate_tokens")
     def test_already_summarized_response_skipped(
-        self, mock_estimate, app, mock_summarization_service
+        self, mock_estimate, app, mock_config_service, mock_summarization_service
     ):
         """Test already summarized response is skipped."""
         mock_estimate.return_value = 5000
@@ -168,14 +199,22 @@ class TestTokenAwareMiddleware:
 
         app.routes.append(Route("/api/summary", endpoint_summary))
 
-        client = TestClient(app)
-        response = client.get("/api/summary")
+        with patch(
+            "src.api.middleware.token_aware_middleware.get_config_service",
+            return_value=mock_config_service,
+        ):
+            with patch(
+                "src.api.middleware.token_aware_middleware.get_summarization_service",
+                return_value=mock_summarization_service,
+            ):
+                client = TestClient(app)
+                response = client.get("/api/summary")
 
-        assert response.status_code == 200
-        data = response.json()
-        # Should not be re-summarized
-        assert "summary" in data
-        mock_summarization_service.summarize_object.assert_not_called()
+                assert response.status_code == 200
+                data = response.json()
+                # Should not be re-summarized
+                assert "summary" in data
+                mock_summarization_service.summarize_object.assert_not_called()
 
     def test_summarization_disabled_for_endpoint(
         self, mock_config_service, mock_summarization_service
