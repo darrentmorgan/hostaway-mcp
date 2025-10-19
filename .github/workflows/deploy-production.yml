@@ -177,12 +177,22 @@ jobs:
             echo "✅ Docker containers started"
             echo ""
 
+            # Check container status
+            echo "📊 Checking container status..."
+            docker ps -a | grep hostaway-mcp-server || echo "Container not found"
+            echo ""
+
             # ==========================================
             # PHASE 5: HEALTH CHECK (US1, US4)
             # ==========================================
             echo "🏥 Running health check..."
             echo "  ↳ Waiting 20 seconds for application startup..."
             sleep 20
+
+            # Show container logs for debugging
+            echo "📋 Container logs (last 20 lines):"
+            docker logs --tail 20 hostaway-mcp-server || echo "Could not fetch logs"
+            echo ""
 
             # FR-005: Verify deployment success via health endpoint
             if curl -f -s http://localhost:8080/health > /dev/null; then
