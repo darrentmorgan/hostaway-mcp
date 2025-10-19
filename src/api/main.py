@@ -22,7 +22,15 @@ from src.mcp.logging import (
 from src.mcp.server import initialize_mcp
 from src.services.hostaway_client import HostawayClient
 from src.services.rate_limiter import RateLimiter
-from src.testing.hostaway_mocks import is_test_mode
+
+# Try to import test mode check, skip if testing module not available (production)
+try:
+    from src.testing.hostaway_mocks import is_test_mode
+except (ImportError, ModuleNotFoundError):
+
+    def is_test_mode():
+        return False  # Always False in production
+
 
 logger = get_logger(__name__)
 
