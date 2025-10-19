@@ -81,12 +81,7 @@ jobs:
           HOSTAWAY_API_BASE_URL: https://api.hostaway.com/v1
           TEST_GROUP: ${{ matrix.test-group }}
         run: |
-          uv run pytest tests/${TEST_GROUP} -v --cov=src --cov-report=xml
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.xml
+          uv run pytest tests/${TEST_GROUP} -v
 
   # Coverage check
   coverage:
