@@ -1,5 +1,7 @@
 # Hostaway MCP Server
 
+[![Deploy to Production](https://github.com/darrenmorgan/hostaway-mcp/actions/workflows/deploy-production.yml/badge.svg)](https://github.com/darrenmorgan/hostaway-mcp/actions/workflows/deploy-production.yml)
+
 A production-ready FastAPI-based Model Context Protocol (MCP) server that exposes Hostaway property management operations as AI-callable tools.
 
 ## Overview

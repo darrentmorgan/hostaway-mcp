@@ -23,6 +23,15 @@ from src.mcp.server import initialize_mcp
 from src.services.hostaway_client import HostawayClient
 from src.services.rate_limiter import RateLimiter
 
+# Try to import test mode check, skip if testing module not available (production)
+try:
+    from src.testing.hostaway_mocks import is_test_mode
+except (ImportError, ModuleNotFoundError):
+
+    def is_test_mode():
+        return False  # Always False in production
+
+
 logger = get_logger(__name__)
 
 
@@ -50,6 +59,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         level=config.log_level if hasattr(config, "log_level") else "INFO",
         json_format=True,
     )
+
     logger.info("Starting Hostaway MCP Server", extra={"version": "0.1.0"})
 
     rate_limiter = RateLimiter(
@@ -58,11 +68,23 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         max_concurrent=config.max_concurrent_requests,
     )
     token_manager = TokenManager(config=config)
-    hostaway_client = HostawayClient(
-        config=config,
-        token_manager=token_manager,
-        rate_limiter=rate_limiter,
-    )
+
+    # Use mock client in test mode, real client otherwise
+    if is_test_mode():
+        from src.testing.mock_client import MockHostawayClient
+
+        logger.info("TEST MODE: Using MockHostawayClient with deterministic data")
+        hostaway_client = MockHostawayClient(
+            config=config,
+            token_manager=token_manager,
+            rate_limiter=rate_limiter,
+        )
+    else:
+        hostaway_client = HostawayClient(
+            config=config,
+            token_manager=token_manager,
+            rate_limiter=rate_limiter,
+        )
 
     logger.info("Hostaway MCP Server started successfully")
 
@@ -130,6 +152,57 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
 
 
 app.add_middleware(CorrelationIdMiddleware)
+
+
+# Error Recovery Middleware for graceful degradation
+class ErrorRecoveryMiddleware(BaseHTTPMiddleware):
+    """Middleware for graceful error recovery and partial success handling.
+
+    Catches unhandled exceptions and returns structured error responses,
+    logging the full context for debugging while preventing sensitive data leakage.
+    """
+
+    async def dispatch(self, request: Request, call_next):  # type: ignore[no-untyped-def]
+        """Handle request errors gracefully.
+
+        Args:
+            request: Incoming HTTP request
+            call_next: Next middleware/handler in chain
+
+        Returns:
+            HTTP response (normal or error response)
+        """
+        try:
+            response = await call_next(request)
+            return response
+        except Exception as e:
+            # Log the error with full context for debugging
+            logger.error(
+                "Unhandled error in request",
+                extra={
+                    "path": request.url.path,
+                    "method": request.method,
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "query_params": dict(request.query_params),
+                },
+                exc_info=True,  # Include stack trace in logs
+            )
+
+            # Return 500 with sanitized error details
+            from fastapi.responses import JSONResponse
+
+            return JSONResponse(
+                content={
+                    "detail": "Internal server error - operation may have partially completed",
+                    "error_type": type(e).__name__,
+                    "path": request.url.path,
+                },
+                status_code=500,
+            )
+
+
+app.add_middleware(ErrorRecoveryMiddleware)
 
 
 # MCP API Key Authentication Middleware

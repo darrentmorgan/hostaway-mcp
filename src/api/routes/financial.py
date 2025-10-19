@@ -4,7 +4,9 @@ Provides endpoints to retrieve financial reports and analytics.
 These endpoints are automatically exposed as MCP tools via FastAPI-MCP.
 """
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
+from nanoid import generate
 from pydantic import BaseModel, Field
 
 from src.mcp.auth import get_authenticated_client
@@ -109,5 +111,75 @@ async def get_financial_report(
         return report
     except HTTPException:
         raise
+    except httpx.HTTPStatusError as e:
+        # Handle Hostaway API errors with compact error hygiene
+        correlation_id = generate(size=10)
+
+        # Log full error server-side
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.error(
+            "Hostaway API error for financial reports",
+            extra={
+                "correlation_id": correlation_id,
+                "status_code": e.response.status_code,
+                "start_date": start_date,
+                "end_date": end_date,
+                "listing_id": listing_id,
+                "response_text": e.response.text[:500],  # First 500 chars only
+            },
+        )
+
+        # Return compact JSON error (no HTML)
+        if e.response.status_code == 404:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "Financial reports endpoint not available",
+                    "message": "The Hostaway API financial reports endpoint may not be enabled for your account",
+                    "correlation_id": correlation_id,
+                },
+            )
+        if e.response.status_code == 403:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "Permission denied",
+                    "message": "Your Hostaway account does not have permission to access financial reports",
+                    "correlation_id": correlation_id,
+                },
+            )
+        raise HTTPException(
+            status_code=502,
+            detail={
+                "error": "Hostaway API error",
+                "message": f"Failed to fetch financial reports (HTTP {e.response.status_code})",
+                "correlation_id": correlation_id,
+            },
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Catch-all for unexpected errors
+        correlation_id = generate(size=10)
+
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.exception(
+            "Unexpected error in financial reports",
+            extra={
+                "correlation_id": correlation_id,
+                "start_date": start_date,
+                "end_date": end_date,
+                "listing_id": listing_id,
+            },
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Internal server error",
+                "message": "An unexpected error occurred while fetching financial reports",
+                "correlation_id": correlation_id,
+            },
+        )
