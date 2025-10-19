@@ -15,10 +15,34 @@ jobs:
   auto-merge:
     name: Auto Merge on Passing Checks
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.draft == false) ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     steps:
-      - name: Enable auto-merge on PR
+      - name: Get PR number
+        id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          REPO: ${{ github.repository }}
         run: |
-          gh pr merge ${{ github.event.pull_request.number }} --auto --squash --delete-branch --repo ${{ github.repository }}
+          if [ "$EVENT_NAME" == "pull_request" ]; then
+            echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          elif [ "$EVENT_NAME" == "workflow_run" ]; then
+            # Get PR number from workflow_run event
+            PR_NUM=$(gh api "/repos/$REPO/pulls" \
+              --jq ".[] | select(.head.sha == \"$HEAD_SHA\") | .number" \
+              | head -1)
+            echo "number=$PR_NUM" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Enable auto-merge on PR
+        if: steps.pr.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh pr merge "$PR_NUMBER" --auto --squash --delete-branch --repo "$REPO"
