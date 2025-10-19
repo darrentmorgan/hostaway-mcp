@@ -89,6 +89,9 @@ jobs:
             # Navigate to deployment directory
             cd "$DEPLOY_PATH"
 
+            # Configure Git safe directory (prevents ownership errors)
+            git config --global --add safe.directory "$DEPLOY_PATH"
+
             # ==========================================
             # PHASE 1: BACKUP CURRENT VERSION (US4)
             # ==========================================
@@ -121,8 +124,8 @@ jobs:
             # PHASE 2: PULL LATEST CODE (US1)
             # ==========================================
             echo "📡 Pulling latest code from GitHub..."
-            git fetch origin main
-            git reset --hard origin/main
+            git fetch origin 001-we-need-to
+            git reset --hard origin/001-we-need-to
             echo "✅ Code updated to commit: $(git rev-parse --short HEAD)"
             echo ""
 
