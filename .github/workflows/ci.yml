@@ -76,8 +76,8 @@ jobs:
 
       - name: Run tests
         env:
-          HOSTAWAY_CLIENT_ID: test_client_id
-          HOSTAWAY_CLIENT_SECRET: test_client_secret
+          HOSTAWAY_ACCOUNT_ID: test_account_id
+          HOSTAWAY_SECRET_KEY: test_secret_key
           HOSTAWAY_API_BASE_URL: https://api.hostaway.com/v1
           TEST_GROUP: ${{ matrix.test-group }}
         run: |
@@ -111,8 +111,8 @@ jobs:
 
       - name: Run full test suite with coverage
         env:
-          HOSTAWAY_CLIENT_ID: test_client_id
-          HOSTAWAY_CLIENT_SECRET: test_client_secret
+          HOSTAWAY_ACCOUNT_ID: test_account_id
+          HOSTAWAY_SECRET_KEY: test_secret_key
           HOSTAWAY_API_BASE_URL: https://api.hostaway.com/v1
         run: |
           uv run pytest --cov=src --cov-report=term --cov-fail-under=80
