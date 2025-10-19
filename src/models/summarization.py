@@ -4,7 +4,7 @@ Defines Pydantic models for condensed responses with drill-down instructions.
 Based on data-model.md entity definitions.
 """
 
-from typing import Any, Generic, Literal, TypeVar
+from typing import Any, Literal, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -38,12 +38,12 @@ class SummaryMetadata(BaseModel):
     """
 
     kind: Literal["preview", "full"] = Field(description="Response type")
-    totalFields: int = Field(ge=0, description="Total fields in full object")
-    projectedFields: list[str] = Field(description="Fields in summary")
-    detailsAvailable: DetailsFetchInfo = Field(description="Full details fetch info")
+    totalFields: int = Field(ge=0, description="Total fields in full object")  # noqa: N815
+    projectedFields: list[str] = Field(description="Fields in summary")  # noqa: N815
+    detailsAvailable: DetailsFetchInfo = Field(description="Full details fetch info")  # noqa: N815
 
 
-class SummaryResponse(BaseModel, Generic[T]):
+class SummaryResponse[T](BaseModel):
     """Condensed response with essential fields.
 
     Generic wrapper for summarized objects with metadata explaining
@@ -144,9 +144,9 @@ class ContentChunk(BaseModel):
     """
 
     content: str = Field(description="Chunk content")
-    chunkIndex: int = Field(ge=0, description="Current chunk (0-indexed)")
-    totalChunks: int = Field(ge=1, description="Total chunks")
-    nextCursor: str | None = Field(
+    chunkIndex: int = Field(ge=0, description="Current chunk (0-indexed)")  # noqa: N815
+    totalChunks: int = Field(ge=1, description="Total chunks")  # noqa: N815
+    nextCursor: str | None = Field(  # noqa: N815
         default=None,
         description="Cursor for next chunk",
     )
@@ -163,10 +163,10 @@ class ChunkMetadata(BaseModel):
         bytesInChunk: Size of this chunk in bytes
     """
 
-    startLine: int = Field(ge=0, description="Start line")
-    endLine: int = Field(ge=0, description="End line (inclusive)")
-    totalLines: int = Field(ge=0, description="Total lines")
-    bytesInChunk: int = Field(ge=0, description="Chunk size in bytes")
+    startLine: int = Field(ge=0, description="Start line")  # noqa: N815
+    endLine: int = Field(ge=0, description="End line (inclusive)")  # noqa: N815
+    totalLines: int = Field(ge=0, description="Total lines")  # noqa: N815
+    bytesInChunk: int = Field(ge=0, description="Chunk size in bytes")  # noqa: N815
 
     def model_post_init(self, __context) -> None:
         """Validate line number constraints."""

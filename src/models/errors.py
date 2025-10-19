@@ -4,14 +4,14 @@ Provides models for handling partial success scenarios where some operations
 succeed while others fail in batch requests.
 """
 
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from pydantic import BaseModel, Field
 
 T = TypeVar("T")
 
 
-class OperationResult(BaseModel, Generic[T]):
+class OperationResult[T](BaseModel):
     """Result of a single operation in a batch.
 
     Tracks whether an operation succeeded or failed, along with either
@@ -24,7 +24,7 @@ class OperationResult(BaseModel, Generic[T]):
     operation_id: str | None = Field(None, description="Identifier for this operation")
 
 
-class PartialFailureResponse(BaseModel, Generic[T]):
+class PartialFailureResponse[T](BaseModel):
     """Response containing both successful and failed operations.
 
     Used for batch operations where some items may succeed while others fail.

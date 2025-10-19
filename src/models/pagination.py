@@ -4,7 +4,7 @@ Defines Pydantic models for paginated responses with cursor-based navigation.
 Based on data-model.md entity definitions.
 """
 
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -34,7 +34,7 @@ class PageMetadata(BaseModel):
         return v
 
 
-class PaginatedResponse(BaseModel, Generic[T]):
+class PaginatedResponse[T](BaseModel):
     """Generic paginated response wrapper.
 
     Wraps a list of items with pagination metadata and optional cursor
