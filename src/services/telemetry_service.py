@@ -140,9 +140,7 @@ class TelemetryService:
         total_latency = sum(r.latency_ms for r in self.records)
 
         # Count oversized events (>4000 tokens before optimization)
-        oversized_events = sum(
-            1 for r in self.records if r.estimated_tokens > 4000
-        )
+        oversized_events = sum(1 for r in self.records if r.estimated_tokens > 4000)
 
         return {
             "total_requests": total_requests,

@@ -47,9 +47,7 @@ def client(mock_hostaway_client, mocker):
 class TestListingsPagination:
     """Test pagination for listings endpoint."""
 
-    def test_listings_first_page_returns_paginated_response(
-        self, client, mock_hostaway_client
-    ):
+    def test_listings_first_page_returns_paginated_response(self, client, mock_hostaway_client):
         """Test that first page request returns PaginatedResponse structure."""
         # Configure mock to return 50 listings
         mock_hostaway_client.get_listings.return_value = [
@@ -92,9 +90,7 @@ class TestListingsPagination:
         assert cursor is not None
 
         # Use cursor to get second page
-        response2 = client.get(
-            f"/api/listings?cursor={cursor}", headers={"X-API-Key": "test-key"}
-        )
+        response2 = client.get(f"/api/listings?cursor={cursor}", headers={"X-API-Key": "test-key"})
 
         assert response2.status_code == 200
         data2 = response2.json()
@@ -139,9 +135,7 @@ class TestListingsPagination:
 class TestBookingsPagination:
     """Test pagination for bookings endpoint."""
 
-    def test_bookings_first_page_returns_paginated_response(
-        self, client, mock_hostaway_client
-    ):
+    def test_bookings_first_page_returns_paginated_response(self, client, mock_hostaway_client):
         """Test that first page request returns PaginatedResponse structure."""
         # Configure mock to return 100 bookings
         mock_hostaway_client.search_bookings.return_value = [
@@ -195,9 +189,7 @@ class TestBookingsPagination:
         mock_hostaway_client.search_bookings.return_value = [{"id": i} for i in range(100)]
 
         # Get first page
-        response = client.get(
-            "/api/reservations?limit=100", headers={"X-API-Key": "test-key"}
-        )
+        response = client.get("/api/reservations?limit=100", headers={"X-API-Key": "test-key"})
 
         assert response.status_code == 200
         data = response.json()

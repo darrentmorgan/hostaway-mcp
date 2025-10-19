@@ -9,6 +9,7 @@ Creates:
 
 import hashlib
 import uuid
+
 from supabase import create_client
 
 # Supabase local connection
@@ -28,11 +29,7 @@ def hash_api_key(api_key: str) -> str:
 
 def main():
     """Create test data in local Supabase."""
-    client = create_client(
-        SUPABASE_URL,
-        SUPABASE_KEY,
-        options={"auth": {"persistSession": False}}
-    )
+    client = create_client(SUPABASE_URL, SUPABASE_KEY, options={"auth": {"persistSession": False}})
 
     print("Setting up local test data...")
 

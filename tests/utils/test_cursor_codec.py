@@ -5,7 +5,6 @@ and error handling for malformed/tampered/expired cursors.
 """
 
 import time
-from unittest.mock import patch
 
 import pytest
 
@@ -29,7 +28,9 @@ class TestEncodeCursor:
         assert cursor
         assert isinstance(cursor, str)
         # Base64 URL-safe characters
-        assert all(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_=" for c in cursor)
+        assert all(
+            c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_=" for c in cursor
+        )
 
     def test_encode_cursor_with_all_parameters(self) -> None:
         """Test cursor encoding with all optional parameters."""
@@ -173,7 +174,7 @@ class TestDecodeCursor:
         payload = {"offset": 50}  # Missing "ts"
         payload_json = json.dumps(payload, separators=(",", ":"), sort_keys=True)
         signature = hmac.new(
-            "test-secret".encode("utf-8"),
+            b"test-secret",
             payload_json.encode("utf-8"),
             hashlib.sha256,
         ).hexdigest()
@@ -200,7 +201,7 @@ class TestDecodeCursor:
         payload = {"offset": -10, "ts": timestamp}
         payload_json = json.dumps(payload, separators=(",", ":"), sort_keys=True)
         signature = hmac.new(
-            "test-secret".encode("utf-8"),
+            b"test-secret",
             payload_json.encode("utf-8"),
             hashlib.sha256,
         ).hexdigest()
