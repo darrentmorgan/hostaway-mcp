@@ -52,10 +52,9 @@ def project_fields(obj: dict[str, Any], fields: list[str]) -> dict[str, Any]:
                             current[part] = {}
                         current = current[part]
                     current[final_key] = value[final_key]
-        else:
-            # Simple field
-            if field in obj:
-                result[field] = obj[field]
+        # Simple field
+        elif field in obj:
+            result[field] = obj[field]
 
     return result
 
