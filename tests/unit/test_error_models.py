@@ -3,8 +3,6 @@
 Tests OperationResult and PartialFailureResponse models for batch operations.
 """
 
-import pytest
-
 from src.models.errors import OperationResult, PartialFailureResponse
 
 

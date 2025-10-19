@@ -4,9 +4,8 @@ Tests cursor creation, validation, paginated response building, and query execut
 """
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
 
-from src.models.pagination import PageMetadata, PaginatedResponse, PaginationParams
+from src.models.pagination import PaginatedResponse, PaginationParams
 from src.services.pagination_service import PaginationService, get_pagination_service
 from src.utils.cursor_codec import CursorCodecError
 

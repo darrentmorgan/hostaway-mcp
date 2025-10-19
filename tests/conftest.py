@@ -14,7 +14,7 @@ from src.mcp.config import HostawayConfig
 from src.services.hostaway_client import HostawayClient
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def mock_supabase_client():
     """Create a mock Supabase client for usage tracking.
 
@@ -28,7 +28,7 @@ def mock_supabase_client():
     return mock_client
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(autouse=True)
 def mock_supabase_for_all_tests(mock_supabase_client, monkeypatch):
     """Automatically mock Supabase for all tests to prevent connection errors.
 

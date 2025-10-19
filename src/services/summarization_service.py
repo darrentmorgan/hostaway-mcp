@@ -46,10 +46,7 @@ class SummarizationService:
             SummaryResponse with projected fields and metadata
         """
         # Determine fields to project
-        if custom_fields:
-            fields = custom_fields
-        else:
-            fields = get_essential_fields(obj_type)
+        fields = custom_fields or get_essential_fields(obj_type)
 
         # Project fields
         summary = project_fields(obj, fields)
@@ -121,10 +118,7 @@ class SummarizationService:
         summarized_tokens = estimate_tokens_from_dict(summary)
 
         # Calculate token reduction
-        if original_tokens > 0:
-            token_reduction = 1.0 - (summarized_tokens / original_tokens)
-        else:
-            token_reduction = 0.0
+        token_reduction = 1.0 - summarized_tokens / original_tokens if original_tokens > 0 else 0.0
 
         return SummarizationResult(
             original_field_count=original_field_count,
@@ -168,10 +162,7 @@ class SummarizationService:
             >>> # Returns list of projected dicts (not SummaryResponse objects)
         """
         # Determine fields to project
-        if custom_fields:
-            fields = custom_fields
-        else:
-            fields = get_essential_fields(obj_type)
+        fields = custom_fields or get_essential_fields(obj_type)
 
         # Project fields for each item
         summarized_items = []

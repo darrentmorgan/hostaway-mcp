@@ -3,8 +3,7 @@
 Tests response optimization, token budget enforcement, and summarization triggering.
 """
 
-import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from starlette.applications import Starlette

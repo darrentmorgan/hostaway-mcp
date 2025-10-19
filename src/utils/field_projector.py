@@ -143,10 +143,9 @@ def estimate_field_count(obj: dict[str, Any]) -> int:
         count += 1
         if isinstance(value, dict):
             count += estimate_field_count(value)
-        elif isinstance(value, list):
+        elif isinstance(value, list) and value and isinstance(value[0], dict):
             # For lists, count fields in first item (assume homogeneous)
-            if value and isinstance(value[0], dict):
-                count += estimate_field_count(value[0])
+            count += estimate_field_count(value[0])
     return count
 
 

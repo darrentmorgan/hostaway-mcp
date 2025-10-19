@@ -17,6 +17,7 @@ from src.utils.cursor_codec import decode_cursor
 def mock_hostaway_client(mocker):
     """Create a mock Hostaway client."""
     from pydantic import SecretStr
+
     from src.mcp.config import HostawayConfig
 
     mock = mocker.MagicMock()

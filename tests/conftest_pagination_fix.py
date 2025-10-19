@@ -4,11 +4,12 @@ This provides fixtures that properly mock all dependencies needed for
 API endpoint tests including Supabase, authentication, and Hostaway client.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 
-@pytest.fixture(scope="function")
+
+@pytest.fixture
 def mock_supabase_client():
     """Create a mock Supabase client for usage tracking."""
     mock_client = MagicMock()
@@ -19,7 +20,7 @@ def mock_supabase_client():
     return mock_client
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(autouse=True)
 def mock_supabase_for_all_tests(mock_supabase_client):
     """Automatically mock Supabase for all tests to prevent connection errors."""
     with patch(
