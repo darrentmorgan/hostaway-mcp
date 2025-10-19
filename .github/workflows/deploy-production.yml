@@ -16,7 +16,7 @@ name: Deploy to Production
 on:
   push:
     branches:
-      - main  # Triggers on commits to main (post-PR merge)
+      - 001-we-need-to  # Triggers on commits to main branch (post-PR merge)
 
   workflow_dispatch:  # Allow manual triggering for emergency deployments
 
