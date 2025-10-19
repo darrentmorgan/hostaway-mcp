@@ -8,7 +8,7 @@ services:
     ports:
       - "8080:8080"  # Hostinger standard port
     env_file:
-      - /etc/hostaway-mcp/production.env  # Secure system location - contains all environment variables
+      - .env  # Environment variables from deployment workflow
     restart: always  # Always restart in production
     healthcheck:
       test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8080/health', timeout=5.0).raise_for_status()"]

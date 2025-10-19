@@ -181,8 +181,8 @@ jobs:
             # PHASE 5: HEALTH CHECK (US1, US4)
             # ==========================================
             echo "🏥 Running health check..."
-            echo "  ↳ Waiting 10 seconds for application startup..."
-            sleep 10
+            echo "  ↳ Waiting 20 seconds for application startup..."
+            sleep 20
 
             # FR-005: Verify deployment success via health endpoint
             if curl -f -s http://localhost:8080/health > /dev/null; then
