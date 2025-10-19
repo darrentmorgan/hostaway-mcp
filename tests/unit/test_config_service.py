@@ -3,15 +3,9 @@
 Tests configuration loading, hot-reload, file watching, and endpoint overrides.
 """
 
-import asyncio
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
 import pytest
 import yaml
 
-from src.models.token_budget import EndpointBudgetOverride, TokenBudgetConfig
 from src.services.config_service import ConfigService, get_config_service
 
 
@@ -44,7 +38,7 @@ class TestConfigService:
             }
         }
 
-        with open(config_file, "w") as f:
+        with config_file.open("w") as f:
             yaml.dump(config_data, f)
 
         service = ConfigService(config_path=config_file, auto_reload=False)
@@ -77,7 +71,7 @@ class TestConfigService:
             }
         }
 
-        with open(config_file, "w") as f:
+        with config_file.open("w") as f:
             yaml.dump(config_data, f)
 
         service = ConfigService(config_path=config_file, auto_reload=False)
@@ -108,7 +102,7 @@ class TestConfigService:
             }
         }
 
-        with open(config_file, "w") as f:
+        with config_file.open("w") as f:
             yaml.dump(config_data, f)
 
         service = ConfigService(config_path=config_file, auto_reload=False)
@@ -134,7 +128,7 @@ class TestConfigService:
             }
         }
 
-        with open(config_file, "w") as f:
+        with config_file.open("w") as f:
             yaml.dump(config_data, f)
 
         service = ConfigService(config_path=config_file, auto_reload=False)
@@ -180,7 +174,7 @@ class TestConfigService:
                 "output_token_threshold": 4000,
             }
         }
-        with open(config_file, "w") as f:
+        with config_file.open("w") as f:
             yaml.dump(config_data, f)
 
         service = ConfigService(config_path=config_file, auto_reload=False)
@@ -188,7 +182,7 @@ class TestConfigService:
 
         # Update config
         config_data["context_protection"]["output_token_threshold"] = 6000
-        with open(config_file, "w") as f:
+        with config_file.open("w") as f:
             yaml.dump(config_data, f)
 
         # Reload

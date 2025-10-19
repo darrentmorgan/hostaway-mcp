@@ -53,7 +53,7 @@ def analyze_coverage(json_path: Path) -> dict:
     if not json_path.exists():
         return {"error": "Coverage report not found"}
 
-    with open(json_path) as f:
+    with json_path.open() as f:
         data = json.load(f)
 
     totals = data.get("totals", {})

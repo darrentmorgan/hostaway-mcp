@@ -3,8 +3,6 @@
 Tests financial report calculation from reservation data.
 """
 
-from datetime import datetime
-
 import pytest
 
 from src.services.financial_calculator import FinancialCalculator
