@@ -30,7 +30,8 @@ def run_financial_tests() -> tuple[int, str]:
 
     result = subprocess.run(
         cmd,
-        check=False, capture_output=True,
+        check=False,
+        capture_output=True,
         text=True,
         cwd=Path(__file__).parent.parent,
     )

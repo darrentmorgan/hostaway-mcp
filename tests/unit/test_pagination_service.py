@@ -17,11 +17,7 @@ class TestPaginationService:
     @pytest.fixture
     def service(self):
         """Create pagination service instance."""
-        return PaginationService(
-            secret="test-secret-key",
-            default_page_size=50,
-            max_page_size=200
-        )
+        return PaginationService(secret="test-secret-key", default_page_size=50, max_page_size=200)
 
     def test_init(self):
         """Test service initialization."""
@@ -84,9 +80,7 @@ class TestPaginationService:
         original_filters = {"status": "confirmed"}
 
         cursor = service.create_cursor(
-            offset=original_offset,
-            order_by=original_order,
-            filters=original_filters
+            offset=original_offset, order_by=original_order, filters=original_filters
         )
 
         decoded = service.parse_cursor(cursor)
@@ -209,6 +203,7 @@ class TestPaginationService:
     @pytest.mark.asyncio
     async def test_paginate_query_first_page(self, service):
         """Test paginate_query for first page."""
+
         # Mock query function
         async def mock_query(offset: int, limit: int):
             return [{"id": i} for i in range(offset, offset + limit)]
@@ -229,6 +224,7 @@ class TestPaginationService:
     @pytest.mark.asyncio
     async def test_paginate_query_with_cursor(self, service):
         """Test paginate_query with existing cursor."""
+
         # Mock query function
         async def mock_query(offset: int, limit: int):
             return [{"id": i} for i in range(offset, offset + limit)]
@@ -250,6 +246,7 @@ class TestPaginationService:
     @pytest.mark.asyncio
     async def test_paginate_query_last_page(self, service):
         """Test paginate_query for last page."""
+
         # Mock query function
         async def mock_query(offset: int, limit: int):
             remaining = 150 - offset
@@ -299,6 +296,7 @@ class TestGetPaginationService:
         """Test that first call requires secret."""
         # Reset global singleton
         import src.services.pagination_service
+
         src.services.pagination_service._pagination_service = None
 
         with pytest.raises(ValueError, match="secret required"):
@@ -308,6 +306,7 @@ class TestGetPaginationService:
         """Test that get_pagination_service returns same instance."""
         # Reset global singleton
         import src.services.pagination_service
+
         src.services.pagination_service._pagination_service = None
 
         service1 = get_pagination_service(secret="test-secret")
@@ -319,12 +318,11 @@ class TestGetPaginationService:
         """Test singleton is initialized with correct parameters."""
         # Reset global singleton
         import src.services.pagination_service
+
         src.services.pagination_service._pagination_service = None
 
         service = get_pagination_service(
-            secret="my-secret",
-            default_page_size=75,
-            max_page_size=300
+            secret="my-secret", default_page_size=75, max_page_size=300
         )
 
         assert service.secret == "my-secret"

@@ -51,7 +51,7 @@ class TestSummarizationServiceComprehensive:
         assert "status" in result.summary
         assert "guestName" in result.summary
         assert "totalAmount" in result.summary
-        
+
         # Should not contain other fields
         assert "guestEmail" not in result.summary
         assert "checkIn" not in result.summary
@@ -87,7 +87,7 @@ class TestSummarizationServiceComprehensive:
         # Verify it used default fields (from get_essential_fields)
         assert "id" in result.summary
         assert "name" in result.summary
-        
+
         # Verify metadata
         assert result.meta.kind == "preview"
         assert result.meta.detailsAvailable.endpoint == "/api/listings/LIST789"

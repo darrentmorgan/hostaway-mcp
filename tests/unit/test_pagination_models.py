@@ -19,11 +19,7 @@ class TestPageMetadata:
 
     def test_create_page_metadata(self):
         """Test creating page metadata."""
-        metadata = PageMetadata(
-            totalCount=100,
-            pageSize=50,
-            hasMore=True
-        )
+        metadata = PageMetadata(totalCount=100, pageSize=50, hasMore=True)
 
         assert metadata.totalCount == 100
         assert metadata.pageSize == 50
@@ -31,22 +27,14 @@ class TestPageMetadata:
 
     def test_page_metadata_last_page(self):
         """Test page metadata for last page."""
-        metadata = PageMetadata(
-            totalCount=100,
-            pageSize=50,
-            hasMore=False
-        )
+        metadata = PageMetadata(totalCount=100, pageSize=50, hasMore=False)
 
         assert metadata.hasMore is False
 
     def test_page_metadata_negative_total(self):
         """Test validation error for negative totalCount."""
         with pytest.raises(ValidationError):
-            PageMetadata(
-                totalCount=-10,
-                pageSize=50,
-                hasMore=False
-            )
+            PageMetadata(totalCount=-10, pageSize=50, hasMore=False)
 
 
 class TestPaginatedResponse:
@@ -57,11 +45,7 @@ class TestPaginatedResponse:
         response = PaginatedResponse[dict](
             items=[{"id": 1}, {"id": 2}, {"id": 3}],
             nextCursor="cursor-123",
-            meta=PageMetadata(
-                totalCount=100,
-                pageSize=3,
-                hasMore=True
-            )
+            meta=PageMetadata(totalCount=100, pageSize=3, hasMore=True),
         )
 
         assert len(response.items) == 3
@@ -73,11 +57,7 @@ class TestPaginatedResponse:
         response = PaginatedResponse[dict](
             items=[{"id": 1}, {"id": 2}],
             nextCursor=None,
-            meta=PageMetadata(
-                totalCount=2,
-                pageSize=2,
-                hasMore=False
-            )
+            meta=PageMetadata(totalCount=2, pageSize=2, hasMore=False),
         )
 
         assert response.nextCursor is None
@@ -86,13 +66,7 @@ class TestPaginatedResponse:
     def test_paginated_response_empty(self):
         """Test paginated response with no items."""
         response = PaginatedResponse[dict](
-            items=[],
-            nextCursor=None,
-            meta=PageMetadata(
-                totalCount=0,
-                pageSize=0,
-                hasMore=False
-            )
+            items=[], nextCursor=None, meta=PageMetadata(totalCount=0, pageSize=0, hasMore=False)
         )
 
         assert len(response.items) == 0
@@ -104,11 +78,7 @@ class TestPaginatedResponse:
         response1 = PaginatedResponse[dict](
             items=[{"id": 1}],
             nextCursor="cursor-123",
-            meta=PageMetadata(
-                totalCount=100,
-                pageSize=1,
-                hasMore=True
-            )
+            meta=PageMetadata(totalCount=100, pageSize=1, hasMore=True),
         )
         assert response1.nextCursor == "cursor-123"
 
@@ -116,11 +86,7 @@ class TestPaginatedResponse:
         response2 = PaginatedResponse[dict](
             items=[{"id": 1}],
             nextCursor=None,
-            meta=PageMetadata(
-                totalCount=1,
-                pageSize=1,
-                hasMore=False
-            )
+            meta=PageMetadata(totalCount=1, pageSize=1, hasMore=False),
         )
         assert response2.nextCursor is None
 
@@ -132,19 +98,12 @@ class TestPaginatedResponse:
             id: str
             name: str
 
-        items = [
-            Item(id="1", name="Item 1"),
-            Item(id="2", name="Item 2")
-        ]
+        items = [Item(id="1", name="Item 1"), Item(id="2", name="Item 2")]
 
         response = PaginatedResponse[Item](
             items=items,
             nextCursor="cursor-abc",
-            meta=PageMetadata(
-                totalCount=10,
-                pageSize=2,
-                hasMore=True
-            )
+            meta=PageMetadata(totalCount=10, pageSize=2, hasMore=True),
         )
 
         assert all(isinstance(item, Item) for item in response.items)
@@ -198,7 +157,7 @@ class TestCursorMetadata:
             timestamp=1234567890.0,
             order_by="created_desc",
             filters={"status": "confirmed"},
-            ttl_seconds=600
+            ttl_seconds=600,
         )
 
         assert metadata.cursor_id == "cursor-123"
@@ -210,11 +169,7 @@ class TestCursorMetadata:
 
     def test_cursor_metadata_defaults(self):
         """Test cursor metadata with default values."""
-        metadata = CursorMetadata(
-            cursor_id="cursor-456",
-            offset=0,
-            timestamp=1234567890.0
-        )
+        metadata = CursorMetadata(cursor_id="cursor-456", offset=0, timestamp=1234567890.0)
 
         assert metadata.order_by is None
         assert metadata.filters is None
@@ -223,8 +178,4 @@ class TestCursorMetadata:
     def test_cursor_metadata_negative_offset(self):
         """Test validation error for negative offset."""
         with pytest.raises(ValidationError):
-            CursorMetadata(
-                cursor_id="cursor-789",
-                offset=-10,
-                timestamp=1234567890.0
-            )
+            CursorMetadata(cursor_id="cursor-789", offset=-10, timestamp=1234567890.0)

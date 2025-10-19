@@ -22,6 +22,11 @@ def mock_supabase_client():
 @pytest.fixture(scope="function", autouse=True)
 def mock_supabase_for_all_tests(mock_supabase_client):
     """Automatically mock Supabase for all tests to prevent connection errors."""
-    with patch("src.services.supabase_client.get_supabase_client", return_value=mock_supabase_client):
-        with patch("src.api.middleware.usage_tracking.get_supabase_client", return_value=mock_supabase_client):
+    with patch(
+        "src.services.supabase_client.get_supabase_client", return_value=mock_supabase_client
+    ):
+        with patch(
+            "src.api.middleware.usage_tracking.get_supabase_client",
+            return_value=mock_supabase_client,
+        ):
             yield

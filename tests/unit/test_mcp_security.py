@@ -59,7 +59,9 @@ class TestApiKeyGeneration:
 class TestSupabaseClient:
     """Test suite for Supabase client initialization."""
 
-    @patch.dict(os.environ, {"SUPABASE_URL": "https://test.supabase.co", "SUPABASE_SERVICE_KEY": "test-key"})
+    @patch.dict(
+        os.environ, {"SUPABASE_URL": "https://test.supabase.co", "SUPABASE_SERVICE_KEY": "test-key"}
+    )
     @patch("src.mcp.security.create_client")
     def test_get_supabase_client_success(self, mock_create_client):
         """Test Supabase client creation with valid credentials."""
@@ -74,13 +76,17 @@ class TestSupabaseClient:
     @patch.dict(os.environ, {}, clear=True)
     def test_get_supabase_client_missing_url(self):
         """Test error when SUPABASE_URL missing."""
-        with pytest.raises(ValueError, match="SUPABASE_URL and SUPABASE_SERVICE_KEY must be configured"):
+        with pytest.raises(
+            ValueError, match="SUPABASE_URL and SUPABASE_SERVICE_KEY must be configured"
+        ):
             get_supabase_client()
 
     @patch.dict(os.environ, {"SUPABASE_URL": "https://test.supabase.co"}, clear=True)
     def test_get_supabase_client_missing_key(self):
         """Test error when SUPABASE_SERVICE_KEY missing."""
-        with pytest.raises(ValueError, match="SUPABASE_URL and SUPABASE_SERVICE_KEY must be configured"):
+        with pytest.raises(
+            ValueError, match="SUPABASE_URL and SUPABASE_SERVICE_KEY must be configured"
+        ):
             get_supabase_client()
 
 
@@ -203,7 +209,9 @@ class TestVerifyApiKey:
     async def test_verify_api_key_database_error(self, mock_get_client, mock_request):
         """Test handling of database errors."""
         mock_client = MagicMock()
-        mock_client.table().select().eq().eq().single().execute.side_effect = Exception("Database error")
+        mock_client.table().select().eq().eq().single().execute.side_effect = Exception(
+            "Database error"
+        )
         mock_get_client.return_value = mock_client
 
         with pytest.raises(HTTPException) as exc_info:

@@ -159,12 +159,42 @@ class TestFinancialCalculator:
     def test_revenue_statuses(self):
         """Test that only revenue statuses are included."""
         reservations = [
-            {"status": "confirmed", "arrivalDate": "2024-01-10", "departureDate": "2024-01-15", "totalPrice": 100},
-            {"status": "checked_in", "arrivalDate": "2024-01-10", "departureDate": "2024-01-15", "totalPrice": 100},
-            {"status": "checked_out", "arrivalDate": "2024-01-10", "departureDate": "2024-01-15", "totalPrice": 100},
-            {"status": "completed", "arrivalDate": "2024-01-10", "departureDate": "2024-01-15", "totalPrice": 100},
-            {"status": "pending", "arrivalDate": "2024-01-10", "departureDate": "2024-01-15", "totalPrice": 100},
-            {"status": "inquiry", "arrivalDate": "2024-01-10", "departureDate": "2024-01-15", "totalPrice": 100},
+            {
+                "status": "confirmed",
+                "arrivalDate": "2024-01-10",
+                "departureDate": "2024-01-15",
+                "totalPrice": 100,
+            },
+            {
+                "status": "checked_in",
+                "arrivalDate": "2024-01-10",
+                "departureDate": "2024-01-15",
+                "totalPrice": 100,
+            },
+            {
+                "status": "checked_out",
+                "arrivalDate": "2024-01-10",
+                "departureDate": "2024-01-15",
+                "totalPrice": 100,
+            },
+            {
+                "status": "completed",
+                "arrivalDate": "2024-01-10",
+                "departureDate": "2024-01-15",
+                "totalPrice": 100,
+            },
+            {
+                "status": "pending",
+                "arrivalDate": "2024-01-10",
+                "departureDate": "2024-01-15",
+                "totalPrice": 100,
+            },
+            {
+                "status": "inquiry",
+                "arrivalDate": "2024-01-10",
+                "departureDate": "2024-01-15",
+                "totalPrice": 100,
+            },
         ]
 
         report = FinancialCalculator.calculate_financial_report(

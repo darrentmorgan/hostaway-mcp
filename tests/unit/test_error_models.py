@@ -14,9 +14,7 @@ class TestOperationResult:
     def test_create_successful_operation(self):
         """Test creating successful operation result."""
         result = OperationResult[dict](
-            success=True,
-            data={"id": "123", "name": "Test"},
-            operation_id="op-1"
+            success=True, data={"id": "123", "name": "Test"}, operation_id="op-1"
         )
 
         assert result.success is True
@@ -27,9 +25,7 @@ class TestOperationResult:
     def test_create_failed_operation(self):
         """Test creating failed operation result."""
         result = OperationResult[dict](
-            success=False,
-            error="Resource not found",
-            operation_id="op-2"
+            success=False, error="Resource not found", operation_id="op-2"
         )
 
         assert result.success is False
@@ -39,10 +35,7 @@ class TestOperationResult:
 
     def test_operation_result_without_id(self):
         """Test operation result without operation_id."""
-        result = OperationResult[dict](
-            success=True,
-            data={"value": 42}
-        )
+        result = OperationResult[dict](success=True, data={"value": 42})
 
         assert result.success is True
         assert result.operation_id is None
@@ -56,10 +49,7 @@ class TestOperationResult:
             value: int
 
         item = Item(id="item-1", value=100)
-        result = OperationResult[Item](
-            success=True,
-            data=item
-        )
+        result = OperationResult[Item](success=True, data=item)
 
         assert result.success is True
         assert isinstance(result.data, Item)
@@ -79,7 +69,7 @@ class TestPartialFailureResponse:
             failed=[],
             total_count=2,
             success_count=2,
-            failure_count=0
+            failure_count=0,
         )
 
         assert response.total_count == 2
@@ -99,7 +89,7 @@ class TestPartialFailureResponse:
             ],
             total_count=2,
             success_count=0,
-            failure_count=2
+            failure_count=2,
         )
 
         assert response.total_count == 2
@@ -121,7 +111,7 @@ class TestPartialFailureResponse:
             ],
             total_count=3,
             success_count=2,
-            failure_count=1
+            failure_count=1,
         )
 
         assert response.total_count == 3
@@ -134,11 +124,7 @@ class TestPartialFailureResponse:
     def test_empty_response(self):
         """Test partial failure response with no operations."""
         response = PartialFailureResponse[dict](
-            successful=[],
-            failed=[],
-            total_count=0,
-            success_count=0,
-            failure_count=0
+            successful=[], failed=[], total_count=0, success_count=0, failure_count=0
         )
 
         assert response.total_count == 0
@@ -153,7 +139,7 @@ class TestPartialFailureResponse:
             failed=[OperationResult(success=False, error="Error")],
             total_count=1,
             success_count=0,
-            failure_count=1
+            failure_count=1,
         )
 
         assert response.has_failures is True
@@ -165,7 +151,7 @@ class TestPartialFailureResponse:
             failed=[],
             total_count=1,
             success_count=1,
-            failure_count=0
+            failure_count=0,
         )
 
         assert response.has_successes is True
@@ -178,7 +164,7 @@ class TestPartialFailureResponse:
             failed=[],
             total_count=1,
             success_count=1,
-            failure_count=0
+            failure_count=0,
         )
         assert response1.partial_success is False
 
@@ -188,7 +174,7 @@ class TestPartialFailureResponse:
             failed=[OperationResult(success=False, error="Error")],
             total_count=1,
             success_count=0,
-            failure_count=1
+            failure_count=1,
         )
         assert response2.partial_success is False
 
@@ -198,7 +184,7 @@ class TestPartialFailureResponse:
             failed=[OperationResult(success=False, error="Error")],
             total_count=2,
             success_count=1,
-            failure_count=1
+            failure_count=1,
         )
         assert response3.partial_success is True
 
@@ -214,7 +200,7 @@ class TestPartialFailureResponse:
             ],
             total_count=3,
             success_count=2,
-            failure_count=1
+            failure_count=1,
         )
 
         assert response.successful[0].operation_id == "op-1"

@@ -119,9 +119,9 @@ class TestConfigService:
 
         assert threshold == 8000  # Override
         assert hard_cap == 12000  # Default
-        assert page_size == 25    # Override
+        assert page_size == 25  # Override
         assert summarization is True  # Default
-        assert pagination is True     # Default
+        assert pagination is True  # Default
 
     def test_get_endpoint_config_without_override(self, tmp_path):
         """Test getting endpoint configuration without override (uses defaults)."""
@@ -235,6 +235,7 @@ class TestGetConfigService:
 
         # Reset global singleton
         import src.services.config_service
+
         src.services.config_service._config_service = None
 
         service1 = get_config_service(config_path=config_file, auto_reload=False)
@@ -249,6 +250,7 @@ class TestGetConfigService:
 
         # Reset global singleton
         import src.services.config_service
+
         src.services.config_service._config_service = None
 
         service = get_config_service(config_path=config_file, auto_reload=False)

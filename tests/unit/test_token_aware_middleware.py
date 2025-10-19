@@ -39,7 +39,7 @@ class TestTokenAwareMiddleware:
         mock_response = MagicMock()
         mock_response.model_dump.return_value = {
             "summary": "Summarized content",
-            "meta": {"summarized": True}
+            "meta": {"summarized": True},
         }
         mock_service.summarize_object.return_value = mock_response
         return mock_service
@@ -47,15 +47,18 @@ class TestTokenAwareMiddleware:
     @pytest.fixture
     def app(self, mock_config_service, mock_summarization_service):
         """Create test application with middleware."""
+
         async def endpoint_small(request: Request):
             return JSONResponse({"message": "small response"})
 
         async def endpoint_large(request: Request):
             # Large response that exceeds token budget
-            return JSONResponse({
-                "data": "x" * 50000,  # Large enough to exceed 4000 token threshold
-                "items": list(range(1000))
-            })
+            return JSONResponse(
+                {
+                    "data": "x" * 50000,  # Large enough to exceed 4000 token threshold
+                    "items": list(range(1000)),
+                }
+            )
 
         async def endpoint_non_json(request: Request):
             return Response(content="plain text", media_type="text/plain")
@@ -72,8 +75,14 @@ class TestTokenAwareMiddleware:
             ]
         )
 
-        with patch("src.api.middleware.token_aware_middleware.get_config_service", return_value=mock_config_service):
-            with patch("src.api.middleware.token_aware_middleware.get_summarization_service", return_value=mock_summarization_service):
+        with patch(
+            "src.api.middleware.token_aware_middleware.get_config_service",
+            return_value=mock_config_service,
+        ):
+            with patch(
+                "src.api.middleware.token_aware_middleware.get_summarization_service",
+                return_value=mock_summarization_service,
+            ):
                 app.add_middleware(TokenAwareMiddleware)
 
         return app
@@ -89,7 +98,9 @@ class TestTokenAwareMiddleware:
         mock_summarization_service.summarize_object.assert_not_called()
 
     @patch("src.api.middleware.token_aware_middleware.estimate_tokens")
-    def test_large_response_triggers_summarization(self, mock_estimate, app, mock_summarization_service):
+    def test_large_response_triggers_summarization(
+        self, mock_estimate, app, mock_summarization_service
+    ):
         """Test large response triggers summarization."""
         # Mock token estimation to exceed threshold
         mock_estimate.return_value = 5000  # Exceeds 4000 threshold
@@ -129,10 +140,9 @@ class TestTokenAwareMiddleware:
 
         # Create endpoint that returns paginated structure
         async def endpoint_paginated(request: Request):
-            return JSONResponse({
-                "items": [{"id": 1}, {"id": 2}],
-                "meta": {"totalCount": 100, "hasMore": True}
-            })
+            return JSONResponse(
+                {"items": [{"id": 1}, {"id": 2}], "meta": {"totalCount": 100, "hasMore": True}}
+            )
 
         app.routes.append(Route("/api/paginated", endpoint_paginated))
 
@@ -147,16 +157,15 @@ class TestTokenAwareMiddleware:
         mock_summarization_service.summarize_object.assert_not_called()
 
     @patch("src.api.middleware.token_aware_middleware.estimate_tokens")
-    def test_already_summarized_response_skipped(self, mock_estimate, app, mock_summarization_service):
+    def test_already_summarized_response_skipped(
+        self, mock_estimate, app, mock_summarization_service
+    ):
         """Test already summarized response is skipped."""
         mock_estimate.return_value = 5000
 
         # Create endpoint that returns summary structure
         async def endpoint_summary(request: Request):
-            return JSONResponse({
-                "summary": "Already summarized",
-                "meta": {"summarized": True}
-            })
+            return JSONResponse({"summary": "Already summarized", "meta": {"summarized": True}})
 
         app.routes.append(Route("/api/summary", endpoint_summary))
 
@@ -169,11 +178,17 @@ class TestTokenAwareMiddleware:
         assert "summary" in data
         mock_summarization_service.summarize_object.assert_not_called()
 
-    def test_summarization_disabled_for_endpoint(self, mock_config_service, mock_summarization_service):
+    def test_summarization_disabled_for_endpoint(
+        self, mock_config_service, mock_summarization_service
+    ):
         """Test summarization skipped when disabled for endpoint."""
         # Configure summarization as disabled
         mock_config_service.get_endpoint_config.return_value = (
-            4000, 12000, 50, False, True  # summarization_enabled=False
+            4000,
+            12000,
+            50,
+            False,
+            True,  # summarization_enabled=False
         )
 
         async def endpoint_large(request: Request):
@@ -181,9 +196,17 @@ class TestTokenAwareMiddleware:
 
         app = Starlette(routes=[Route("/api/test", endpoint_large)])
 
-        with patch("src.api.middleware.token_aware_middleware.get_config_service", return_value=mock_config_service):
-            with patch("src.api.middleware.token_aware_middleware.get_summarization_service", return_value=mock_summarization_service):
-                with patch("src.api.middleware.token_aware_middleware.estimate_tokens", return_value=5000):
+        with patch(
+            "src.api.middleware.token_aware_middleware.get_config_service",
+            return_value=mock_config_service,
+        ):
+            with patch(
+                "src.api.middleware.token_aware_middleware.get_summarization_service",
+                return_value=mock_summarization_service,
+            ):
+                with patch(
+                    "src.api.middleware.token_aware_middleware.estimate_tokens", return_value=5000
+                ):
                     app.add_middleware(TokenAwareMiddleware)
 
                     client = TestClient(app)
@@ -195,15 +218,16 @@ class TestTokenAwareMiddleware:
 
     def test_invalid_json_response_passes_through(self, mock_config_service):
         """Test invalid JSON response passes through unchanged."""
+
         async def endpoint_broken_json(request: Request):
-            return Response(
-                content=b"not valid json {{{",
-                media_type="application/json"
-            )
+            return Response(content=b"not valid json {{{", media_type="application/json")
 
         app = Starlette(routes=[Route("/api/broken", endpoint_broken_json)])
 
-        with patch("src.api.middleware.token_aware_middleware.get_config_service", return_value=mock_config_service):
+        with patch(
+            "src.api.middleware.token_aware_middleware.get_config_service",
+            return_value=mock_config_service,
+        ):
             app.add_middleware(TokenAwareMiddleware)
 
             client = TestClient(app)
@@ -214,7 +238,9 @@ class TestTokenAwareMiddleware:
             assert response.text == "not valid json {{{"
 
     @patch("src.api.middleware.token_aware_middleware.estimate_tokens")
-    def test_detect_object_type_booking(self, mock_estimate, mock_config_service, mock_summarization_service):
+    def test_detect_object_type_booking(
+        self, mock_estimate, mock_config_service, mock_summarization_service
+    ):
         """Test object type detection for booking endpoint."""
         mock_estimate.return_value = 5000
 
@@ -223,8 +249,14 @@ class TestTokenAwareMiddleware:
 
         app = Starlette(routes=[Route("/api/bookings/123", endpoint_booking)])
 
-        with patch("src.api.middleware.token_aware_middleware.get_config_service", return_value=mock_config_service):
-            with patch("src.api.middleware.token_aware_middleware.get_summarization_service", return_value=mock_summarization_service):
+        with patch(
+            "src.api.middleware.token_aware_middleware.get_config_service",
+            return_value=mock_config_service,
+        ):
+            with patch(
+                "src.api.middleware.token_aware_middleware.get_summarization_service",
+                return_value=mock_summarization_service,
+            ):
                 app.add_middleware(TokenAwareMiddleware)
 
                 client = TestClient(app)
@@ -235,7 +267,9 @@ class TestTokenAwareMiddleware:
                 assert call_args[1]["obj_type"] == "booking"
 
     @patch("src.api.middleware.token_aware_middleware.estimate_tokens")
-    def test_detect_object_type_listing(self, mock_estimate, mock_config_service, mock_summarization_service):
+    def test_detect_object_type_listing(
+        self, mock_estimate, mock_config_service, mock_summarization_service
+    ):
         """Test object type detection for listing endpoint."""
         mock_estimate.return_value = 5000
 
@@ -244,8 +278,14 @@ class TestTokenAwareMiddleware:
 
         app = Starlette(routes=[Route("/api/listings/456", endpoint_listing)])
 
-        with patch("src.api.middleware.token_aware_middleware.get_config_service", return_value=mock_config_service):
-            with patch("src.api.middleware.token_aware_middleware.get_summarization_service", return_value=mock_summarization_service):
+        with patch(
+            "src.api.middleware.token_aware_middleware.get_config_service",
+            return_value=mock_config_service,
+        ):
+            with patch(
+                "src.api.middleware.token_aware_middleware.get_summarization_service",
+                return_value=mock_summarization_service,
+            ):
                 app.add_middleware(TokenAwareMiddleware)
 
                 client = TestClient(app)
@@ -255,7 +295,9 @@ class TestTokenAwareMiddleware:
                 assert call_args[1]["obj_type"] == "listing"
 
     @patch("src.api.middleware.token_aware_middleware.estimate_tokens")
-    def test_detect_object_type_financial(self, mock_estimate, mock_config_service, mock_summarization_service):
+    def test_detect_object_type_financial(
+        self, mock_estimate, mock_config_service, mock_summarization_service
+    ):
         """Test object type detection for financial endpoint."""
         mock_estimate.return_value = 5000
 
@@ -264,8 +306,14 @@ class TestTokenAwareMiddleware:
 
         app = Starlette(routes=[Route("/api/financial/report", endpoint_financial)])
 
-        with patch("src.api.middleware.token_aware_middleware.get_config_service", return_value=mock_config_service):
-            with patch("src.api.middleware.token_aware_middleware.get_summarization_service", return_value=mock_summarization_service):
+        with patch(
+            "src.api.middleware.token_aware_middleware.get_config_service",
+            return_value=mock_config_service,
+        ):
+            with patch(
+                "src.api.middleware.token_aware_middleware.get_summarization_service",
+                return_value=mock_summarization_service,
+            ):
                 app.add_middleware(TokenAwareMiddleware)
 
                 client = TestClient(app)
@@ -275,7 +323,9 @@ class TestTokenAwareMiddleware:
                 assert call_args[1]["obj_type"] == "financial_transaction"
 
     @patch("src.api.middleware.token_aware_middleware.estimate_tokens")
-    def test_list_response_warning(self, mock_estimate, mock_config_service, mock_summarization_service, caplog):
+    def test_list_response_warning(
+        self, mock_estimate, mock_config_service, mock_summarization_service, caplog
+    ):
         """Test warning logged when list response received."""
         mock_estimate.return_value = 5000
 
@@ -284,8 +334,14 @@ class TestTokenAwareMiddleware:
 
         app = Starlette(routes=[Route("/api/items", endpoint_list)])
 
-        with patch("src.api.middleware.token_aware_middleware.get_config_service", return_value=mock_config_service):
-            with patch("src.api.middleware.token_aware_middleware.get_summarization_service", return_value=mock_summarization_service):
+        with patch(
+            "src.api.middleware.token_aware_middleware.get_config_service",
+            return_value=mock_config_service,
+        ):
+            with patch(
+                "src.api.middleware.token_aware_middleware.get_summarization_service",
+                return_value=mock_summarization_service,
+            ):
                 app.add_middleware(TokenAwareMiddleware)
 
                 client = TestClient(app)

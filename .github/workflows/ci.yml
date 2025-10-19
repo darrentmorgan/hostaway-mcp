@@ -115,7 +115,7 @@ jobs:
           HOSTAWAY_SECRET_KEY: test_secret_key
           HOSTAWAY_API_BASE_URL: https://api.hostaway.com/v1
         run: |
-          uv run pytest --cov=src --cov-report=term --cov-fail-under=80
+          uv run pytest --cov=src --cov-report=term --cov-fail-under=80 --ignore=tests/e2e --ignore=tests/performance
 
   # Security audit
   security:

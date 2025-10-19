@@ -37,8 +37,13 @@ def mock_supabase_for_all_tests(mock_supabase_client, monkeypatch):
     # Set cursor secret for pagination tests
     monkeypatch.setenv("CURSOR_SECRET", "test-cursor-secret-for-pagination")
 
-    with patch("src.services.supabase_client.get_supabase_client", return_value=mock_supabase_client):
-        with patch("src.api.middleware.usage_tracking.get_supabase_client", return_value=mock_supabase_client):
+    with patch(
+        "src.services.supabase_client.get_supabase_client", return_value=mock_supabase_client
+    ):
+        with patch(
+            "src.api.middleware.usage_tracking.get_supabase_client",
+            return_value=mock_supabase_client,
+        ):
             yield
 
 

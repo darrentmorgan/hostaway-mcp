@@ -22,10 +22,7 @@ class TestDetailsFetchInfo:
 
     def test_create_details_fetch_info(self):
         """Test creating DetailsFetchInfo with required fields."""
-        info = DetailsFetchInfo(
-            endpoint="/api/v1/bookings/123",
-            parameters={"fields": "all"}
-        )
+        info = DetailsFetchInfo(endpoint="/api/v1/bookings/123", parameters={"fields": "all"})
 
         assert info.endpoint == "/api/v1/bookings/123"
         assert info.parameters == {"fields": "all"}
@@ -47,7 +44,7 @@ class TestSummaryMetadata:
             kind="preview",
             totalFields=20,
             projectedFields=["id", "status", "guestName"],
-            detailsAvailable=DetailsFetchInfo(endpoint="/api/v1/bookings/123")
+            detailsAvailable=DetailsFetchInfo(endpoint="/api/v1/bookings/123"),
         )
 
         assert metadata.kind == "preview"
@@ -60,7 +57,7 @@ class TestSummaryMetadata:
             kind="full",
             totalFields=20,
             projectedFields=["id"] * 20,
-            detailsAvailable=DetailsFetchInfo(endpoint="/api/v1/bookings/123")
+            detailsAvailable=DetailsFetchInfo(endpoint="/api/v1/bookings/123"),
         )
 
         assert metadata.kind == "full"
@@ -72,7 +69,7 @@ class TestSummaryMetadata:
                 kind="preview",
                 totalFields=-5,
                 projectedFields=["id"],
-                detailsAvailable=DetailsFetchInfo(endpoint="/test")
+                detailsAvailable=DetailsFetchInfo(endpoint="/test"),
             )
 
 
@@ -82,20 +79,15 @@ class TestSummaryResponse:
     def test_create_summary_response(self):
         """Test creating summary response."""
         response = SummaryResponse[dict](
-            summary={
-                "id": "BK12345",
-                "status": "confirmed",
-                "guestName": "John Doe"
-            },
+            summary={"id": "BK12345", "status": "confirmed", "guestName": "John Doe"},
             meta=SummaryMetadata(
                 kind="preview",
                 totalFields=20,
                 projectedFields=["id", "status", "guestName"],
                 detailsAvailable=DetailsFetchInfo(
-                    endpoint="/api/v1/bookings/BK12345",
-                    parameters={"fields": "all"}
-                )
-            )
+                    endpoint="/api/v1/bookings/BK12345", parameters={"fields": "all"}
+                ),
+            ),
         )
 
         assert response.summary["id"] == "BK12345"
@@ -111,8 +103,8 @@ class TestSummaryResponse:
                 kind="preview",
                 totalFields=0,
                 projectedFields=[],
-                detailsAvailable=DetailsFetchInfo(endpoint="/api/test")
-            )
+                detailsAvailable=DetailsFetchInfo(endpoint="/api/test"),
+            ),
         )
 
         assert response.summary == {}
@@ -137,7 +129,7 @@ class TestSummarizationStrategy:
             strategy_type="field_projection",
             essential_fields=["id", "status", "name"],
             max_nested_depth=3,
-            preserve_structure=True
+            preserve_structure=True,
         )
 
         assert strategy.strategy_type == "field_projection"
@@ -147,8 +139,7 @@ class TestSummarizationStrategy:
     def test_create_strategy_extractive(self):
         """Test creating extractive strategy."""
         strategy = SummarizationStrategy(
-            strategy_type="extractive",
-            essential_fields=["summary", "highlights"]
+            strategy_type="extractive", essential_fields=["summary", "highlights"]
         )
 
         assert strategy.strategy_type == "extractive"
@@ -156,9 +147,7 @@ class TestSummarizationStrategy:
     def test_create_strategy_abstractive(self):
         """Test creating abstractive strategy."""
         strategy = SummarizationStrategy(
-            strategy_type="abstractive",
-            max_nested_depth=1,
-            preserve_structure=False
+            strategy_type="abstractive", max_nested_depth=1, preserve_structure=False
         )
 
         assert strategy.strategy_type == "abstractive"
@@ -181,7 +170,7 @@ class TestSummarizationResult:
             reduction_ratio=0.75,
             original_tokens=1000,
             summarized_tokens=250,
-            token_reduction=0.75
+            token_reduction=0.75,
         )
 
         assert result.original_field_count == 20
@@ -199,7 +188,7 @@ class TestSummarizationResult:
             reduction_ratio=0.0,
             original_tokens=500,
             summarized_tokens=500,
-            token_reduction=0.0
+            token_reduction=0.0,
         )
 
         assert result.reduction_ratio == 0.0
@@ -214,7 +203,7 @@ class TestSummarizationResult:
                 reduction_ratio=0.5,
                 original_tokens=100,
                 summarized_tokens=50,
-                token_reduction=0.5
+                token_reduction=0.5,
             )
 
     def test_summarization_result_invalid_ratio(self):
@@ -226,7 +215,7 @@ class TestSummarizationResult:
                 reduction_ratio=1.5,  # Invalid: > 1.0
                 original_tokens=100,
                 summarized_tokens=50,
-                token_reduction=0.5
+                token_reduction=0.5,
             )
 
 
@@ -235,12 +224,7 @@ class TestChunkMetadata:
 
     def test_create_chunk_metadata(self):
         """Test creating chunk metadata."""
-        metadata = ChunkMetadata(
-            startLine=0,
-            endLine=99,
-            totalLines=500,
-            bytesInChunk=4096
-        )
+        metadata = ChunkMetadata(startLine=0, endLine=99, totalLines=500, bytesInChunk=4096)
 
         assert metadata.startLine == 0
         assert metadata.endLine == 99
@@ -250,12 +234,7 @@ class TestChunkMetadata:
     def test_chunk_metadata_validation_end_before_start(self):
         """Test validation error when endLine < startLine."""
         with pytest.raises(ValidationError, match="endLine must be >= startLine"):
-            ChunkMetadata(
-                startLine=100,
-                endLine=50,
-                totalLines=500,
-                bytesInChunk=1024
-            )
+            ChunkMetadata(startLine=100, endLine=50, totalLines=500, bytesInChunk=1024)
 
     def test_chunk_metadata_validation_total_too_small(self):
         """Test validation error when totalLines <= endLine."""
@@ -264,17 +243,12 @@ class TestChunkMetadata:
                 startLine=0,
                 endLine=100,
                 totalLines=100,  # Should be > endLine
-                bytesInChunk=1024
+                bytesInChunk=1024,
             )
 
     def test_chunk_metadata_equal_start_end(self):
         """Test chunk metadata with equal start and end lines."""
-        metadata = ChunkMetadata(
-            startLine=50,
-            endLine=50,
-            totalLines=100,
-            bytesInChunk=100
-        )
+        metadata = ChunkMetadata(startLine=50, endLine=50, totalLines=100, bytesInChunk=100)
 
         assert metadata.startLine == metadata.endLine
 
@@ -289,12 +263,7 @@ class TestContentChunk:
             chunkIndex=0,
             totalChunks=5,
             nextCursor="cursor-for-chunk-2",
-            metadata=ChunkMetadata(
-                startLine=0,
-                endLine=99,
-                totalLines=500,
-                bytesInChunk=2048
-            )
+            metadata=ChunkMetadata(startLine=0, endLine=99, totalLines=500, bytesInChunk=2048),
         )
 
         assert chunk.content == "This is chunk 1 content..."
@@ -310,12 +279,7 @@ class TestContentChunk:
             chunkIndex=4,
             totalChunks=5,
             nextCursor=None,
-            metadata=ChunkMetadata(
-                startLine=400,
-                endLine=499,
-                totalLines=500,
-                bytesInChunk=1024
-            )
+            metadata=ChunkMetadata(startLine=400, endLine=499, totalLines=500, bytesInChunk=1024),
         )
 
         assert chunk.chunkIndex == 4
@@ -329,12 +293,7 @@ class TestContentChunk:
                 content="test",
                 chunkIndex=-1,
                 totalChunks=5,
-                metadata=ChunkMetadata(
-                    startLine=0,
-                    endLine=10,
-                    totalLines=100,
-                    bytesInChunk=100
-                )
+                metadata=ChunkMetadata(startLine=0, endLine=10, totalLines=100, bytesInChunk=100),
             )
 
     def test_content_chunk_zero_total(self):
@@ -344,12 +303,7 @@ class TestContentChunk:
                 content="test",
                 chunkIndex=0,
                 totalChunks=0,
-                metadata=ChunkMetadata(
-                    startLine=0,
-                    endLine=10,
-                    totalLines=100,
-                    bytesInChunk=100
-                )
+                metadata=ChunkMetadata(startLine=0, endLine=10, totalLines=100, bytesInChunk=100),
             )
 
     def test_content_chunk_empty_content(self):
@@ -358,12 +312,7 @@ class TestContentChunk:
             content="",
             chunkIndex=0,
             totalChunks=1,
-            metadata=ChunkMetadata(
-                startLine=0,
-                endLine=0,
-                totalLines=1,
-                bytesInChunk=0
-            )
+            metadata=ChunkMetadata(startLine=0, endLine=0, totalLines=1, bytesInChunk=0),
         )
 
         assert chunk.content == ""

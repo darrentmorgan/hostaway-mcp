@@ -28,11 +28,7 @@ class TestTokenBudget:
 
     def test_token_budget_custom_values(self):
         """Test creating token budget with custom values."""
-        budget = TokenBudget(
-            threshold=5000,
-            hard_cap=15000,
-            estimated_tokens=4500
-        )
+        budget = TokenBudget(threshold=5000, hard_cap=15000, estimated_tokens=4500)
 
         assert budget.threshold == 5000
         assert budget.hard_cap == 15000
@@ -106,7 +102,7 @@ class TestBudgetMetadata:
             estimated_tokens=6000,
             budget_ratio=1.5,
             action_taken="summarized",
-            reason="Response exceeded token threshold"
+            reason="Response exceeded token threshold",
         )
 
         assert metadata.threshold_used == 4000
@@ -122,7 +118,7 @@ class TestBudgetMetadata:
             estimated_tokens=2000,
             budget_ratio=0.5,
             action_taken="allowed",
-            reason="Response within budget"
+            reason="Response within budget",
         )
 
         assert metadata.action_taken == "allowed"
@@ -135,7 +131,7 @@ class TestBudgetMetadata:
             estimated_tokens=8000,
             budget_ratio=2.0,
             action_taken="paginated",
-            reason="List response split into pages"
+            reason="List response split into pages",
         )
 
         assert metadata.action_taken == "paginated"
@@ -150,7 +146,7 @@ class TestTokenEstimationResult:
             text_length=10000,
             estimated_tokens=2500,
             estimation_method="character-based",
-            overhead_tokens=200
+            overhead_tokens=200,
         )
 
         assert result.text_length == 10000
@@ -160,20 +156,13 @@ class TestTokenEstimationResult:
 
     def test_total_tokens_calculation(self):
         """Test total_tokens includes overhead."""
-        result = TokenEstimationResult(
-            text_length=8000,
-            estimated_tokens=2000,
-            overhead_tokens=300
-        )
+        result = TokenEstimationResult(text_length=8000, estimated_tokens=2000, overhead_tokens=300)
 
         assert result.total_tokens == 2300  # 2000 + 300
 
     def test_estimation_result_defaults(self):
         """Test estimation result with default values."""
-        result = TokenEstimationResult(
-            text_length=5000,
-            estimated_tokens=1250
-        )
+        result = TokenEstimationResult(text_length=5000, estimated_tokens=1250)
 
         assert result.estimation_method == "character-based"
         assert result.overhead_tokens == 200
@@ -181,11 +170,7 @@ class TestTokenEstimationResult:
 
     def test_estimation_result_zero_overhead(self):
         """Test estimation with zero overhead."""
-        result = TokenEstimationResult(
-            text_length=4000,
-            estimated_tokens=1000,
-            overhead_tokens=0
-        )
+        result = TokenEstimationResult(text_length=4000, estimated_tokens=1000, overhead_tokens=0)
 
         assert result.total_tokens == 1000
 
@@ -212,7 +197,7 @@ class TestTokenBudgetConfig:
             default_page_size=100,
             max_page_size=500,
             enable_summarization=False,
-            enable_pagination=True
+            enable_pagination=True,
         )
 
         assert config.output_token_threshold == 5000
@@ -223,19 +208,15 @@ class TestTokenBudgetConfig:
 
     def test_config_hard_cap_validation_error(self):
         """Test validation error when hard_cap < threshold."""
-        with pytest.raises(ValueError, match="hard_output_token_cap must be >= output_token_threshold"):
-            TokenBudgetConfig(
-                output_token_threshold=10000,
-                hard_output_token_cap=5000
-            )
+        with pytest.raises(
+            ValueError, match="hard_output_token_cap must be >= output_token_threshold"
+        ):
+            TokenBudgetConfig(output_token_threshold=10000, hard_output_token_cap=5000)
 
     def test_config_max_page_size_validation_error(self):
         """Test validation error when max_page_size < default_page_size."""
         with pytest.raises(ValueError, match="max_page_size must be >= default_page_size"):
-            TokenBudgetConfig(
-                default_page_size=100,
-                max_page_size=50
-            )
+            TokenBudgetConfig(default_page_size=100, max_page_size=50)
 
     def test_config_page_size_bounds(self):
         """Test page size boundary validation."""
@@ -272,7 +253,7 @@ class TestEndpointBudgetOverride:
             hard_cap=20000,
             page_size=25,
             summarization_enabled=False,
-            pagination_enabled=True
+            pagination_enabled=True,
         )
 
         assert override.endpoint_pattern == "/api/v1/listings"
@@ -284,10 +265,7 @@ class TestEndpointBudgetOverride:
 
     def test_create_override_partial_fields(self):
         """Test creating override with only some fields."""
-        override = EndpointBudgetOverride(
-            endpoint_pattern="/api/v1/bookings",
-            threshold=6000
-        )
+        override = EndpointBudgetOverride(endpoint_pattern="/api/v1/bookings", threshold=6000)
 
         assert override.endpoint_pattern == "/api/v1/bookings"
         assert override.threshold == 6000
@@ -298,10 +276,7 @@ class TestEndpointBudgetOverride:
 
     def test_override_threshold_only(self):
         """Test override with only threshold."""
-        override = EndpointBudgetOverride(
-            endpoint_pattern="/api/v1/financial",
-            threshold=10000
-        )
+        override = EndpointBudgetOverride(endpoint_pattern="/api/v1/financial", threshold=10000)
 
         assert override.threshold == 10000
         assert override.hard_cap is None
@@ -310,40 +285,26 @@ class TestEndpointBudgetOverride:
         """Test page size validation in override."""
         # page_size must be >= 1 and <= 200
         with pytest.raises(ValidationError):
-            EndpointBudgetOverride(
-                endpoint_pattern="/test",
-                page_size=0
-            )
+            EndpointBudgetOverride(endpoint_pattern="/test", page_size=0)
 
         with pytest.raises(ValidationError):
-            EndpointBudgetOverride(
-                endpoint_pattern="/test",
-                page_size=201
-            )
+            EndpointBudgetOverride(endpoint_pattern="/test", page_size=201)
 
     def test_override_negative_threshold(self):
         """Test validation error for negative threshold."""
         with pytest.raises(ValidationError):
-            EndpointBudgetOverride(
-                endpoint_pattern="/test",
-                threshold=-1000
-            )
+            EndpointBudgetOverride(endpoint_pattern="/test", threshold=-1000)
 
     def test_override_wildcard_pattern(self):
         """Test override with wildcard pattern."""
-        override = EndpointBudgetOverride(
-            endpoint_pattern="/api/v1/*",
-            threshold=5000
-        )
+        override = EndpointBudgetOverride(endpoint_pattern="/api/v1/*", threshold=5000)
 
         assert override.endpoint_pattern == "/api/v1/*"
 
     def test_override_boolean_flags(self):
         """Test override with boolean flags."""
         override = EndpointBudgetOverride(
-            endpoint_pattern="/api/test",
-            summarization_enabled=True,
-            pagination_enabled=False
+            endpoint_pattern="/api/test", summarization_enabled=True, pagination_enabled=False
         )
 
         assert override.summarization_enabled is True
