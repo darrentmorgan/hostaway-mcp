@@ -16,7 +16,7 @@ name: Deploy to Production
 on:
   push:
     branches:
-      - 001-we-need-to  # Triggers on commits to main branch (post-PR merge)
+      - main  # Triggers on commits to main branch (post-PR merge)
 
   workflow_dispatch:  # Allow manual triggering for emergency deployments
 
@@ -124,8 +124,8 @@ jobs:
             # PHASE 2: PULL LATEST CODE (US1)
             # ==========================================
             echo "📡 Pulling latest code from GitHub..."
-            git fetch origin 001-we-need-to
-            git reset --hard origin/001-we-need-to
+            git fetch origin main
+            git reset --hard origin/main
             echo "✅ Code updated to commit: $(git rev-parse --short HEAD)"
             echo ""
 
