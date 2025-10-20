@@ -248,6 +248,10 @@ from src.api.middleware.usage_tracking import UsageTrackingMiddleware
 
 app.add_middleware(UsageTrackingMiddleware)
 
+# Token-Aware Middleware for response optimization (prevents context window overflow)
+from src.api.middleware.token_aware_middleware import TokenAwareMiddleware
+
+app.add_middleware(TokenAwareMiddleware)
 
 app.add_middleware(MCPAuthMiddleware)
 
