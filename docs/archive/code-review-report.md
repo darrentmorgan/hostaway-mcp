@@ -59,13 +59,13 @@ def profit_margin(self) -> Decimal:
 # src/mcp/auth.py:91
 async def get_token(self) -> AccessToken:
     """Get a valid access token, refreshing if necessary.
-    
+
     Thread-safe token acquisition with automatic refresh logic.
     Returns cached token if still valid, otherwise refreshes.
-    
+
     Returns:
         Valid AccessToken with at least 7 days until expiration
-        
+
     Raises:
         httpx.HTTPStatusError: If token refresh fails
     """
@@ -76,7 +76,7 @@ async def get_token(self) -> AccessToken:
 # src/api/routes/bookings.py:24
 async def search_bookings(...) -> BookingsResponse:
     """Search and filter bookings/reservations.
-    
+
     Supports filtering by:
     - Property (listing_id)
     - Check-in/check-out dates
@@ -84,14 +84,14 @@ async def search_bookings(...) -> BookingsResponse:
     - Guest email
     - Booking source/channel
     - Guest count
-    
+
     All filters are optional and can be combined.
-    
+
     Args:
         listing_id: Filter by property ID
         check_in_from: Check-in on or after (YYYY-MM-DD)
         ...
-        
+
     Returns:
         BookingsResponse with matching bookings and pagination metadata
     """
@@ -133,7 +133,7 @@ except httpx.HTTPStatusError as e:
 try:
     start = datetime.strptime(start_date, "%Y-%m-%d").date()
     end = datetime.strptime(end_date, "%Y-%m-%d").date()
-    
+
     if end < start:
         raise HTTPException(
             status_code=400,
@@ -285,7 +285,7 @@ tests/
 1. **Coverage Below 80%**: Current 72.80%, target 80%
    - Impact: Moderate
    - Fix: Add integration tests for route handlers
-   
+
 2. **Deprecation Warnings**: FastAPI Query `regex` → `pattern`
    - Impact: Low (works, but deprecated)
    - Fix: Replace `regex=` with `pattern=` in route files
@@ -334,7 +334,7 @@ tests/
 3. **Document Test Markers**: Add test markers to pytest docs
 4. **Coverage Reports**: Include coverage reports in CI/CD artifacts
 
-### Long Term  
+### Long Term
 5. **Performance Benchmarks**: Establish baseline metrics and SLAs
 6. **Monitoring Integration**: Add APM (Application Performance Monitoring)
 7. **API Versioning**: Consider versioning strategy for breaking changes
