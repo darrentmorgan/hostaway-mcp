@@ -190,6 +190,55 @@ uv run mypy src/ tests/
 uv run bandit -r src/
 ```
 
+### Pre-Push Validation
+
+**IMPORTANT**: Always run pre-push checks before pushing to CI/CD to avoid build failures.
+
+```bash
+# Run all pre-push validation checks (recommended)
+make pre-push
+
+# Or run the script directly
+./scripts/pre-push-check.sh
+```
+
+The pre-push script validates:
+- ✅ **Formatting**: Ruff format check
+- ✅ **Linting**: Ruff lint check
+- ✅ **Tests**: Quick integration test run (no coverage)
+
+If all checks pass, you'll see:
+```
+✓ All pre-push checks passed!
+✓ Safe to push to CI/CD
+```
+
+If any check fails, fix the issues before pushing:
+```bash
+# Fix formatting
+make format
+
+# Fix linting issues
+make lint
+
+# Run tests to debug failures
+make test-integration
+```
+
+**Available Make Targets**:
+```bash
+make help              # Show all available targets
+make pre-push          # Run pre-push validation
+make format            # Format code with ruff
+make format-check      # Check formatting without changes
+make lint              # Run linter
+make test              # Run all tests with coverage
+make test-integration  # Run integration tests only
+make test-unit         # Run unit tests only
+make clean             # Remove build artifacts
+make install           # Install dependencies
+```
+
 ### Logging and Debugging
 
 The server uses structured JSON logging with correlation IDs:
