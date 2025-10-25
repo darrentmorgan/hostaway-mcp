@@ -1,0 +1,2 @@
+# Mock data generators
+# Contains functions to generate realistic test data (properties, bookings, financial reports, errors)

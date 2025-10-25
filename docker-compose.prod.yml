@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile.prod
     container_name: hostaway-mcp-server
     ports:
-      - "8080:8080"  # Hostinger standard port
+      - "8080:8080"  # Internal port only
     env_file:
       - .env  # Environment variables from deployment workflow
     restart: always  # Always restart in production
@@ -16,6 +16,34 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    networks:
+      - mcp-network
+
+  # Nginx Reverse Proxy with SSL
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    ports:
+      - "80:80"      # HTTP (redirects to HTTPS)
+      - "443:443"    # HTTPS
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+    restart: always
+    depends_on:
+      - hostaway-mcp
+    networks:
+      - mcp-network
+
+  # Certbot for SSL certificates
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     networks:
       - mcp-network
 
