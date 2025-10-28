@@ -5,12 +5,15 @@ and decrypted Hostaway credentials retrieval.
 """
 
 import hashlib
+import logging
 from typing import NamedTuple
 
 from fastapi import Header, HTTPException, status
 
 from src.services.credential_service import DecryptedCredentials
 from src.services.supabase_client import get_supabase_client
+
+logger = logging.getLogger(__name__)
 
 
 class OrganizationContext(NamedTuple):
@@ -177,9 +180,9 @@ async def get_organization_context(
             "update_api_key_last_used",
             {"key_hash": key_hash},
         ).execute()
-    except Exception:
+    except Exception as e:
         # Non-critical - log but don't fail request
-        pass
+        logger.warning(f"Failed to update API key last_used timestamp: {e!s}")
 
     return OrganizationContext(
         organization_id=organization_id,

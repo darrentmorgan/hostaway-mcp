@@ -6,8 +6,6 @@ Tests in-memory cursor storage with TTL, cleanup, and thread safety.
 import asyncio
 import time
 
-import pytest
-
 from src.services.cursor_storage import CursorStorage, get_cursor_storage
 
 
@@ -261,10 +259,7 @@ class TestCursorStorageMultipleCursors:
         """Test storing multiple independent cursors."""
         storage = CursorStorage()
 
-        cursors = {
-            f"cursor-{i}": {"offset": i * 50}
-            for i in range(10)
-        }
+        cursors = {f"cursor-{i}": {"offset": i * 50} for i in range(10)}
 
         # Store all cursors
         for cursor_id, data in cursors.items():

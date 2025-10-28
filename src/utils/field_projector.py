@@ -52,10 +52,9 @@ def project_fields(obj: dict[str, Any], fields: list[str]) -> dict[str, Any]:
                             current[part] = {}
                         current = current[part]
                     current[final_key] = value[final_key]
-        else:
-            # Simple field
-            if field in obj:
-                result[field] = obj[field]
+        # Simple field
+        elif field in obj:
+            result[field] = obj[field]
 
     return result
 
@@ -144,10 +143,9 @@ def estimate_field_count(obj: dict[str, Any]) -> int:
         count += 1
         if isinstance(value, dict):
             count += estimate_field_count(value)
-        elif isinstance(value, list):
+        elif isinstance(value, list) and value and isinstance(value[0], dict):
             # For lists, count fields in first item (assume homogeneous)
-            if value and isinstance(value[0], dict):
-                count += estimate_field_count(value[0])
+            count += estimate_field_count(value[0])
     return count
 
 

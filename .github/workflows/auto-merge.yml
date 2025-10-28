@@ -15,10 +15,46 @@ jobs:
   auto-merge:
     name: Auto Merge on Passing Checks
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.draft == false) ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'pull_request')
     steps:
-      - name: Enable auto-merge on PR
+      - name: Get PR number
+        id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          REPO: ${{ github.repository }}
         run: |
-          gh pr merge ${{ github.event.pull_request.number }} --auto --squash --delete-branch --repo ${{ github.repository }}
+          if [ "$EVENT_NAME" == "pull_request" ]; then
+            echo "📋 PR event detected: PR #$PR_NUMBER"
+            echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          elif [ "$EVENT_NAME" == "workflow_run" ]; then
+            # Get PR number from workflow_run event
+            echo "🔍 Searching for PR associated with commit $HEAD_SHA"
+            PR_NUM=$(gh api "/repos/$REPO/pulls" \
+              --jq ".[] | select(.head.sha == \"$HEAD_SHA\") | .number" \
+              | head -1)
+            if [ -n "$PR_NUM" ]; then
+              echo "✅ Found PR #$PR_NUM"
+              echo "number=$PR_NUM" >> $GITHUB_OUTPUT
+            else
+              echo "⚠️  No PR found for commit $HEAD_SHA"
+              echo "This is expected for direct pushes to main branch"
+            fi
+          fi
+
+      - name: Enable auto-merge on PR
+        if: steps.pr.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "🚀 Enabling auto-merge for PR #$PR_NUMBER"
+          gh pr merge "$PR_NUMBER" --auto --squash --delete-branch --repo "$REPO"
+          echo "✅ Auto-merge enabled - PR will merge automatically when all checks pass"

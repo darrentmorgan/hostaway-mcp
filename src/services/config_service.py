@@ -49,9 +49,9 @@ class ConfigFileHandler(FileSystemEventHandler):
 
         self._last_modified = current_time
 
-        # Schedule callback in event loop
+        # Schedule callback in event loop (fire-and-forget)
         try:
-            asyncio.create_task(self.callback())
+            _ = asyncio.create_task(self.callback())  # noqa: RUF006
         except RuntimeError:
             # No event loop running
             logger.warning("No event loop available for config reload")
@@ -105,7 +105,7 @@ class ConfigService:
         Performs atomic swap of config object on successful load.
         """
         try:
-            with open(self.config_path) as f:
+            with self.config_path.open() as f:
                 config_data = yaml.safe_load(f)
 
             if config_data is None:
@@ -115,9 +115,7 @@ class ConfigService:
             # Parse main config
             context_protection = config_data.get("context_protection", {})
             new_config = TokenBudgetConfig(
-                output_token_threshold=context_protection.get(
-                    "output_token_threshold", 4000
-                ),
+                output_token_threshold=context_protection.get("output_token_threshold", 4000),
                 hard_output_token_cap=context_protection.get("hard_output_token_cap", 12000),
                 default_page_size=context_protection.get("default_page_size", 50),
                 max_page_size=context_protection.get("max_page_size", 200),
@@ -204,15 +202,18 @@ class ConfigService:
 
         # Apply overrides or use defaults
         threshold = (
-            override.threshold if override and override.threshold is not None
+            override.threshold
+            if override and override.threshold is not None
             else self.config.output_token_threshold
         )
         hard_cap = (
-            override.hard_cap if override and override.hard_cap is not None
+            override.hard_cap
+            if override and override.hard_cap is not None
             else self.config.hard_output_token_cap
         )
         page_size = (
-            override.page_size if override and override.page_size is not None
+            override.page_size
+            if override and override.page_size is not None
             else self.config.default_page_size
         )
         summarization_enabled = (

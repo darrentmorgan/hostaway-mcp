@@ -231,13 +231,12 @@ class TokenAwareMiddleware(BaseHTTPMiddleware):
         # Simple heuristic based on path segments
         if "booking" in endpoint_path:
             return "booking"
-        elif "listing" in endpoint_path:
+        if "listing" in endpoint_path:
             return "listing"
-        elif "financial" in endpoint_path or "transaction" in endpoint_path:
+        if "financial" in endpoint_path or "transaction" in endpoint_path:
             return "financial_transaction"
-        elif "conversation" in endpoint_path or "message" in endpoint_path:
+        if "conversation" in endpoint_path or "message" in endpoint_path:
             return "conversation"
-        elif "review" in endpoint_path:
+        if "review" in endpoint_path:
             return "review"
-        else:
-            return "unknown"
+        return "unknown"

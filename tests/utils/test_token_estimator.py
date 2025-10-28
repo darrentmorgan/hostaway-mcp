@@ -182,7 +182,7 @@ class TestCheckTokenBudget:
         # Create text that's approximately 4000 tokens
         # 4000 tokens * 4 chars/token / 1.2 (safety margin) ≈ 13333 chars
         text = "x" * 13333
-        estimated, exceeds, ratio = check_token_budget(text, threshold=4000)
+        estimated, _exceeds, ratio = check_token_budget(text, threshold=4000)
 
         # Should be very close to 4000 tokens
         assert 3900 <= estimated <= 4100
@@ -192,7 +192,7 @@ class TestCheckTokenBudget:
     def test_check_token_budget_custom_threshold(self) -> None:
         """Test budget check with custom threshold."""
         text = "Hello" * 100
-        estimated, exceeds, ratio = check_token_budget(text, threshold=100)
+        estimated, exceeds, _ratio = check_token_budget(text, threshold=100)
 
         assert estimated > 100
         assert exceeds is True
@@ -200,7 +200,7 @@ class TestCheckTokenBudget:
     def test_check_token_budget_zero_threshold(self) -> None:
         """Test budget check with zero threshold."""
         text = "Hello"
-        estimated, exceeds, ratio = check_token_budget(text, threshold=0)
+        _estimated, exceeds, ratio = check_token_budget(text, threshold=0)
 
         assert exceeds is True
         assert ratio == 0.0  # Avoid division by zero

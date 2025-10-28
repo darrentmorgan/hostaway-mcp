@@ -3,9 +3,10 @@
 .gitignore
 .gitattributes
 
-# Documentation
-*.md
-README*
+# Documentation (exclude specific md files, but keep README.md for hatchling)
+CHANGELOG*.md
+CONTRIBUTING.md
+ARCHITECTURE.md
 LICENSE
 CHANGELOG*
 docs/

@@ -105,6 +105,49 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+# Custom 404 exception handler (Issue #008-US1: Return 404 for non-existent routes)
+# This must be registered BEFORE middleware to handle route matching failures
+# before authentication is checked
+@app.exception_handler(404)
+async def custom_404_handler(request: Request, exc: Exception) -> dict:
+    """Return 404 for non-existent routes without authentication check.
+
+    This handler ensures that non-existent routes return HTTP 404 instead of 401,
+    improving API consumer developer experience. Route existence should be checked
+    BEFORE authentication.
+
+    Args:
+        request: Incoming HTTP request
+        exc: Exception that triggered the handler (StarletteHTTPException)
+
+    Returns:
+        JSON response with 404 status and route path in error message
+    """
+    from fastapi.responses import JSONResponse
+
+    # Get correlation ID from request state (set by CorrelationIdMiddleware)
+    correlation_id = getattr(request.state, "correlation_id", "unknown")
+
+    # Build error response with route path
+    response_content = {
+        "detail": f"Route '{request.url.path}' not found",
+        "path": request.url.path,
+        "method": request.method,
+    }
+
+    # Create JSON response with 404 status
+    response = JSONResponse(
+        status_code=404,
+        content=response_content,
+    )
+
+    # Preserve correlation ID header for request tracing
+    response.headers["X-Correlation-ID"] = correlation_id
+
+    return response
+
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -204,10 +247,37 @@ class ErrorRecoveryMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(ErrorRecoveryMiddleware)
 
+# Rate Limiter Middleware (Issue #008-US2: Add rate limit visibility headers)
+from src.api.middleware.rate_limiter import RateLimiterMiddleware
+
+app.add_middleware(RateLimiterMiddleware, ip_limit=15, time_window=10)
+
 
 # MCP API Key Authentication Middleware
 class MCPAuthMiddleware(BaseHTTPMiddleware):
-    """Middleware to enforce API key authentication for MCP endpoints."""
+    """Middleware to enforce API key authentication for MCP endpoints.
+
+    ISSUE #008-US1 FIX: This middleware now checks route existence BEFORE
+    enforcing authentication, allowing 404 errors to be returned for
+    non-existent routes instead of 401.
+    """
+
+    def _route_exists(self, request: Request) -> bool:
+        """Check if a route exists in FastAPI's router.
+
+        Args:
+            request: Incoming HTTP request
+
+        Returns:
+            True if route exists, False otherwise
+        """
+        # Access FastAPI's router to check if route exists
+        for route in request.app.routes:
+            # Check if this route matches the request path and method
+            match, _ = route.matches(request.scope)
+            if match.name in ("full", "partial"):
+                return True
+        return False
 
     async def dispatch(self, request: Request, call_next):  # type: ignore[no-untyped-def]
         """Check API key for MCP endpoint access.
@@ -221,6 +291,16 @@ class MCPAuthMiddleware(BaseHTTPMiddleware):
         """
         # Protect both MCP and API endpoints that need authentication
         if request.url.path.startswith("/mcp") or request.url.path.startswith("/api/"):
+            # ISSUE #008-US1 FIX: Check if route exists BEFORE enforcing authentication
+            # This prevents 401 responses for non-existent routes
+            if not self._route_exists(request):
+                # Route doesn't exist - let it pass through to get proper 404 response
+                response = await call_next(request)
+                return response
+
+            # Route exists - enforce authentication
+            from fastapi import HTTPException
+
             from src.mcp.security import verify_api_key
 
             # Extract API key from header manually since we're not using dependency injection
@@ -229,17 +309,21 @@ class MCPAuthMiddleware(BaseHTTPMiddleware):
             try:
                 # Call with extracted header value
                 await verify_api_key(request, x_api_key)
-            except Exception as e:
-                # Authentication failed, return error response
+            except HTTPException as e:
+                # Authentication failed - verify_api_key raised HTTP exception
                 from fastapi.responses import JSONResponse
 
                 return JSONResponse(
-                    status_code=401,
-                    content={"detail": str(e)},
-                    headers={"WWW-Authenticate": "ApiKey"},
+                    status_code=e.status_code,
+                    content={"detail": e.detail},
+                    headers=e.headers or {},
                 )
 
-        # Continue with request
+            # Authentication passed - continue with request
+            response = await call_next(request)
+            return response
+
+        # Path doesn't require authentication - continue with request
         response = await call_next(request)
         return response
 
@@ -248,6 +332,10 @@ from src.api.middleware.usage_tracking import UsageTrackingMiddleware
 
 app.add_middleware(UsageTrackingMiddleware)
 
+# Token-Aware Middleware for response optimization (prevents context window overflow)
+from src.api.middleware.token_aware_middleware import TokenAwareMiddleware
+
+app.add_middleware(TokenAwareMiddleware)
 
 app.add_middleware(MCPAuthMiddleware)
 

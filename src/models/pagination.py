@@ -4,7 +4,7 @@ Defines Pydantic models for paginated responses with cursor-based navigation.
 Based on data-model.md entity definitions.
 """
 
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -21,20 +21,20 @@ class PageMetadata(BaseModel):
         hasMore: Whether more pages are available
     """
 
-    totalCount: int = Field(ge=0, description="Total items available")
-    pageSize: int = Field(ge=0, description="Items in current page")
-    hasMore: bool = Field(description="More pages available")
+    totalCount: int = Field(ge=0, description="Total items available")  # noqa: N815
+    pageSize: int = Field(ge=0, description="Items in current page")  # noqa: N815
+    hasMore: bool = Field(description="More pages available")  # noqa: N815
 
     @field_validator("pageSize")
     @classmethod
-    def validate_page_size(cls, v: int, info) -> int:
+    def validate_page_size(cls, v: int, _info) -> int:
         """Validate that pageSize <= totalCount."""
         # Note: info.data is available in Pydantic v2
         # We'll validate this in the PaginatedResponse model instead
         return v
 
 
-class PaginatedResponse(BaseModel, Generic[T]):
+class PaginatedResponse[T](BaseModel):
     """Generic paginated response wrapper.
 
     Wraps a list of items with pagination metadata and optional cursor
@@ -61,7 +61,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
     """
 
     items: list[T] = Field(description="Current page items")
-    nextCursor: str | None = Field(
+    nextCursor: str | None = Field(  # noqa: N815
         default=None,
         description="Cursor for next page (null on final page)",
     )
@@ -107,9 +107,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
         page_size = meta.pageSize if isinstance(meta, PageMetadata) else meta.get("pageSize")
 
         if page_size is not None and len(v) != page_size:
-            raise ValueError(
-                f"items length ({len(v)}) must match meta.pageSize ({page_size})"
-            )
+            raise ValueError(f"items length ({len(v)}) must match meta.pageSize ({page_size})")
 
         return v
 

@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "hostaway": {
+      "command": "uvicorn",
+      "args": [
+        "src.api.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
+      "cwd": "/Users/darrenmorgan/AI_Projects/hostaway-mcp",
+      "env": {
+        "HOSTAWAY_CLIENT_ID": "YOUR_HOSTAWAY_CLIENT_ID",
+        "HOSTAWAY_CLIENT_SECRET": "YOUR_HOSTAWAY_SECRET",
+        "SUPABASE_URL": "YOUR_SUPABASE_URL",
+        "SUPABASE_SERVICE_KEY": "YOUR_SUPABASE_KEY"
+      }
+    }
+  }
+}

@@ -18,6 +18,39 @@ This project enables AI assistants like Claude to interact with Hostaway's prope
 - ✅ **Performance**: Async/await, connection pooling, and exponential backoff retry logic
 - ✅ **Production Ready**: Docker support, CI/CD pipeline, comprehensive test coverage
 
+## Recent Updates (Issue #008)
+
+**Three MCP server improvements implemented (2025-10-28)**:
+
+### ✅ Issue #008-US1: 404 vs 401 Priority Fix
+- **Problem**: Non-existent routes returned `401 Unauthorized` instead of `404 Not Found`
+- **Solution**: Added custom 404 exception handler and route existence check in authentication middleware
+- **Impact**: Improved API developer experience - route existence now checked before authentication
+- **Tests**: 7 integration tests covering 404 behavior, auth preservation, CORS, and correlation IDs
+
+### ✅ Issue #008-US2: Rate Limit Visibility Headers
+- **Problem**: API consumers had no visibility into rate limit status
+- **Solution**: Added `RateLimiterMiddleware` that injects industry-standard headers on all responses
+  - `X-RateLimit-Limit`: Maximum requests allowed per window
+  - `X-RateLimit-Remaining`: Requests remaining in current window
+  - `X-RateLimit-Reset`: Unix timestamp when window resets
+  - `Retry-After`: Seconds to wait when limit exceeded
+- **Impact**: Transparent rate limiting for better client retry logic
+- **Tests**: 9 tests (4 integration + 5 unit) + 3 performance regression tests
+
+### ✅ Issue #008-US3: API Key Generation CLI
+- **Problem**: No documented way to generate test API keys for local development
+- **Solution**: Created CLI script (`src/scripts/generate_api_key.py`) with:
+  - Cryptographically secure key generation (`secrets.token_urlsafe(32)`)
+  - SHA-256 hashing for database storage
+  - Organization verification before key creation
+  - One-time display of plain key (security best practice)
+- **Usage**: `uv run python -m src.scripts.generate_api_key --org-id 1 --user-id user-123`
+- **Documentation**: See `docs/API_KEY_GENERATION.md`
+- **Tests**: 6 unit tests covering format, hashing, CLI interface, and entropy
+
+**All implementations follow TDD** - tests written first, implementation second.
+
 ## Quick Start
 
 ### Prerequisites
@@ -188,6 +221,55 @@ uv run mypy src/ tests/
 
 # Security scan
 uv run bandit -r src/
+```
+
+### Pre-Push Validation
+
+**IMPORTANT**: Always run pre-push checks before pushing to CI/CD to avoid build failures.
+
+```bash
+# Run all pre-push validation checks (recommended)
+make pre-push
+
+# Or run the script directly
+./scripts/pre-push-check.sh
+```
+
+The pre-push script validates:
+- ✅ **Formatting**: Ruff format check
+- ✅ **Linting**: Ruff lint check
+- ✅ **Tests**: Quick integration test run (no coverage)
+
+If all checks pass, you'll see:
+```
+✓ All pre-push checks passed!
+✓ Safe to push to CI/CD
+```
+
+If any check fails, fix the issues before pushing:
+```bash
+# Fix formatting
+make format
+
+# Fix linting issues
+make lint
+
+# Run tests to debug failures
+make test-integration
+```
+
+**Available Make Targets**:
+```bash
+make help              # Show all available targets
+make pre-push          # Run pre-push validation
+make format            # Format code with ruff
+make format-check      # Check formatting without changes
+make lint              # Run linter
+make test              # Run all tests with coverage
+make test-integration  # Run integration tests only
+make test-unit         # Run unit tests only
+make clean             # Remove build artifacts
+make install           # Install dependencies
 ```
 
 ### Logging and Debugging

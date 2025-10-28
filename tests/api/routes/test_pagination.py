@@ -16,9 +16,18 @@ from src.utils.cursor_codec import decode_cursor
 @pytest.fixture
 def mock_hostaway_client(mocker):
     """Create a mock Hostaway client."""
+    from pydantic import SecretStr
+
+    from src.mcp.config import HostawayConfig
+
     mock = mocker.MagicMock()
     mock.get_listings = AsyncMock()
     mock.search_bookings = AsyncMock()
+
+    # Mock config with proper cursor_secret
+    mock.config = mocker.MagicMock(spec=HostawayConfig)
+    mock.config.cursor_secret = SecretStr("test-cursor-secret-for-pagination")
+
     return mock
 
 
@@ -37,6 +46,11 @@ def client(mock_hostaway_client, mocker):
 
     mocker.patch("src.mcp.security.verify_api_key", side_effect=mock_verify_api_key)
 
+    # Mock Supabase client to prevent usage tracking errors
+    mock_supabase = mocker.MagicMock()
+    mock_supabase.table.return_value.insert.return_value.execute = AsyncMock()
+    mocker.patch("src.services.supabase_client.get_supabase_client", return_value=mock_supabase)
+
     client = TestClient(app)
     yield client
 
@@ -47,9 +61,7 @@ def client(mock_hostaway_client, mocker):
 class TestListingsPagination:
     """Test pagination for listings endpoint."""
 
-    def test_listings_first_page_returns_paginated_response(
-        self, client, mock_hostaway_client
-    ):
+    def test_listings_first_page_returns_paginated_response(self, client, mock_hostaway_client):
         """Test that first page request returns PaginatedResponse structure."""
         # Configure mock to return 50 listings
         mock_hostaway_client.get_listings.return_value = [
@@ -59,6 +71,8 @@ class TestListingsPagination:
         # Request first page
         response = client.get("/api/listings?limit=50", headers={"X-API-Key": "test-key"})
 
+        if response.status_code != 200:
+            print(f"\nError response: {response.text}")
         assert response.status_code == 200
         data = response.json()
 
@@ -92,9 +106,7 @@ class TestListingsPagination:
         assert cursor is not None
 
         # Use cursor to get second page
-        response2 = client.get(
-            f"/api/listings?cursor={cursor}", headers={"X-API-Key": "test-key"}
-        )
+        response2 = client.get(f"/api/listings?cursor={cursor}", headers={"X-API-Key": "test-key"})
 
         assert response2.status_code == 200
         data2 = response2.json()
@@ -104,7 +116,7 @@ class TestListingsPagination:
         assert len(data2["items"]) == 50
 
         # Verify cursor contains offset=50
-        cursor_data = decode_cursor(cursor, secret="hostaway-cursor-secret")
+        cursor_data = decode_cursor(cursor, secret="test-cursor-secret-for-pagination")
         assert cursor_data["offset"] == 50
 
     def test_listings_invalid_cursor_returns_400(self, client, mock_hostaway_client):
@@ -139,9 +151,7 @@ class TestListingsPagination:
 class TestBookingsPagination:
     """Test pagination for bookings endpoint."""
 
-    def test_bookings_first_page_returns_paginated_response(
-        self, client, mock_hostaway_client
-    ):
+    def test_bookings_first_page_returns_paginated_response(self, client, mock_hostaway_client):
         """Test that first page request returns PaginatedResponse structure."""
         # Configure mock to return 100 bookings
         mock_hostaway_client.search_bookings.return_value = [
@@ -195,16 +205,14 @@ class TestBookingsPagination:
         mock_hostaway_client.search_bookings.return_value = [{"id": i} for i in range(100)]
 
         # Get first page
-        response = client.get(
-            "/api/reservations?limit=100", headers={"X-API-Key": "test-key"}
-        )
+        response = client.get("/api/reservations?limit=100", headers={"X-API-Key": "test-key"})
 
         assert response.status_code == 200
         data = response.json()
         cursor = data["nextCursor"]
 
         # Decode cursor and verify offset
-        cursor_data = decode_cursor(cursor, secret="hostaway-cursor-secret")
+        cursor_data = decode_cursor(cursor, secret="test-cursor-secret-for-pagination")
         assert cursor_data["offset"] == 100
         assert "ts" in cursor_data  # Timestamp should be present
 

@@ -1,0 +1,2 @@
+# Live integration tests (optional)
+# Contains tests that run against real Hostaway API (RUN_LIVE_TESTS=true)
