@@ -324,26 +324,15 @@ jq 'select(.level == "ERROR")' logs/app.log
 ```
 
 ## Recent Changes
+- 008-fix-issues-identified: Added Python 3.12+ + FastAPI 0.100+, fastapi-mcp 0.4+, httpx 0.27+, Pydantic 2.0+, pydantic-settings
 
 ### 2025-10-20
 - Fixed auto-merge workflow to only run on PR events (not direct pushes)
 - Added event type check: `github.event.workflow_run.event == 'pull_request'`
-- Improved logging for auto-merge PR resolution
-- Cleaned up root directory (moved docs to `docs/archive/`)
-- Updated CLAUDE.md with comprehensive project documentation
 
 ### 2025-10-19
-- Fixed Docker build README.md issue (removed wildcard from .dockerignore)
-- Fixed test failures for CI compatibility
-- Added missing `src/testing/` module files
-- Marked TDD MCP tests as expected failures (xfail)
-- Fixed linting errors (RUF012, SIM102, N806)
 
 ### 2025-10-12
-- Completed Phase 7: Financial Reporting endpoints
-- Completed Phase 8: Polish & Production Readiness
-- Achieved 76.90% test coverage
-- Implemented token-aware middleware for response optimization
 
 ## Production Status
 

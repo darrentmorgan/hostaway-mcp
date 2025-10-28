@@ -12,10 +12,10 @@ import sys
 from typing import Any
 
 import httpx
-from mcp.server.stdio import stdio_server
-from mcp.types import TextContent, Tool
 
 from mcp.server import Server
+from mcp.server.stdio import stdio_server
+from mcp.types import TextContent, Tool
 
 # Get remote server config from environment
 REMOTE_URL = os.getenv("REMOTE_MCP_URL", "http://72.60.233.157:8080/mcp")

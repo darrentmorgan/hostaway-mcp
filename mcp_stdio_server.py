@@ -12,10 +12,10 @@ import os
 from typing import Any
 
 import httpx
-from mcp.server.stdio import stdio_server
-from mcp.types import TextContent, Tool
 
 from mcp.server import Server
+from mcp.server.stdio import stdio_server
+from mcp.types import TextContent, Tool
 
 # Create MCP server
 app = Server("hostaway-mcp")

@@ -117,9 +117,9 @@ class TestRateLimitingPerformance:
         assert len(results) == 20
 
         # Verify concurrent limit was never exceeded
-        assert max_active <= max_concurrent, (
-            f"Max concurrent {max_active} exceeded limit {max_concurrent}"
-        )
+        assert (
+            max_active <= max_concurrent
+        ), f"Max concurrent {max_active} exceeded limit {max_concurrent}"
 
     async def test_burst_traffic_handling(self, test_config: HostawayConfig) -> None:
         """Test rate limiter handles burst traffic without errors.
@@ -211,9 +211,9 @@ class TestRateLimitingPerformance:
         phase3_duration = time.time() - phase3_start
 
         # Should complete quickly (within rate limit)
-        assert phase3_duration < 2.0, (
-            f"Phase 3 should be fast after recovery, took {phase3_duration:.2f}s"
-        )
+        assert (
+            phase3_duration < 2.0
+        ), f"Phase 3 should be fast after recovery, took {phase3_duration:.2f}s"
 
     async def test_rate_limiter_fairness(self) -> None:
         """Test that rate limiter distributes capacity fairly across requests.
