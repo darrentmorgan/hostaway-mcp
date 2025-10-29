@@ -4,15 +4,20 @@ Provides endpoints to search and retrieve booking/reservation information.
 These endpoints are automatically exposed as MCP tools via FastAPI-MCP.
 """
 
+import logging
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from src.mcp.auth import get_authenticated_client
 from src.models.pagination import PageMetadata, PaginatedResponse
+from src.models.summarized import SummarizedBooking
 from src.services.hostaway_client import HostawayClient
 from src.utils.cursor_codec import decode_cursor, encode_cursor
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 class BookingsResponse(BaseModel):
@@ -26,9 +31,10 @@ class BookingsResponse(BaseModel):
 
 @router.get(
     "/reservations",
-    response_model=PaginatedResponse[dict],
+    response_model=None,  # Allow dynamic response type based on summary parameter
     summary="Search bookings/reservations",
-    description="Search and filter bookings/reservations with cursor-based pagination",
+    description="Search and filter bookings/reservations with cursor-based pagination. "
+    "Use summary=true for compact responses optimized for AI assistants.",
     tags=["Bookings"],
 )
 async def search_bookings(
@@ -67,10 +73,14 @@ async def search_bookings(
     max_guests: int | None = Query(
         None, ge=1, description="Filter bookings with at most this many guests"
     ),
+    summary: bool = Query(
+        False,
+        description="Return summarized response with essential fields only (80-90% size reduction)",
+    ),
     limit: int = Query(default=100, ge=1, le=200, description="Maximum results per page"),
     cursor: str | None = Query(None, description="Pagination cursor from previous response"),
     client: HostawayClient = Depends(get_authenticated_client),
-) -> PaginatedResponse[dict]:
+) -> Any:
     """
     Search and filter bookings/reservations with cursor-based pagination.
 
@@ -161,7 +171,46 @@ async def search_bookings(
                 secret=client.config.cursor_secret.get_secret_value(),
             )
 
-        # Build paginated response
+        # Check if summary mode is requested
+        if summary:
+            # Log summary mode usage for analytics
+            logger.info(
+                "Summary mode request",
+                extra={
+                    "endpoint": "/api/reservations",
+                    "summary": True,
+                    "organization_id": client.config.account_id,
+                    "page_size": len(bookings),
+                },
+            )
+
+            # Transform to summarized bookings
+            summarized_items = [
+                SummarizedBooking(
+                    id=item["id"],
+                    guestName=item.get("guestName", item.get("guest_name", "N/A")),
+                    checkIn=item.get("checkInDate", item.get("check_in_date", item.get("checkIn", ""))),
+                    checkOut=item.get("checkOutDate", item.get("check_out_date", item.get("checkOut", ""))),
+                    listingId=item.get("listingMapId", item.get("listing_id", item.get("listingId", 0))),
+                    status=item.get("status", "unknown"),
+                    totalPrice=float(item.get("totalPrice", item.get("total_price", 0.0))),
+                )
+                for item in bookings
+            ]
+
+            # Build paginated response with summarized items
+            return PaginatedResponse[SummarizedBooking](
+                items=summarized_items,
+                nextCursor=next_cursor,
+                meta=PageMetadata(
+                    totalCount=total_count,
+                    pageSize=len(summarized_items),
+                    hasMore=has_more,
+                    note="Use GET /api/reservations/{id} to see full booking details",
+                ),
+            )
+
+        # Return full response (backward compatible default)
         return PaginatedResponse[dict](
             items=bookings,
             nextCursor=next_cursor,
