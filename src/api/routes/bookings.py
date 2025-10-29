@@ -189,9 +189,15 @@ async def search_bookings(
                 SummarizedBooking(
                     id=item["id"],
                     guestName=item.get("guestName", item.get("guest_name", "N/A")),
-                    checkIn=item.get("checkInDate", item.get("check_in_date", item.get("checkIn", ""))),
-                    checkOut=item.get("checkOutDate", item.get("check_out_date", item.get("checkOut", ""))),
-                    listingId=item.get("listingMapId", item.get("listing_id", item.get("listingId", 0))),
+                    checkIn=item.get(
+                        "checkInDate", item.get("check_in_date", item.get("checkIn", ""))
+                    ),
+                    checkOut=item.get(
+                        "checkOutDate", item.get("check_out_date", item.get("checkOut", ""))
+                    ),
+                    listingId=item.get(
+                        "listingMapId", item.get("listing_id", item.get("listingId", 0))
+                    ),
                     status=item.get("status", "unknown"),
                     totalPrice=float(item.get("totalPrice", item.get("total_price", 0.0))),
                 )
