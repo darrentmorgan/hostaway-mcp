@@ -18,6 +18,33 @@ This project enables AI assistants like Claude to interact with Hostaway's prope
 - ✅ **Performance**: Async/await, connection pooling, and exponential backoff retry logic
 - ✅ **Production Ready**: Docker support, CI/CD pipeline, comprehensive test coverage
 
+## Quick Start
+
+**Server is already deployed and accessible!**
+
+- **Base URL**: `http://72.60.233.157:8080`
+- **Health Check**: http://72.60.233.157:8080/health
+- **API Docs**: http://72.60.233.157:8080/docs
+
+### Using with Claude Desktop
+
+Add to your `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "hostaway": {
+      "url": "http://72.60.233.157:8080/mcp/v1",
+      "transport": "sse"
+    }
+  }
+}
+```
+
+Restart Claude Desktop and start using Hostaway MCP tools!
+
+For detailed setup instructions, see [docs/SIMPLE_SETUP.md](docs/SIMPLE_SETUP.md).
+
 ## Recent Updates (Issue #008)
 
 **Three MCP server improvements implemented (2025-10-28)**:
@@ -124,7 +151,10 @@ All FastAPI routes are automatically exposed as MCP tools via FastAPI-MCP integr
 ### Property Listings
 
 - `GET /api/listings` - List all properties with pagination
-  - Query params: `limit`, `offset`
+  - Query params: `limit`, `cursor`, `summary` (optional)
+  - **New**: `summary=true` returns compact response (80-90% size reduction)
+    - Only essential fields: id, name, city, country, bedrooms, status
+    - Use `GET /api/listings/{id}` for full details
 - `GET /api/listings/{id}` - Get detailed property information
 - `GET /api/listings/{id}/availability` - Check availability for date range
   - Query params: `start_date`, `end_date` (YYYY-MM-DD)
@@ -132,7 +162,10 @@ All FastAPI routes are automatically exposed as MCP tools via FastAPI-MCP integr
 ### Booking Management
 
 - `GET /api/reservations` - Search bookings with filters
-  - Query params: `listing_id`, `check_in_from`, `check_in_to`, `check_out_from`, `check_out_to`, `status`, `guest_email`, `booking_source`, `min_guests`, `max_guests`, `limit`, `offset`
+  - Query params: `listing_id`, `check_in_from`, `check_in_to`, `check_out_from`, `check_out_to`, `status`, `guest_email`, `booking_source`, `min_guests`, `max_guests`, `limit`, `cursor`, `summary` (optional)
+  - **New**: `summary=true` returns compact response (80-90% size reduction)
+    - Only essential fields: id, guestName, checkIn, checkOut, listingId, status, totalPrice
+    - Use `GET /api/reservations/{id}` for full details
 - `GET /api/reservations/{id}` - Get booking details
 - `GET /api/reservations/{id}/guest` - Get guest information for booking
 
@@ -141,6 +174,83 @@ All FastAPI routes are automatically exposed as MCP tools via FastAPI-MCP integr
 - `GET /api/financialReports` - Get financial report for date range
   - Query params: `start_date`, `end_date` (YYYY-MM-DD), optional `listing_id`
   - Returns revenue breakdown, expense breakdown, profitability metrics
+
+## Usage Examples
+
+### Response Summarization (New!)
+
+The API now supports optional response summarization for list endpoints, reducing response sizes by 80-90% for AI assistant consumption:
+
+**Listings - Full Response**:
+```bash
+curl "http://72.60.233.157:8080/api/listings?limit=10"
+# Returns full property details: id, name, address, city, state, country, postal_code,
+# description, capacity, bedrooms, bathrooms, property_type, base_price, amenities, images, etc.
+```
+
+**Listings - Summarized Response**:
+```bash
+curl "http://72.60.233.157:8080/api/listings?limit=10&summary=true"
+# Returns only essential fields:
+# {
+#   "items": [
+#     {
+#       "id": 12345,
+#       "name": "Luxury Villa in Seminyak",
+#       "city": "Seminyak",
+#       "country": "Indonesia",
+#       "bedrooms": 3,
+#       "status": "Available"
+#     }
+#   ],
+#   "nextCursor": "eyJvZmZzZXQiOjEwfQ==",
+#   "meta": {
+#     "totalCount": 100,
+#     "pageSize": 10,
+#     "hasMore": true,
+#     "note": "Use GET /api/listings/{id} to see full property details"
+#   }
+# }
+```
+
+**Bookings - Full Response**:
+```bash
+curl "http://72.60.233.157:8080/api/reservations?limit=10&status=confirmed"
+# Returns full booking details including nested guest objects, payment history, etc.
+```
+
+**Bookings - Summarized Response**:
+```bash
+curl "http://72.60.233.157:8080/api/reservations?limit=10&status=confirmed&summary=true"
+# Returns only essential fields:
+# {
+#   "items": [
+#     {
+#       "id": 67890,
+#       "guestName": "John Doe",
+#       "checkIn": "2025-11-15",
+#       "checkOut": "2025-11-22",
+#       "listingId": 12345,
+#       "status": "confirmed",
+#       "totalPrice": 2500.00
+#     }
+#   ],
+#   "nextCursor": "eyJvZmZzZXQiOjEwfQ==",
+#   "meta": {
+#     "totalCount": 50,
+#     "pageSize": 10,
+#     "hasMore": true,
+#     "note": "Use GET /api/reservations/{id} to see full booking details"
+#   }
+# }
+```
+
+**Benefits**:
+- 80-90% reduction in response size
+- Faster response times
+- Reduced context window consumption for AI assistants
+- Backward compatible (defaults to full response)
+- Guidance note points to detailed endpoints
 
 ## Project Structure
 
