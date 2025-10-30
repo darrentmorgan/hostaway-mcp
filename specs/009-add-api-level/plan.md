@@ -1,6 +1,7 @@
 # Implementation Plan: API-Level Response Summarization
 
 **Branch**: `009-add-api-level` | **Date**: 2025-10-29 | **Spec**: [spec.md](./spec.md)
+**Status**: ✅ Complete | **Deployed**: 2025-10-30 | **PR**: #7
 
 **Input**: Feature specification from `/specs/009-add-api-level/spec.md`
 
@@ -216,7 +217,8 @@ All constitution principles pass without exceptions. Feature implements straight
 
 1. **GET /api/listings**
    - Added parameter: `summary: bool` (default: false)
-   - Response: `PaginatedResponse[SummarizedListing] | PaginatedResponse[dict]`
+   - Response type: `PaginatedResponse[SummarizedListing] | PaginatedResponse[dict]` (conceptual)
+   - **Implementation Note**: Due to FastAPI limitations with Union types in generic responses, the actual implementation uses `response_model=None` with `Any` return type. FastAPI still generates correct OpenAPI schemas via type inference from the returned Pydantic models.
    - Backward compatible: absence of parameter returns full response
 
 2. **GET /api/listings/{listing_id}**
@@ -225,10 +227,11 @@ All constitution principles pass without exceptions. Feature implements straight
 
 3. **GET /api/reservations**
    - Added parameter: `summary: bool` (default: false)
-   - Response: `PaginatedResponse[SummarizedBooking] | PaginatedResponse[dict]`
+   - Response type: `PaginatedResponse[SummarizedBooking] | PaginatedResponse[dict]` (conceptual)
+   - **Implementation Note**: Uses same `response_model=None` workaround as listings endpoint
    - Filters out nested objects when summary=true
 
-**Schema Generation**: Automatic via FastAPI Pydantic integration
+**Schema Generation**: Automatic via FastAPI Pydantic integration (type inference)
 
 **MCP Tool Updates**: Automatic via fastapi-mcp OpenAPI introspection
 
@@ -255,7 +258,8 @@ All constitution principles pass without exceptions. Feature implements straight
 - Add `summary: bool = Query(False)` parameter
 - Add conditional logic: `if summary: transform_to_summarized() else: return_full()`
 - Add logging for summary mode usage (`logger.info(...)`)
-- Update `response_model` to Union type
+- Set `response_model=None` with `Any` return type (FastAPI Union limitation workaround)
+- Update function return type annotation to `Any` for type checking
 
 **Pattern**: Fetch full data → Check summary flag → Transform if true → Return
 
