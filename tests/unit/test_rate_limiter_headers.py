@@ -41,9 +41,9 @@ def test_rate_limit_headers_format(rate_limit_headers_expected: dict) -> None:
 
     # Verify values are strings (header values must be strings)
     for header_value in rate_limit_headers_expected.values():
-        assert isinstance(
-            header_value, str
-        ), f"Header value must be string, got {type(header_value)}"
+        assert isinstance(header_value, str), (
+            f"Header value must be string, got {type(header_value)}"
+        )
 
 
 def test_rate_limit_info_structure() -> None:

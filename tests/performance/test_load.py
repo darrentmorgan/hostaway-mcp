@@ -221,9 +221,9 @@ class TestLoadPerformance:
 
         # Verify token is still the same (not refreshed unnecessarily)
         current_token = await token_manager.get_token()
-        assert (
-            current_token.access_token == initial_access_token
-        ), "Token should be reused, not refreshed"
+        assert current_token.access_token == initial_access_token, (
+            "Token should be reused, not refreshed"
+        )
 
         # Cleanup
         await client.aclose()
