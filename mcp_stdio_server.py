@@ -135,6 +135,8 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
         try:
             if name == "list_properties":
                 params = {k: v for k, v in arguments.items() if v is not None}
+                # Use summary=true to prevent context window overflow
+                params["summary"] = "true"
                 response = await client.get(f"{BASE_URL}/api/listings", params=params)
                 response.raise_for_status()
                 data = response.json()
@@ -163,6 +165,8 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
             if name == "search_bookings":
                 params = {k: v for k, v in arguments.items() if v is not None}
+                # Use summary=true to prevent context window overflow
+                params["summary"] = "true"
                 response = await client.get(f"{BASE_URL}/api/reservations", params=params)
                 response.raise_for_status()
                 data = response.json()
