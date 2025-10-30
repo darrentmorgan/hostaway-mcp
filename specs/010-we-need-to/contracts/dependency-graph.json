@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Dependency Graph Schema",
+  "description": "Schema for defining fix dependencies and execution order",
+  "type": "object",
+  "required": ["nodes", "edges", "execution_order"],
+  "properties": {
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(fix|imp)-\\d+-[a-z-]+$"
+      },
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true,
+      "description": "List of all fix_ids"
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "properties": {
+          "from": {
+            "type": "string",
+            "pattern": "^(fix|imp)-\\d+-[a-z-]+$",
+            "description": "Fix ID that must complete first"
+          },
+          "to": {
+            "type": "string",
+            "pattern": "^(fix|imp)-\\d+-[a-z-]+$",
+            "description": "Fix ID that depends on 'from'"
+          }
+        }
+      },
+      "description": "Directed edges representing dependencies"
+    },
+    "execution_order": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": "^(fix|imp)-\\d+-[a-z-]+$"
+        },
+        "description": "Wave of fixes that can execute in parallel"
+      },
+      "description": "List of execution waves (topologically sorted)"
+    }
+  }
+}
