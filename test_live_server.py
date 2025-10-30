@@ -379,10 +379,10 @@ class ServerTester:
 
                 if response.status_code == 200:
                     response_times.append(response_time)
-                    print(f"    Request {i+1}/{num_requests}: {response_time:.2f}ms")
+                    print(f"    Request {i + 1}/{num_requests}: {response_time:.2f}ms")
 
             except Exception as e:
-                result.add_fail(f"Request {i+1} failed: {e}")
+                result.add_fail(f"Request {i + 1} failed: {e}")
 
         if response_times:
             avg_time = sum(response_times) / len(response_times)

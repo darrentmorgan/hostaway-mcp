@@ -47,9 +47,9 @@ def test_nonexistent_route_with_auth_returns_404(
     response = test_client.get("/api/nonexistent", headers=auth_headers)
 
     # Should still return 404, not 401 or 200
-    assert (
-        response.status_code == 404
-    ), f"Expected 404 for non-existent route even with auth, got {response.status_code}"
+    assert response.status_code == 404, (
+        f"Expected 404 for non-existent route even with auth, got {response.status_code}"
+    )
 
 
 def test_existing_route_requires_auth(test_client: TestClient) -> None:
@@ -75,9 +75,9 @@ def test_existing_route_requires_auth(test_client: TestClient) -> None:
     )
 
     # Verify it's a protected route by checking it doesn't return 200 without proper setup
-    assert (
-        response.status_code in [401, 500]
-    ), f"Expected 401 or 500 for protected route without full test setup, got {response.status_code}"
+    assert response.status_code in [401, 500], (
+        f"Expected 401 or 500 for protected route without full test setup, got {response.status_code}"
+    )
 
 
 def test_405_method_not_allowed_still_works(test_client: TestClient) -> None:

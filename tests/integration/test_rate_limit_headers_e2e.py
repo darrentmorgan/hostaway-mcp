@@ -19,15 +19,15 @@ def test_rate_limit_headers_present(test_client: TestClient, auth_headers: dict)
     response = test_client.get("/health")
 
     # Verify rate limit headers are present
-    assert (
-        "x-ratelimit-limit" in response.headers or "X-RateLimit-Limit" in response.headers
-    ), "Response should include X-RateLimit-Limit header"
+    assert "x-ratelimit-limit" in response.headers or "X-RateLimit-Limit" in response.headers, (
+        "Response should include X-RateLimit-Limit header"
+    )
     assert (
         "x-ratelimit-remaining" in response.headers or "X-RateLimit-Remaining" in response.headers
     ), "Response should include X-RateLimit-Remaining header"
-    assert (
-        "x-ratelimit-reset" in response.headers or "X-RateLimit-Reset" in response.headers
-    ), "Response should include X-RateLimit-Reset header"
+    assert "x-ratelimit-reset" in response.headers or "X-RateLimit-Reset" in response.headers, (
+        "Response should include X-RateLimit-Reset header"
+    )
 
 
 def test_rate_limit_headers_decrement(test_client: TestClient) -> None:

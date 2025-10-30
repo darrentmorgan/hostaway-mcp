@@ -237,9 +237,9 @@ class TestFinancialMiddlewareIntegration:
                 summary = response_data["summary"]
                 if "transactions" in summary:
                     # Transactions should be reduced or removed
-                    assert (
-                        len(summary.get("transactions", [])) < 100
-                    ), "Summarized response should have fewer transactions"
+                    assert len(summary.get("transactions", [])) < 100, (
+                        "Summarized response should have fewer transactions"
+                    )
 
                 # Check that summary is a dictionary
                 assert isinstance(summary, dict), "Summary should be a dictionary"
@@ -251,9 +251,9 @@ class TestFinancialMiddlewareIntegration:
                 summary_size = len(json.dumps(response_data))
                 reduction_ratio = 1.0 - (summary_size / original_size)
 
-                assert (
-                    reduction_ratio > 0.5
-                ), f"Summary should significantly reduce response size (reduction: {reduction_ratio:.2%})"
+                assert reduction_ratio > 0.5, (
+                    f"Summary should significantly reduce response size (reduction: {reduction_ratio:.2%})"
+                )
 
                 print("\n✓ Response was summarized (as expected for large financial data)")
                 print(f"  Original size: {original_size} bytes")
@@ -309,9 +309,9 @@ class TestFinancialMiddlewareIntegration:
 
             # Small response should not be summarized
             # It should match the original structure (no "summary" wrapper)
-            assert (
-                "revenue" in response_data or "summary" in response_data
-            ), "Response should contain financial data"
+            assert "revenue" in response_data or "summary" in response_data, (
+                "Response should contain financial data"
+            )
 
             # If not summarized, should have direct access to fields
             if "revenue" in response_data:
@@ -363,9 +363,9 @@ class TestFinancialMiddlewareIntegration:
             # Verify response is reasonably sized (not massive)
             # Typical summarized response should be < 50KB
             if "summary" in response_data:
-                assert (
-                    response_size < 50000
-                ), f"Summarized response should be compact (got {response_size} bytes)"
+                assert response_size < 50000, (
+                    f"Summarized response should be compact (got {response_size} bytes)"
+                )
                 print(f"✓ Response summarized to {response_size} bytes")
 
     @pytest.mark.asyncio
@@ -403,7 +403,7 @@ class TestFinancialMiddlewareIntegration:
 
             # Error response should not be summarized
             response_data = response.json()
-            assert (
-                "detail" in response_data or "error" in response_data
-            ), "Error response should have error details"
+            assert "detail" in response_data or "error" in response_data, (
+                "Error response should have error details"
+            )
             print(f"\n✓ Error response (HTTP {response.status_code}) passed through middleware")
