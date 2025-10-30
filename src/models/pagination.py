@@ -19,11 +19,13 @@ class PageMetadata(BaseModel):
         totalCount: Total number of items available across all pages
         pageSize: Number of items in current page
         hasMore: Whether more pages are available
+        note: Optional guidance message for API consumers (e.g., how to access full details)
     """
 
     totalCount: int = Field(ge=0, description="Total items available")  # noqa: N815
     pageSize: int = Field(ge=0, description="Items in current page")  # noqa: N815
     hasMore: bool = Field(description="More pages available")  # noqa: N815
+    note: str | None = Field(default=None, description="Additional guidance for API consumers")
 
     @field_validator("pageSize")
     @classmethod
