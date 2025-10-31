@@ -1,0 +1,239 @@
+# Fix Implementation Template
+# This template generates the implementation code for each fix
+
+{# Fix 1: Service Prefixes #}
+{% if fix_id == "fix-1-service-prefixes" %}
+# Service Prefix Implementation
+# Replace tool names with hostaway_ prefix
+
+OLD_TOOL_NAMES = [
+    "list_properties",
+    "get_property_details",
+    "check_availability",
+    "search_bookings",
+    "get_booking_details",
+    "get_guest_info",
+    "get_financial_reports"
+]
+
+NEW_TOOL_NAMES = [
+    "hostaway_list_properties",
+    "hostaway_get_property_details",
+    "hostaway_check_availability",
+    "hostaway_search_bookings",
+    "hostaway_get_booking_details",
+    "hostaway_get_guest_info",
+    "hostaway_get_financial_reports"
+]
+
+# Find and replace all occurrences in mcp_stdio_server.py
+{% endif %}
+
+{# Fix 2: Tool Annotations #}
+{% if fix_id == "fix-2-tool-annotations" %}
+# Tool Annotations Implementation
+# Add annotations dict to each Tool definition
+
+ANNOTATIONS_TEMPLATE = {
+    "readOnlyHint": True,      # All tools are read-only
+    "destructiveHint": False,   # None modify/delete data
+    "idempotentHint": True,     # Same query = same result (except financial)
+    "openWorldHint": True       # All interact with external API
+}
+
+# Special case: financial reports are not idempotent
+FINANCIAL_ANNOTATIONS = {
+    "readOnlyHint": True,
+    "destructiveHint": False,
+    "idempotentHint": False,  # Data may update
+    "openWorldHint": True
+}
+{% endif %}
+
+{# Fix 3: Error Messages #}
+{% if fix_id == "fix-3-error-messages" %}
+# Error Message Helpers
+# Add to mcp_stdio_server.py after imports
+
+def create_error_response(message: str, is_error: bool = True) -> list[TextContent]:
+    """Create a standardized error response."""
+    prefix = "ERROR: " if is_error else "WARNING: "
+    return [TextContent(type="text", text=f"{prefix}{message}")]
+
+
+def create_http_error_response(error: httpx.HTTPError, context: str) -> list[TextContent]:
+    """Create actionable error response from HTTP error."""
+    if isinstance(error, httpx.HTTPStatusError):
+        status_code = error.response.status_code
+
+        if status_code == 401:
+            return create_error_response(
+                f"Authentication failed while {context}. "
+                f"The REMOTE_MCP_API_KEY environment variable may be invalid or expired. "
+                f"Contact your administrator to verify API key configuration."
+            )
+        elif status_code == 403:
+            return create_error_response(
+                f"Permission denied while {context}. "
+                f"Your API key does not have permission to access this resource. "
+                f"Contact your Hostaway administrator to request access."
+            )
+        elif status_code == 404:
+            return create_error_response(
+                f"Resource not found while {context}. "
+                f"The requested property or booking may not exist. "
+                f"Use hostaway_list_properties or hostaway_search_bookings to find valid IDs."
+            )
+        elif status_code == 429:
+            return create_error_response(
+                f"Rate limit exceeded while {context}. "
+                f"Too many requests in a short time. "
+                f"Wait 10 seconds and try again, or reduce the 'limit' parameter."
+            )
+        elif status_code >= 500:
+            return create_error_response(
+                f"Server error while {context} (HTTP {status_code}). "
+                f"The Hostaway API is experiencing issues. "
+                f"Wait a few minutes and try again. If the problem persists, contact Hostaway support."
+            )
+        else:
+            return create_error_response(
+                f"HTTP {status_code} error while {context}: {error.response.text}"
+            )
+    elif isinstance(error, httpx.TimeoutException):
+        return create_error_response(
+            f"Request timeout while {context}. "
+            f"The operation took longer than 30 seconds. "
+            f"Try reducing the 'limit' parameter or adding date filters."
+        )
+    elif isinstance(error, httpx.ConnectError):
+        return create_error_response(
+            f"Connection error while {context}. "
+            f"Cannot reach the Hostaway MCP server at {BASE_URL}. "
+            f"Check that REMOTE_MCP_URL is correctly configured."
+        )
+    else:
+        return create_error_response(
+            f"Network error while {context}: {str(error)}. "
+            f"Check your internet connection and try again."
+        )
+{% endif %}
+
+{# Fix 4: Response Formats #}
+{% if fix_id == "fix-4-response-formats" %}
+# Response Format Implementation
+# Add markdown formatting functions
+
+def format_property_markdown(property_data: dict) -> str:
+    """Format a single property as Markdown."""
+    prop_id = property_data.get("id", "N/A")
+    name = property_data.get("name", "Unnamed Property")
+    city = property_data.get("city", "N/A")
+    country = property_data.get("country", "N/A")
+    bedrooms = property_data.get("bedrooms", 0)
+    status = property_data.get("status", "unknown")
+
+    return f"""### {name}
+**ID**: {prop_id}
+**Location**: {city}, {country}
+**Bedrooms**: {bedrooms}
+**Status**: {status}
+"""
+
+# Add similar functions for:
+# - format_properties_list_markdown
+# - format_booking_markdown
+# - format_bookings_list_markdown
+# - format_property_details_markdown
+# - format_availability_markdown
+# - format_financial_report_markdown
+{% endif %}
+
+{# Improvement 1: Tool Descriptions #}
+{% if fix_id == "imp-1-tool-descriptions" %}
+# Enhanced Tool Description Template
+
+ENHANCED_DESCRIPTION = """List all Hostaway properties with cursor-based pagination.
+
+Returns summarized property information optimized for AI context windows.
+
+**When to use:**
+- Browsing all available properties
+- Finding properties by specific criteria
+- Building property catalogs
+
+**When NOT to use:**
+- Getting complete details → Use hostaway_get_property_details
+- Checking availability → Use hostaway_check_availability
+
+**Usage examples:**
+1. List first 10: {limit: 10}
+2. Next page: {limit: 10, offset: 10}
+
+**Performance:**
+- Response time: <500ms for 10 properties
+- Rate limit: 20 requests per 10 seconds
+"""
+{% endif %}
+
+{# Improvement 2: Input Validation #}
+{% if fix_id == "imp-2-input-validation" %}
+# Input Validation Schema Enhancement
+
+ENHANCED_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "limit": {
+            "type": "integer",
+            "description": "Maximum results per page",
+            "minimum": 1,
+            "maximum": 200,
+            "default": 10,
+            "examples": [10, 50, 100]
+        },
+        "offset": {
+            "type": "integer",
+            "description": "Pagination offset",
+            "minimum": 0,
+            "default": 0,
+            "examples": [0, 10, 50]
+        }
+    },
+    "additionalProperties": False
+}
+{% endif %}
+
+{# Improvement 3: CHARACTER_LIMIT #}
+{% if fix_id == "imp-3-character-limit" %}
+# Character Limit Implementation
+
+CHARACTER_LIMIT = 25000
+
+def truncate_response(text: str, limit: int = CHARACTER_LIMIT) -> str:
+    """Truncate response text if it exceeds character limit."""
+    if len(text) <= limit:
+        return text
+
+    truncate_at = int(limit * 0.8)
+    truncated_text = text[:truncate_at]
+
+    guidance_message = f"""
+
+---
+
+⚠️ **Response Truncated**
+
+Original response was {len(text):,} characters, truncated to {len(truncated_text):,}.
+
+**To see more results:**
+1. Reduce the `limit` parameter
+2. Add filters to narrow the search
+3. Use cursor pagination
+
+**Need specific data?**
+- Use detail endpoints for individual items
+- Filter by specific criteria
+"""
+
+    return truncated_text + guidance_message
+{% endif %}

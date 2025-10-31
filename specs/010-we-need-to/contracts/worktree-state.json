@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Worktree State Schema",
+  "description": "Schema for tracking individual worktree execution state",
+  "type": "object",
+  "required": [
+    "fix_id",
+    "branch_name",
+    "worktree_path",
+    "status",
+    "dependencies"
+  ],
+  "properties": {
+    "fix_id": {
+      "type": "string",
+      "pattern": "^(fix|imp)-\\d+-[a-z-]+$",
+      "description": "Unique identifier for this fix",
+      "examples": ["fix-1-service-prefixes", "imp-3-character-limit"]
+    },
+    "branch_name": {
+      "type": "string",
+      "pattern": "^mcp-",
+      "description": "Git branch name for this fix",
+      "examples": ["mcp-fix-1-service-prefixes"]
+    },
+    "worktree_path": {
+      "type": "string",
+      "pattern": "^/tmp/hostaway-mcp-worktrees/",
+      "description": "Absolute filesystem path to worktree",
+      "examples": ["/tmp/hostaway-mcp-worktrees/fix-1-service-prefixes"]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "not_started",
+        "implementing",
+        "testing",
+        "pr_created",
+        "complete",
+        "failed",
+        "waiting_dependencies"
+      ],
+      "description": "Current execution state"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(fix|imp)-\\d+-[a-z-]+$"
+      },
+      "description": "List of fix_ids that must complete before this fix can start"
+    },
+    "start_time": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO8601 timestamp when implementation began"
+    },
+    "end_time": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO8601 timestamp when worktree reached terminal state"
+    },
+    "pr_number": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "GitHub PR number if created"
+    },
+    "test_results": {
+      "type": "object",
+      "properties": {
+        "unit_tests_pass": {
+          "type": "boolean",
+          "description": "Did pytest unit tests pass?"
+        },
+        "mcp_inspector_pass": {
+          "type": "boolean",
+          "description": "Did MCP Inspector validation pass?"
+        },
+        "coverage_percent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Test coverage percentage"
+        }
+      }
+    },
+    "error_log_path": {
+      "type": ["string", "null"],
+      "description": "Path to error log if failed"
+    }
+  }
+}

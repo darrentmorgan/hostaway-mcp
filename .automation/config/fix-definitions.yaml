@@ -1,0 +1,89 @@
+# Fix Definitions for MCP Migration
+# Maps migration guide sections to executable fixes
+
+fixes:
+  - fix_id: fix-1-service-prefixes
+    fix_number: 1
+    fix_type: high_priority
+    name: "Add Service Prefixes"
+    description: "Add 'hostaway_' prefix to all 7 tool names to prevent conflicts"
+    migration_guide_section: "Fix 1: Add Service Prefixes"
+    estimated_duration_seconds: 7200  # 1-2 hours
+    target_file: mcp_stdio_server.py
+    lines_added: 30
+    test_file: tests/mcp/test_tool_discovery.py
+    dependencies: []
+
+  - fix_id: fix-2-tool-annotations
+    fix_number: 2
+    fix_type: high_priority
+    name: "Add Tool Annotations"
+    description: "Add readOnlyHint, destructiveHint, idempotentHint, openWorldHint to all tools"
+    migration_guide_section: "Fix 2: Add Tool Annotations"
+    estimated_duration_seconds: 1800  # 30 minutes
+    target_file: mcp_stdio_server.py
+    lines_added: 56  # 8 lines per tool * 7 tools
+    test_file: tests/mcp/test_tool_annotations.py
+    dependencies: []
+
+  - fix_id: fix-3-error-messages
+    fix_number: 3
+    fix_type: high_priority
+    name: "Improve Error Messages"
+    description: "Add actionable error handling with create_error_response and create_http_error_response helpers"
+    migration_guide_section: "Fix 3: Improve Error Messages"
+    estimated_duration_seconds: 10800  # 2-3 hours
+    target_file: mcp_stdio_server.py
+    lines_added: 150  # Error helpers + validation logic
+    test_file: tests/mcp/test_error_handling.py
+    dependencies: []
+
+  - fix_id: fix-4-response-formats
+    fix_number: 4
+    fix_type: high_priority
+    name: "Add Response Format Support"
+    description: "Implement markdown and json response formats with formatting functions"
+    migration_guide_section: "Fix 4: Add Response Format Support"
+    estimated_duration_seconds: 14400  # 3-4 hours
+    target_file: mcp_stdio_server.py
+    lines_added: 200  # Markdown formatters + integration
+    test_file: tests/mcp/test_response_formats.py
+    dependencies:
+      - fix-1-service-prefixes  # Needs prefixed tool names
+      - fix-3-error-messages     # Needs error helpers
+
+  - fix_id: imp-1-tool-descriptions
+    fix_number: 5
+    fix_type: medium_priority
+    name: "Enhance Tool Descriptions"
+    description: "Add comprehensive usage examples and guidance to all tool descriptions"
+    migration_guide_section: "Improvement 1: Enhance Tool Descriptions"
+    estimated_duration_seconds: 10800  # 2-3 hours
+    target_file: mcp_stdio_server.py
+    lines_added: 100  # Enhanced docstrings
+    test_file: tests/mcp/test_tool_descriptions.py
+    dependencies: []
+
+  - fix_id: imp-2-input-validation
+    fix_number: 6
+    fix_type: medium_priority
+    name: "Add Input Validation"
+    description: "Add comprehensive input validation with constraints and examples to all tool schemas"
+    migration_guide_section: "Improvement 2: Add Input Validation"
+    estimated_duration_seconds: 10800  # 2-3 hours
+    target_file: mcp_stdio_server.py
+    lines_added: 80  # Schema enhancements
+    test_file: tests/mcp/test_input_validation.py
+    dependencies: []
+
+  - fix_id: imp-3-character-limit
+    fix_number: 7
+    fix_type: medium_priority
+    name: "Add CHARACTER_LIMIT Truncation"
+    description: "Implement 25,000 character limit with truncation and guidance messages"
+    migration_guide_section: "Improvement 3: Add CHARACTER_LIMIT Truncation"
+    estimated_duration_seconds: 7200  # 1-2 hours
+    target_file: mcp_stdio_server.py
+    lines_added: 40  # Truncation function + integration
+    test_file: tests/mcp/test_character_limit.py
+    dependencies: []

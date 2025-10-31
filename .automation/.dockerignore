@@ -1,0 +1,44 @@
+# Automation .dockerignore
+# For future containerization of the automation system
+
+# Logs (never include in images)
+logs/
+*.log
+*.json
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Git
+.git/
+.gitignore
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+.coverage
+htmlcov/
+
+# Documentation (optional - include if needed)
+# README.md
+
+# Environment files (critical - never include secrets)
+.env
+*.env
+.env.*

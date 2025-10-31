@@ -2,8 +2,12 @@
 
 **Feature Branch**: `009-add-api-level`
 **Created**: 2025-10-29
-**Status**: Draft
+**Status**: ✅ Complete (Deployed to Production)
+**Deployed**: 2025-10-30
+**PR**: #7 (merged to `001-we-need-to`)
 **Input**: User description: "Add API-level response summarization to prevent context window bloat for MCP consumers. Currently only local mcp_stdio_server.py summarizes responses. Need VPS API to support optional summary=true query parameter that returns compact essential fields instead of full JSON payloads."
+
+**Terminology Note**: In this specification, "Property" and "Listing" are used interchangeably to refer to the same entity - a vacation rental property managed through Hostaway. The API endpoints and data models use the term "Listing" (e.g., `/api/listings`, `SummarizedListing`), while user-facing descriptions may use "Property" for clarity.
 
 ## Clarifications
 

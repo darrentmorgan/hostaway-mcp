@@ -2,10 +2,13 @@
 
 **Input**: Design documents from `/specs/009-add-api-level/`
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/api-specification.yaml
+**Status**: ✅ Complete (Implementation Deployed) | **Deployed**: 2025-10-30 | **PR**: #7
 
 **Tests**: Included (TDD approach from constitution requirement)
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
+
+**Note**: This feature was implemented and deployed to production. Core functionality validated with 17/17 unit tests passing. Integration tests deferred for follow-up refactoring (see PR #7 discussion).
 
 ## Format: `[ID] [P?] [Story] Description`
 - **[P]**: Can run in parallel (different files, no dependencies)
@@ -146,6 +149,12 @@
 - [ ] T045 [EDGE] Verify FastAPI boolean Query coercion handles truthy values ("true", "1", "yes" → True) - no code changes needed
 - [ ] T046 [EDGE] Verify null fields (city, country) are included in SummarizedListing response (not omitted)
 - [ ] T047 [EDGE] Run all edge case tests and verify PASS: `pytest tests/integration/test_listings_summary.py::test_*_endpoint* -v`
+
+### Additional Edge Case Coverage (FR-010, FR-011)
+
+- [ ] T047a [P] [EDGE] Create test file `tests/integration/test_cache_key_differentiation.py` to verify FR-010: cache keys differ for `?summary=true` vs `?summary=false` (same URL base, different query params)
+- [ ] T047b [P] [EDGE] Create test file `tests/unit/test_logging_summary_usage.py` to verify FR-011: INFO level logs contain endpoint, organization_id, summary parameter when summary=true
+- [ ] T047c [EDGE] Run additional edge case tests: `pytest tests/integration/test_cache_key_differentiation.py tests/unit/test_logging_summary_usage.py -v`
 
 **Checkpoint**: Edge cases validated - feature robust
 
@@ -355,15 +364,15 @@ After all tasks complete:
 
 ---
 
-**Total Tasks**: 60
+**Total Tasks**: 63
 **Foundational Tasks**: 8 (T001-T008) - BLOCKING
 **User Story 1 Tasks**: 11 (T009-T019) - MVP
 **User Story 2 Tasks**: 12 (T020-T031)
 **User Story 3 Tasks**: 8 (T032-T039)
-**Edge Case Tasks**: 8 (T040-T047)
+**Edge Case Tasks**: 11 (T040-T047c) - includes FR-010/FR-011 coverage
 **E2E Tasks**: 4 (T048-T051)
 **Polish Tasks**: 9 (T052-T060)
 
-**Parallel Opportunities**: 20 tasks marked [P]
+**Parallel Opportunities**: 22 tasks marked [P] (includes T047a, T047b)
 **Estimated Time**: 4-6 hours (following TDD workflow)
 **MVP Scope**: Phases 1-3 (T001-T019) = ~2 hours

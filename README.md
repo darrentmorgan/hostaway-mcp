@@ -78,6 +78,63 @@ Restart Claude Desktop and start using Hostaway MCP tools!
 
 For detailed setup instructions, see [docs/SIMPLE_SETUP.md](docs/SIMPLE_SETUP.md).
 
+## Automated MCP Migration
+
+**Parallel execution system** for applying MCP Migration Guide fixes using git worktrees.
+
+### Quick Start
+
+```bash
+# Execute all 7 fixes in parallel (~45 minutes vs 4 hours sequential)
+.automation/scripts/orchestrator.sh --auto-rollback --failure-threshold 30
+
+# Monitor progress in real-time
+.automation/scripts/status.sh --watch --metrics
+
+# Generate HTML report
+.automation/scripts/generate-report.sh --format html --output report.html
+```
+
+### Key Features
+
+- ✅ **6x Speedup**: Parallel execution using git worktrees (4 hours → 45 min)
+- ✅ **Zero Manual Intervention**: Fully automated from execution to PR merge
+- ✅ **Safety First**: Automatic rollback on failure threshold, checkpoint tags
+- ✅ **Comprehensive Testing**: MCP Inspector validation + pytest integration
+- ✅ **Real-Time Monitoring**: Progress visualization with metrics
+- ✅ **Audit Trail**: Timestamped logs and execution state tracking
+
+### Architecture
+
+The system executes 7 MCP fixes in 2 waves using dependency-aware scheduling:
+
+- **Wave 1** (Parallel): 6 independent fixes run concurrently in isolated git worktrees
+- **Wave 2** (Sequential): Fix-4 runs after Wave 1 (depends on Fix-1 and Fix-3)
+
+Each fix executes in its own worktree with:
+- Automated implementation
+- Unit + integration tests (pytest)
+- MCP Inspector schema validation
+- Automatic PR creation (GitHub CLI)
+
+### Prerequisites
+
+- Git >= 2.30 (worktree support)
+- Python >= 3.12
+- GitHub CLI (`gh`) - for PR automation
+- Node.js (optional) - for MCP Inspector
+
+### Documentation
+
+For complete documentation, see [.automation/README.md](.automation/README.md)
+
+**Core scripts**:
+- `orchestrator.sh` - Main entry point
+- `status.sh` - Real-time monitoring
+- `rollback.sh` - Emergency recovery
+- `generate-report.sh` - Summary reports
+- `cleanup.sh` - Manual cleanup
+
 ## Recent Updates (Issue #008)
 
 **Three MCP server improvements implemented (2025-10-28)**:

@@ -324,11 +324,11 @@ jq 'select(.level == "ERROR")' logs/app.log
 ```
 
 ## Recent Changes
+- 010-we-need-to: Added Python 3.12+ (existing project requirement), Bash 4.0+ for worktree orchestration
 - 008-fix-issues-identified: Added Python 3.12+ + FastAPI 0.100+, fastapi-mcp 0.4+, httpx 0.27+, Pydantic 2.0+, pydantic-settings
 
 ### 2025-10-20
 - Fixed auto-merge workflow to only run on PR events (not direct pushes)
-- Added event type check: `github.event.workflow_run.event == 'pull_request'`
 
 ### 2025-10-19
 
