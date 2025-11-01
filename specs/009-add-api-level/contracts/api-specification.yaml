@@ -1,0 +1,461 @@
+openapi: 3.1.0
+info:
+  title: Hostaway MCP API - Response Summarization
+  version: 0.2.0
+  description: |
+    API contract for response summarization feature.
+
+    This specification defines the enhanced endpoints with `summary` query parameter support
+    for compact responses optimized for AI assistants and clients with limited context windows.
+
+servers:
+  - url: http://72.60.233.157:8080
+    description: Production VPS server
+  - url: http://localhost:8000
+    description: Local development server
+
+paths:
+  /api/listings:
+    get:
+      operationId: get_listings_with_summary
+      summary: Get all property listings
+      description: |
+        Retrieve all property listings with optional summarization.
+
+        When `summary=true`, returns only essential fields (id, name, location, bedrooms, status)
+        to reduce response size by 80-90%. Useful for browsing and filtering operations.
+
+        When `summary` is absent or `false`, returns full property details (backward compatible).
+      tags:
+        - Listings
+      parameters:
+        - name: summary
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: |
+            Return summarized response with essential fields only.
+            Reduces response size by 80-90% for efficient browsing.
+
+            Truthy values: true, 1, yes → Returns summarized response
+            All other values → Returns full response
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 200
+          description: Maximum results per page
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+          description: Pagination cursor from previous response
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PaginatedResponseSummarizedListing'
+                  - $ref: '#/components/schemas/PaginatedResponseFullListing'
+              examples:
+                summarized:
+                  summary: Summarized response (summary=true)
+                  value:
+                    items:
+                      - id: 12345
+                        name: "Luxury Villa in Seminyak"
+                        city: "Seminyak"
+                        country: "Indonesia"
+                        bedrooms: 3
+                        status: "Available"
+                      - id: 12346
+                        name: "Beachfront Apartment"
+                        city: "Canggu"
+                        country: "Indonesia"
+                        bedrooms: 2
+                        status: "Inactive"
+                    nextCursor: "eyJvZmZzZXQiOjEwfQ=="
+                    metadata:
+                      total: 150
+                      limit: 10
+                      offset: 0
+                      note: "Use GET /api/listings/{id} to see full property details"
+                full:
+                  summary: Full response (summary=false or absent)
+                  value:
+                    items:
+                      - id: 12345
+                        name: "Luxury Villa in Seminyak"
+                        city: "Seminyak"
+                        country: "Indonesia"
+                        bedrooms: 3
+                        isActive: true
+                        description: "Stunning 3-bedroom villa..."
+                        amenities: ["Pool", "WiFi", "Kitchen"]
+                        # ... full property data
+                    nextCursor: "eyJvZmZzZXQiOjEwfQ=="
+                    metadata:
+                      total: 150
+                      limit: 10
+                      offset: 0
+        '400':
+          description: Bad request (invalid cursor)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized (missing or invalid API key)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - ApiKeyAuth: []
+
+  /api/listings/{listing_id}:
+    get:
+      operationId: get_listing_details
+      summary: Get property listing details
+      description: |
+        Retrieve full details for a specific property listing.
+
+        **Note**: The `summary` parameter is silently ignored on detail endpoints.
+        Detail endpoints always return full property information.
+      tags:
+        - Listings
+      parameters:
+        - name: listing_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Unique property listing ID
+        - name: summary
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: |
+            **Ignored on detail endpoints.**
+            Detail endpoints always return full data regardless of this parameter.
+      responses:
+        '200':
+          description: Full property details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FullListing'
+        '404':
+          description: Listing not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - ApiKeyAuth: []
+
+  /api/reservations:
+    get:
+      operationId: search_bookings_with_summary
+      summary: Search bookings
+      description: |
+        Search bookings with optional summarization.
+
+        When `summary=true`, returns only essential fields (id, guest, dates, property, status, price)
+        to reduce response size and exclude nested objects.
+
+        When `summary` is absent or `false`, returns full booking details including guest info,
+        payment history, and property details.
+      tags:
+        - Bookings
+      parameters:
+        - name: summary
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: |
+            Return summarized response with essential fields only.
+            Excludes nested objects (guest details, property info, payment history).
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 200
+          description: Maximum results per page
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          description: Pagination offset
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by booking status
+        - name: start_date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Filter by check-in date (YYYY-MM-DD)
+        - name: end_date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Filter by check-out date (YYYY-MM-DD)
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PaginatedResponseSummarizedBooking'
+                  - $ref: '#/components/schemas/PaginatedResponseFullBooking'
+              examples:
+                summarized:
+                  summary: Summarized response (summary=true)
+                  value:
+                    items:
+                      - id: 67890
+                        guestName: "John Doe"
+                        checkIn: "2025-11-15"
+                        checkOut: "2025-11-22"
+                        listingId: 12345
+                        status: "confirmed"
+                        totalPrice: 2500.00
+                    nextCursor: null
+                    metadata:
+                      total: 25
+                      limit: 10
+                      offset: 0
+                      note: "Use GET /api/reservations/{id} to see full booking details"
+        '400':
+          description: Bad request (invalid parameters)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - ApiKeyAuth: []
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+  schemas:
+    SummarizedListing:
+      type: object
+      required: [id, name, bedrooms, status]
+      properties:
+        id:
+          type: integer
+          description: Unique property listing ID
+          example: 12345
+        name:
+          type: string
+          description: Property display name
+          example: "Luxury Villa in Seminyak"
+        city:
+          type: string
+          nullable: true
+          description: City location
+          example: "Seminyak"
+        country:
+          type: string
+          nullable: true
+          description: Country location
+          example: "Indonesia"
+        bedrooms:
+          type: integer
+          minimum: 0
+          description: Number of bedrooms
+          example: 3
+        status:
+          type: string
+          description: Availability status
+          enum: ["Available", "Inactive"]
+          example: "Available"
+
+    SummarizedBooking:
+      type: object
+      required: [id, guestName, checkIn, checkOut, listingId, status, totalPrice]
+      properties:
+        id:
+          type: integer
+          description: Unique booking ID
+          example: 67890
+        guestName:
+          type: string
+          description: Guest full name
+          example: "John Doe"
+        checkIn:
+          type: string
+          format: date
+          description: Check-in date (ISO 8601 YYYY-MM-DD)
+          example: "2025-11-15"
+        checkOut:
+          type: string
+          format: date
+          description: Check-out date (ISO 8601 YYYY-MM-DD)
+          example: "2025-11-22"
+        listingId:
+          type: integer
+          description: Associated property listing ID
+          example: 12345
+        status:
+          type: string
+          description: Booking status
+          example: "confirmed"
+        totalPrice:
+          type: number
+          format: float
+          minimum: 0
+          description: Total booking price
+          example: 2500.00
+
+    PageMetadata:
+      type: object
+      required: [total, limit]
+      properties:
+        total:
+          type: integer
+          description: Total number of items available
+          example: 150
+        limit:
+          type: integer
+          description: Maximum items per page
+          example: 10
+        offset:
+          type: integer
+          nullable: true
+          description: Current pagination offset
+          example: 0
+        note:
+          type: string
+          nullable: true
+          description: Additional guidance for API consumers
+          example: "Use GET /api/listings/{id} to see full property details"
+
+    PaginatedResponseSummarizedListing:
+      type: object
+      required: [items, metadata]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SummarizedListing'
+        nextCursor:
+          type: string
+          nullable: true
+          description: Cursor for next page
+          example: "eyJvZmZzZXQiOjEwfQ=="
+        metadata:
+          $ref: '#/components/schemas/PageMetadata'
+
+    PaginatedResponseSummarizedBooking:
+      type: object
+      required: [items, metadata]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SummarizedBooking'
+        nextCursor:
+          type: string
+          nullable: true
+        metadata:
+          $ref: '#/components/schemas/PageMetadata'
+
+    PaginatedResponseFullListing:
+      type: object
+      description: Full listing response (existing schema, for reference only)
+      required: [items, metadata]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FullListing'
+        nextCursor:
+          type: string
+          nullable: true
+        metadata:
+          $ref: '#/components/schemas/PageMetadata'
+
+    PaginatedResponseFullBooking:
+      type: object
+      description: Full booking response (existing schema, for reference only)
+      required: [items, metadata]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FullBooking'
+        nextCursor:
+          type: string
+          nullable: true
+        metadata:
+          $ref: '#/components/schemas/PageMetadata'
+
+    FullListing:
+      type: object
+      description: Full property listing (existing schema, not modified)
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        # ... all existing fields (not exhaustively listed here)
+      additionalProperties: true
+
+    FullBooking:
+      type: object
+      description: Full booking details (existing schema, not modified)
+      properties:
+        id:
+          type: integer
+        guestName:
+          type: string
+        # ... all existing fields (not exhaustively listed here)
+      additionalProperties: true
+
+    ErrorResponse:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          type: string
+          description: Error message
+          example: "Invalid cursor format"

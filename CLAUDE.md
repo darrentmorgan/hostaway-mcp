@@ -325,6 +325,16 @@ jq 'select(.level == "ERROR")' logs/app.log
 
 ## Recent Changes
 
+### 2025-11-01
+- Completed MCP Migration (spec 010-we-need-to):
+  - ✅ Fix #1: Service Prefixes (hostaway_ prefix)
+  - ✅ Fix #2: Tool Annotations (MCP hints)
+  - ✅ Improvement #1: Enhanced Tool Descriptions
+  - ✅ Improvement #2: Input Validation
+  - ✅ Improvement #3: Character Limit Truncation
+  - 🔄 Fix #3: Error Messages (in review)
+  - 🔄 Fix #4: Response Formats (in review)
+
 ### 2025-10-20
 - Fixed auto-merge workflow to only run on PR events (not direct pushes)
 - Added event type check: `github.event.workflow_run.event == 'pull_request'`

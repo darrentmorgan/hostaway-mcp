@@ -340,3 +340,42 @@ def mock_bookings_response() -> list[dict[str, Any]]:
             "status": "confirmed",
         },
     ]
+
+
+# Middleware testing fixtures for 008-fix-issues-identified
+
+
+@pytest.fixture
+def mock_request():
+    """Create mock FastAPI Request for middleware testing.
+
+    Returns:
+        Mock Request with correlation_id and state
+    """
+    from unittest.mock import MagicMock
+
+    from starlette.requests import Request
+
+    request = MagicMock(spec=Request)
+    request.state = MagicMock()
+    request.state.correlation_id = "test-correlation-id-12345"
+    request.url = MagicMock()
+    request.url.path = "/api/test"
+    request.headers = {}
+    return request
+
+
+@pytest.fixture
+def mock_rate_limit_state():
+    """Create mock rate limit state for testing header calculations.
+
+    Returns:
+        Dictionary with rate limit state (count, window_start)
+    """
+    from datetime import UTC, datetime
+
+    return {
+        "count": 5,
+        "window_start": datetime.now(UTC).timestamp(),
+        "limit": 15,
+    }

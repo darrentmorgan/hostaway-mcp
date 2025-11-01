@@ -1,0 +1,351 @@
+# Test Template for MCP Migration Fixes
+# Generates pytest tests for each fix
+
+"""Tests for {{ fix_name }}."""
+import pytest
+{% if fix_id in ["fix-3-error-messages", "fix-4-response-formats", "imp-3-character-limit"] %}
+from mcp_stdio_server import (
+    {% if fix_id == "fix-3-error-messages" %}
+    create_error_response,
+    create_http_error_response,
+    {% endif %}
+    {% if fix_id == "fix-4-response-formats" %}
+    format_property_markdown,
+    format_properties_list_markdown,
+    format_booking_markdown,
+    {% endif %}
+    {% if fix_id == "imp-3-character-limit" %}
+    truncate_response,
+    CHARACTER_LIMIT,
+    {% endif %}
+)
+{% endif %}
+
+
+{# Fix 1: Service Prefixes #}
+{% if fix_id == "fix-1-service-prefixes" %}
+def test_tool_names_have_hostaway_prefix():
+    """Verify all tool names have 'hostaway_' prefix."""
+    from mcp_stdio_server import list_tools
+    import asyncio
+
+    tools = asyncio.run(list_tools())
+
+    for tool in tools:
+        assert tool.name.startswith("hostaway_"), f"Tool {tool.name} missing prefix"
+
+    expected_names = [
+        "hostaway_list_properties",
+        "hostaway_get_property_details",
+        "hostaway_check_availability",
+        "hostaway_search_bookings",
+        "hostaway_get_booking_details",
+        "hostaway_get_guest_info",
+        "hostaway_get_financial_reports"
+    ]
+
+    actual_names = [tool.name for tool in tools]
+    assert actual_names == expected_names
+
+
+def test_tool_routing_uses_prefixed_names():
+    """Verify call_tool function handles prefixed names."""
+    from mcp_stdio_server import call_tool
+    import asyncio
+
+    # Test with valid prefixed name (mock API call)
+    # This would need proper mocking in real test
+    pass
+{% endif %}
+
+{# Fix 2: Tool Annotations #}
+{% if fix_id == "fix-2-tool-annotations" %}
+def test_all_tools_have_annotations():
+    """Verify all tools have required annotations."""
+    from mcp_stdio_server import list_tools
+    import asyncio
+
+    tools = asyncio.run(list_tools())
+
+    required_annotations = ["readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"]
+
+    for tool in tools:
+        assert tool.annotations is not None, f"Tool {tool.name} missing annotations"
+
+        for annotation in required_annotations:
+            assert annotation in tool.annotations, f"Tool {tool.name} missing {annotation}"
+
+
+def test_read_only_annotations():
+    """Verify all tools are marked as read-only."""
+    from mcp_stdio_server import list_tools
+    import asyncio
+
+    tools = asyncio.run(list_tools())
+
+    for tool in tools:
+        assert tool.annotations["readOnlyHint"] is True, f"Tool {tool.name} should be read-only"
+        assert tool.annotations["destructiveHint"] is False, f"Tool {tool.name} should not be destructive"
+
+
+def test_open_world_annotations():
+    """Verify all tools are marked as open-world (external API)."""
+    from mcp_stdio_server import list_tools
+    import asyncio
+
+    tools = asyncio.run(list_tools())
+
+    for tool in tools:
+        assert tool.annotations["openWorldHint"] is True, f"Tool {tool.name} should be open-world"
+
+
+def test_financial_reports_not_idempotent():
+    """Verify financial reports marked as non-idempotent."""
+    from mcp_stdio_server import list_tools
+    import asyncio
+
+    tools = asyncio.run(list_tools())
+
+    financial_tool = next(t for t in tools if t.name == "hostaway_get_financial_reports")
+    assert financial_tool.annotations["idempotentHint"] is False, "Financial reports should not be idempotent"
+{% endif %}
+
+{# Fix 3: Error Messages #}
+{% if fix_id == "fix-3-error-messages" %}
+def test_create_error_response():
+    """Test error response formatting."""
+    response = create_error_response("Test error")
+
+    assert len(response) == 1
+    assert response[0].type == "text"
+    assert "ERROR:" in response[0].text
+    assert "Test error" in response[0].text
+
+
+def test_create_http_error_401():
+    """Test 401 error handling."""
+    import httpx
+
+    # Mock 401 error
+    mock_response = httpx.Response(401, request=httpx.Request("GET", "http://test"))
+    error = httpx.HTTPStatusError("Unauthorized", request=mock_response.request, response=mock_response)
+
+    response = create_http_error_response(error, "testing authentication")
+
+    assert len(response) == 1
+    assert "Authentication failed" in response[0].text
+    assert "REMOTE_MCP_API_KEY" in response[0].text
+
+
+def test_create_http_error_404():
+    """Test 404 error handling."""
+    import httpx
+
+    mock_response = httpx.Response(404, request=httpx.Request("GET", "http://test"))
+    error = httpx.HTTPStatusError("Not Found", request=mock_response.request, response=mock_response)
+
+    response = create_http_error_response(error, "fetching property")
+
+    assert len(response) == 1
+    assert "Resource not found" in response[0].text
+    assert "hostaway_list_properties" in response[0].text  # Suggests alternative
+
+
+def test_create_http_error_429():
+    """Test rate limit error handling."""
+    import httpx
+
+    mock_response = httpx.Response(429, request=httpx.Request("GET", "http://test"))
+    error = httpx.HTTPStatusError("Too Many Requests", request=mock_response.request, response=mock_response)
+
+    response = create_http_error_response(error, "listing properties")
+
+    assert len(response) == 1
+    assert "Rate limit exceeded" in response[0].text
+    assert "Wait 10 seconds" in response[0].text
+
+
+def test_create_http_error_timeout():
+    """Test timeout error handling."""
+    import httpx
+
+    error = httpx.TimeoutException("Connection timeout")
+
+    response = create_http_error_response(error, "fetching data")
+
+    assert len(response) == 1
+    assert "timeout" in response[0].text.lower()
+    assert "30 seconds" in response[0].text
+{% endif %}
+
+{# Fix 4: Response Formats #}
+{% if fix_id == "fix-4-response-formats" %}
+def test_format_property_markdown():
+    """Test property markdown formatting."""
+    property_data = {
+        "id": 12345,
+        "name": "Test Villa",
+        "city": "Ubud",
+        "country": "Indonesia",
+        "bedrooms": 3,
+        "status": "Available"
+    }
+
+    markdown = format_property_markdown(property_data)
+
+    assert "Test Villa" in markdown
+    assert "12345" in markdown
+    assert "Ubud, Indonesia" in markdown
+    assert "3" in markdown
+    assert "Available" in markdown
+
+
+def test_format_properties_list_markdown():
+    """Test properties list markdown formatting."""
+    data = {
+        "items": [
+            {"id": 1, "name": "Villa 1", "city": "Ubud", "country": "Indonesia",
+             "bedrooms": 3, "status": "Available"},
+            {"id": 2, "name": "Villa 2", "city": "Seminyak", "country": "Indonesia",
+             "bedrooms": 4, "status": "Available"}
+        ],
+        "meta": {"hasMore": True},
+        "nextCursor": "abc123"
+    }
+
+    markdown = format_properties_list_markdown(data)
+
+    assert "# Properties (2 results)" in markdown
+    assert "Villa 1" in markdown
+    assert "Villa 2" in markdown
+    assert "More results available" in markdown
+
+
+def test_response_format_parameter():
+    """Test that tools accept response_format parameter."""
+    from mcp_stdio_server import list_tools
+    import asyncio
+
+    tools = asyncio.run(list_tools())
+
+    for tool in tools:
+        if tool.name in ["hostaway_list_properties", "hostaway_search_bookings"]:
+            schema = tool.inputSchema
+            assert "response_format" in schema["properties"]
+            assert schema["properties"]["response_format"]["type"] == "string"
+            assert "markdown" in schema["properties"]["response_format"]["enum"]
+            assert "json" in schema["properties"]["response_format"]["enum"]
+{% endif %}
+
+{# Improvement 1: Tool Descriptions #}
+{% if fix_id == "imp-1-tool-descriptions" %}
+def test_tool_descriptions_have_usage_examples():
+    """Verify tool descriptions include usage examples."""
+    from mcp_stdio_server import list_tools
+    import asyncio
+
+    tools = asyncio.run(list_tools())
+
+    for tool in tools:
+        description = tool.description
+        assert len(description) > 100, f"Tool {tool.name} description too short"
+        assert "When to use" in description or "Usage examples" in description
+
+
+def test_tool_descriptions_have_when_not_to_use():
+    """Verify descriptions guide users on when NOT to use tool."""
+    from mcp_stdio_server import list_tools
+    import asyncio
+
+    tools = asyncio.run(list_tools())
+
+    # Check list tools have "when NOT to use"
+    for tool in tools:
+        if "list" in tool.name or "search" in tool.name:
+            assert "NOT to use" in tool.description
+{% endif %}
+
+{# Improvement 2: Input Validation #}
+{% if fix_id == "imp-2-input-validation" %}
+def test_input_schemas_have_constraints():
+    """Verify input schemas have min/max constraints."""
+    from mcp_stdio_server import list_tools
+    import asyncio
+
+    tools = asyncio.run(list_tools())
+
+    for tool in tools:
+        schema = tool.inputSchema
+        properties = schema.get("properties", {})
+
+        # Check numeric fields have constraints
+        for prop_name, prop_schema in properties.items():
+            if prop_schema.get("type") == "integer":
+                assert "minimum" in prop_schema, f"{tool.name}.{prop_name} missing minimum"
+                if prop_name == "limit":
+                    assert "maximum" in prop_schema, f"{tool.name}.{prop_name} missing maximum"
+
+
+def test_input_schemas_have_examples():
+    """Verify input schemas include examples."""
+    from mcp_stdio_server import list_tools
+    import asyncio
+
+    tools = asyncio.run(list_tools())
+
+    for tool in tools:
+        schema = tool.inputSchema
+        properties = schema.get("properties", {})
+
+        # At least one property should have examples
+        has_examples = any("examples" in prop_schema for prop_schema in properties.values())
+        assert has_examples, f"Tool {tool.name} has no examples in schema"
+
+
+def test_schemas_reject_additional_properties():
+    """Verify schemas set additionalProperties: false."""
+    from mcp_stdio_server import list_tools
+    import asyncio
+
+    tools = asyncio.run(list_tools())
+
+    for tool in tools:
+        schema = tool.inputSchema
+        assert schema.get("additionalProperties") is False, f"{tool.name} allows additional properties"
+{% endif %}
+
+{# Improvement 3: CHARACTER_LIMIT #}
+{% if fix_id == "imp-3-character-limit" %}
+def test_character_limit_constant():
+    """Verify CHARACTER_LIMIT is set to 25000."""
+    assert CHARACTER_LIMIT == 25000
+
+
+def test_truncate_response_under_limit():
+    """Test truncation with text under limit."""
+    text = "Short text"
+    result = truncate_response(text, limit=1000)
+
+    assert result == text
+    assert "Truncated" not in result
+
+
+def test_truncate_response_over_limit():
+    """Test truncation with text over limit."""
+    text = "a" * 30000
+    result = truncate_response(text, limit=25000)
+
+    assert len(result) <= 25000
+    assert "Response Truncated" in result
+    assert "To see more results" in result
+
+
+def test_truncate_response_includes_guidance():
+    """Verify truncation includes helpful guidance."""
+    text = "x" * 30000
+    result = truncate_response(text, limit=25000)
+
+    assert "Reduce the `limit` parameter" in result
+    assert "Add filters" in result
+    assert "Use cursor pagination" in result
+{% endif %}

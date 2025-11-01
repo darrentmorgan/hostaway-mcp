@@ -4,14 +4,20 @@ Provides endpoints to retrieve property listings, details, and availability.
 These endpoints are automatically exposed as MCP tools via FastAPI-MCP.
 """
 
+import logging
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from src.api.dependencies import OrganizationContext, get_organization_context
 from src.mcp.auth import get_authenticated_client
 from src.models.pagination import PageMetadata, PaginatedResponse
+from src.models.summarized import SummarizedListing
 from src.services.hostaway_client import HostawayClient
 from src.utils.cursor_codec import decode_cursor, encode_cursor
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -45,16 +51,21 @@ class AvailabilityResponse(BaseModel):
 
 @router.get(
     "/listings",
-    response_model=PaginatedResponse[dict],
+    response_model=None,  # Allow dynamic response type based on summary parameter
     summary="Get all property listings",
-    description="Retrieve all property listings with cursor-based pagination support",
+    description="Retrieve all property listings with cursor-based pagination support. "
+    "Use summary=true for compact responses optimized for AI assistants.",
     tags=["Listings"],
 )
 async def get_listings(
     limit: int = Query(default=50, ge=1, le=200, description="Maximum results per page"),
     cursor: str | None = Query(None, description="Pagination cursor from previous response"),
+    summary: bool = Query(
+        False,
+        description="Return summarized response with essential fields only (80-90% size reduction)",
+    ),
     client: HostawayClient = Depends(get_authenticated_client),
-) -> PaginatedResponse[dict]:
+) -> Any:
     """
     Get all property listings with cursor-based pagination.
 
@@ -119,7 +130,47 @@ async def get_listings(
                 secret=client.config.cursor_secret.get_secret_value(),
             )
 
-        # Build paginated response
+        # Check if summary mode is requested
+        if summary:
+            # Log summary mode usage for analytics
+            logger.info(
+                "Summary mode request",
+                extra={
+                    "endpoint": "/api/listings",
+                    "summary": True,
+                    "organization_id": client.config.account_id,
+                    "page_size": len(listings),
+                },
+            )
+
+            # Transform to summarized listings
+            summarized_items = [
+                SummarizedListing(
+                    id=item["id"],
+                    name=item["name"],
+                    city=item.get("city"),
+                    country=item.get("country"),
+                    bedrooms=item.get("bedrooms", 0),
+                    status="Available"
+                    if item.get("isActive", item.get("is_active"))
+                    else "Inactive",
+                )
+                for item in listings
+            ]
+
+            # Build paginated response with summarized items
+            return PaginatedResponse[SummarizedListing](
+                items=summarized_items,
+                nextCursor=next_cursor,
+                meta=PageMetadata(
+                    totalCount=total_count,
+                    pageSize=len(summarized_items),
+                    hasMore=has_more,
+                    note="Use GET /api/listings/{id} to see full property details",
+                ),
+            )
+
+        # Return full response (backward compatible default)
         return PaginatedResponse[dict](
             items=listings,
             nextCursor=next_cursor,

@@ -18,6 +18,156 @@ This project enables AI assistants like Claude to interact with Hostaway's prope
 - ✅ **Performance**: Async/await, connection pooling, and exponential backoff retry logic
 - ✅ **Production Ready**: Docker support, CI/CD pipeline, comprehensive test coverage
 
+## Recent Updates (Issue #008)
+
+**Three MCP server improvements implemented (2025-10-28)**:
+
+### ✅ Issue #008-US1: 404 vs 401 Priority Fix
+- **Problem**: Non-existent routes returned `401 Unauthorized` instead of `404 Not Found`
+- **Solution**: Added custom 404 exception handler and route existence check in authentication middleware
+- **Impact**: Improved API developer experience - route existence now checked before authentication
+- **Tests**: 7 integration tests covering 404 behavior, auth preservation, CORS, and correlation IDs
+
+### ✅ Issue #008-US2: Rate Limit Visibility Headers
+- **Problem**: API consumers had no visibility into rate limit status
+- **Solution**: Added `RateLimiterMiddleware` that injects industry-standard headers on all responses
+  - `X-RateLimit-Limit`: Maximum requests allowed per window
+  - `X-RateLimit-Remaining`: Requests remaining in current window
+  - `X-RateLimit-Reset`: Unix timestamp when window resets
+  - `Retry-After`: Seconds to wait when limit exceeded
+- **Impact**: Transparent rate limiting for better client retry logic
+- **Tests**: 9 tests (4 integration + 5 unit) + 3 performance regression tests
+
+### ✅ Issue #008-US3: API Key Generation CLI
+- **Problem**: No documented way to generate test API keys for local development
+- **Solution**: Created CLI script (`src/scripts/generate_api_key.py`) with:
+  - Cryptographically secure key generation (`secrets.token_urlsafe(32)`)
+  - SHA-256 hashing for database storage
+  - Organization verification before key creation
+  - One-time display of plain key (security best practice)
+- **Usage**: `uv run python -m src.scripts.generate_api_key --org-id 1 --user-id user-123`
+- **Documentation**: See `docs/API_KEY_GENERATION.md`
+- **Tests**: 6 unit tests covering format, hashing, CLI interface, and entropy
+
+**All implementations follow TDD** - tests written first, implementation second.
+
+## Quick Start
+
+**Server is already deployed and accessible!**
+
+- **Base URL**: `http://72.60.233.157:8080`
+- **Health Check**: http://72.60.233.157:8080/health
+- **API Docs**: http://72.60.233.157:8080/docs
+
+### Using with Claude Desktop
+
+Add to your `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "hostaway": {
+      "url": "http://72.60.233.157:8080/mcp/v1",
+      "transport": "sse"
+    }
+  }
+}
+```
+
+Restart Claude Desktop and start using Hostaway MCP tools!
+
+For detailed setup instructions, see [docs/SIMPLE_SETUP.md](docs/SIMPLE_SETUP.md).
+
+## Automated MCP Migration
+
+**Parallel execution system** for applying MCP Migration Guide fixes using git worktrees.
+
+### Quick Start
+
+```bash
+# Execute all 7 fixes in parallel (~45 minutes vs 4 hours sequential)
+.automation/scripts/orchestrator.sh --auto-rollback --failure-threshold 30
+
+# Monitor progress in real-time
+.automation/scripts/status.sh --watch --metrics
+
+# Generate HTML report
+.automation/scripts/generate-report.sh --format html --output report.html
+```
+
+### Key Features
+
+- ✅ **6x Speedup**: Parallel execution using git worktrees (4 hours → 45 min)
+- ✅ **Zero Manual Intervention**: Fully automated from execution to PR merge
+- ✅ **Safety First**: Automatic rollback on failure threshold, checkpoint tags
+- ✅ **Comprehensive Testing**: MCP Inspector validation + pytest integration
+- ✅ **Real-Time Monitoring**: Progress visualization with metrics
+- ✅ **Audit Trail**: Timestamped logs and execution state tracking
+
+### Architecture
+
+The system executes 7 MCP fixes in 2 waves using dependency-aware scheduling:
+
+- **Wave 1** (Parallel): 6 independent fixes run concurrently in isolated git worktrees
+- **Wave 2** (Sequential): Fix-4 runs after Wave 1 (depends on Fix-1 and Fix-3)
+
+Each fix executes in its own worktree with:
+- Automated implementation
+- Unit + integration tests (pytest)
+- MCP Inspector schema validation
+- Automatic PR creation (GitHub CLI)
+
+### Prerequisites
+
+- Git >= 2.30 (worktree support)
+- Python >= 3.12
+- GitHub CLI (`gh`) - for PR automation
+- Node.js (optional) - for MCP Inspector
+
+### Documentation
+
+For complete documentation, see [.automation/README.md](.automation/README.md)
+
+**Core scripts**:
+- `orchestrator.sh` - Main entry point
+- `status.sh` - Real-time monitoring
+- `rollback.sh` - Emergency recovery
+- `generate-report.sh` - Summary reports
+- `cleanup.sh` - Manual cleanup
+
+## Recent Updates (Issue #008)
+
+**Three MCP server improvements implemented (2025-10-28)**:
+
+### ✅ Issue #008-US1: 404 vs 401 Priority Fix
+- **Problem**: Non-existent routes returned `401 Unauthorized` instead of `404 Not Found`
+- **Solution**: Added custom 404 exception handler and route existence check in authentication middleware
+- **Impact**: Improved API developer experience - route existence now checked before authentication
+- **Tests**: 7 integration tests covering 404 behavior, auth preservation, CORS, and correlation IDs
+
+### ✅ Issue #008-US2: Rate Limit Visibility Headers
+- **Problem**: API consumers had no visibility into rate limit status
+- **Solution**: Added `RateLimiterMiddleware` that injects industry-standard headers on all responses
+  - `X-RateLimit-Limit`: Maximum requests allowed per window
+  - `X-RateLimit-Remaining`: Requests remaining in current window
+  - `X-RateLimit-Reset`: Unix timestamp when window resets
+  - `Retry-After`: Seconds to wait when limit exceeded
+- **Impact**: Transparent rate limiting for better client retry logic
+- **Tests**: 9 tests (4 integration + 5 unit) + 3 performance regression tests
+
+### ✅ Issue #008-US3: API Key Generation CLI
+- **Problem**: No documented way to generate test API keys for local development
+- **Solution**: Created CLI script (`src/scripts/generate_api_key.py`) with:
+  - Cryptographically secure key generation (`secrets.token_urlsafe(32)`)
+  - SHA-256 hashing for database storage
+  - Organization verification before key creation
+  - One-time display of plain key (security best practice)
+- **Usage**: `uv run python -m src.scripts.generate_api_key --org-id 1 --user-id user-123`
+- **Documentation**: See `docs/API_KEY_GENERATION.md`
+- **Tests**: 6 unit tests covering format, hashing, CLI interface, and entropy
+
+**All implementations follow TDD** - tests written first, implementation second.
+
 ## Quick Start
 
 ### Prerequisites
@@ -91,7 +241,10 @@ All FastAPI routes are automatically exposed as MCP tools via FastAPI-MCP integr
 ### Property Listings
 
 - `GET /api/listings` - List all properties with pagination
-  - Query params: `limit`, `offset`
+  - Query params: `limit`, `cursor`, `summary` (optional)
+  - **New**: `summary=true` returns compact response (80-90% size reduction)
+    - Only essential fields: id, name, city, country, bedrooms, status
+    - Use `GET /api/listings/{id}` for full details
 - `GET /api/listings/{id}` - Get detailed property information
 - `GET /api/listings/{id}/availability` - Check availability for date range
   - Query params: `start_date`, `end_date` (YYYY-MM-DD)
@@ -99,7 +252,10 @@ All FastAPI routes are automatically exposed as MCP tools via FastAPI-MCP integr
 ### Booking Management
 
 - `GET /api/reservations` - Search bookings with filters
-  - Query params: `listing_id`, `check_in_from`, `check_in_to`, `check_out_from`, `check_out_to`, `status`, `guest_email`, `booking_source`, `min_guests`, `max_guests`, `limit`, `offset`
+  - Query params: `listing_id`, `check_in_from`, `check_in_to`, `check_out_from`, `check_out_to`, `status`, `guest_email`, `booking_source`, `min_guests`, `max_guests`, `limit`, `cursor`, `summary` (optional)
+  - **New**: `summary=true` returns compact response (80-90% size reduction)
+    - Only essential fields: id, guestName, checkIn, checkOut, listingId, status, totalPrice
+    - Use `GET /api/reservations/{id}` for full details
 - `GET /api/reservations/{id}` - Get booking details
 - `GET /api/reservations/{id}/guest` - Get guest information for booking
 
@@ -108,6 +264,83 @@ All FastAPI routes are automatically exposed as MCP tools via FastAPI-MCP integr
 - `GET /api/financialReports` - Get financial report for date range
   - Query params: `start_date`, `end_date` (YYYY-MM-DD), optional `listing_id`
   - Returns revenue breakdown, expense breakdown, profitability metrics
+
+## Usage Examples
+
+### Response Summarization (New!)
+
+The API now supports optional response summarization for list endpoints, reducing response sizes by 80-90% for AI assistant consumption:
+
+**Listings - Full Response**:
+```bash
+curl "http://72.60.233.157:8080/api/listings?limit=10"
+# Returns full property details: id, name, address, city, state, country, postal_code,
+# description, capacity, bedrooms, bathrooms, property_type, base_price, amenities, images, etc.
+```
+
+**Listings - Summarized Response**:
+```bash
+curl "http://72.60.233.157:8080/api/listings?limit=10&summary=true"
+# Returns only essential fields:
+# {
+#   "items": [
+#     {
+#       "id": 12345,
+#       "name": "Luxury Villa in Seminyak",
+#       "city": "Seminyak",
+#       "country": "Indonesia",
+#       "bedrooms": 3,
+#       "status": "Available"
+#     }
+#   ],
+#   "nextCursor": "eyJvZmZzZXQiOjEwfQ==",
+#   "meta": {
+#     "totalCount": 100,
+#     "pageSize": 10,
+#     "hasMore": true,
+#     "note": "Use GET /api/listings/{id} to see full property details"
+#   }
+# }
+```
+
+**Bookings - Full Response**:
+```bash
+curl "http://72.60.233.157:8080/api/reservations?limit=10&status=confirmed"
+# Returns full booking details including nested guest objects, payment history, etc.
+```
+
+**Bookings - Summarized Response**:
+```bash
+curl "http://72.60.233.157:8080/api/reservations?limit=10&status=confirmed&summary=true"
+# Returns only essential fields:
+# {
+#   "items": [
+#     {
+#       "id": 67890,
+#       "guestName": "John Doe",
+#       "checkIn": "2025-11-15",
+#       "checkOut": "2025-11-22",
+#       "listingId": 12345,
+#       "status": "confirmed",
+#       "totalPrice": 2500.00
+#     }
+#   ],
+#   "nextCursor": "eyJvZmZzZXQiOjEwfQ==",
+#   "meta": {
+#     "totalCount": 50,
+#     "pageSize": 10,
+#     "hasMore": true,
+#     "note": "Use GET /api/reservations/{id} to see full booking details"
+#   }
+# }
+```
+
+**Benefits**:
+- 80-90% reduction in response size
+- Faster response times
+- Reduced context window consumption for AI assistants
+- Backward compatible (defaults to full response)
+- Guidance note points to detailed endpoints
 
 ## Project Structure
 

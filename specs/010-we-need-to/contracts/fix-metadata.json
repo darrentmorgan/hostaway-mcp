@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fix Metadata Schema",
+  "description": "Schema for defining fix specifications from migration guide",
+  "type": "object",
+  "required": [
+    "fix_id",
+    "fix_number",
+    "fix_type",
+    "name",
+    "description",
+    "migration_guide_section",
+    "estimated_duration_seconds",
+    "target_file",
+    "lines_added",
+    "test_file",
+    "dependencies"
+  ],
+  "properties": {
+    "fix_id": {
+      "type": "string",
+      "pattern": "^(fix|imp)-\\d+-[a-z-]+$",
+      "description": "Unique identifier"
+    },
+    "fix_number": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 7,
+      "description": "Sequential ordering number"
+    },
+    "fix_type": {
+      "type": "string",
+      "enum": ["high_priority", "medium_priority"],
+      "description": "Priority classification"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of what the fix does"
+    },
+    "migration_guide_section": {
+      "type": "string",
+      "description": "Section reference in migration guide"
+    },
+    "estimated_duration_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Expected time to implement (seconds)"
+    },
+    "target_file": {
+      "type": "string",
+      "description": "File to modify"
+    },
+    "lines_added": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Approximate lines of code added"
+    },
+    "test_file": {
+      "type": "string",
+      "description": "Test file path"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(fix|imp)-\\d+-[a-z-]+$"
+      },
+      "description": "Fix IDs that must complete first"
+    }
+  }
+}

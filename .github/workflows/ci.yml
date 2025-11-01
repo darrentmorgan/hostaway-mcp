@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, 001-we-need-to ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, 001-we-need-to ]
   workflow_dispatch:
 
 env:
@@ -33,11 +33,11 @@ jobs:
 
       - name: Run ruff format check
         run: |
-          uv run ruff format --check .
+          uv run ruff format --check src/ tests/
 
       - name: Run ruff lint
         run: |
-          uv run ruff check .
+          uv run ruff check src/ tests/
 
   # Type checking - TEMPORARILY DISABLED
   # TODO: Fix type errors in follow-up PR

@@ -1,0 +1,32 @@
+# Dependency Graph for MCP Migration Fixes
+# Defines execution order and dependencies between fixes
+
+nodes:
+  - fix-1-service-prefixes
+  - fix-2-tool-annotations
+  - fix-3-error-messages
+  - fix-4-response-formats
+  - imp-1-tool-descriptions
+  - imp-2-input-validation
+  - imp-3-character-limit
+
+edges:
+  # Fix 4 depends on Fix 1 (needs prefixed tool names)
+  - from: fix-1-service-prefixes
+    to: fix-4-response-formats
+
+  # Fix 4 depends on Fix 3 (needs error helpers)
+  - from: fix-3-error-messages
+    to: fix-4-response-formats
+
+execution_order:
+  # Wave 1: Independent fixes (can run in parallel)
+  - - fix-1-service-prefixes
+    - fix-2-tool-annotations
+    - fix-3-error-messages
+    - imp-1-tool-descriptions
+    - imp-2-input-validation
+    - imp-3-character-limit
+
+  # Wave 2: Dependent fixes (wait for Fix 1 and Fix 3)
+  - - fix-4-response-formats

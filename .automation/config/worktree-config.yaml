@@ -1,0 +1,22 @@
+# Worktree Configuration for MCP Migration
+
+worktree_base_dir: /tmp/hostaway-mcp-worktrees
+branch_prefix: mcp-
+base_branch: 001-we-need-to
+
+# Worktree lifecycle settings
+cleanup_on_success: true
+cleanup_on_failure: false  # Keep for debugging
+
+# Timeouts (seconds)
+fix_timeout: 7200  # 2 hours per fix
+test_timeout: 600  # 10 minutes for tests
+pr_creation_timeout: 300  # 5 minutes for PR creation
+
+# Auto-merge settings
+auto_merge_enabled: true
+auto_merge_method: squash
+delete_branch_after_merge: true
+
+# Parallel execution limits
+max_concurrent_worktrees: 7  # All fixes can run in parallel (respecting dependencies)

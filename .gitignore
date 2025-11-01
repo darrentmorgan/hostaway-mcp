@@ -56,6 +56,10 @@ coverage/
 logs/
 *.log
 
+# Automation logs (keep directory structure)
+.automation/logs/*
+!.automation/logs/.gitignore
+
 # Temporary files
 tmp/
 temp/
