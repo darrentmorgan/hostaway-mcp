@@ -13,10 +13,10 @@ import re
 from typing import Any
 
 import httpx
-
-from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import TextContent, Tool
+
+from mcp.server import Server
 
 # Create MCP server
 app = Server("hostaway-mcp")
@@ -24,6 +24,34 @@ app = Server("hostaway-mcp")
 # HTTP client for API calls - use remote server
 BASE_URL = os.getenv("REMOTE_MCP_URL", "http://72.60.233.157:8080")
 API_KEY = os.getenv("REMOTE_MCP_API_KEY", "")
+CHARACTER_LIMIT = 25000  # MCP best practice: 25,000 character limit
+
+
+def truncate_response(text: str, limit: int = CHARACTER_LIMIT) -> str:
+    """Truncate response text if it exceeds character limit."""
+    if len(text) <= limit:
+        return text
+
+    truncate_at = int(limit * 0.8)
+    truncated_text = text[:truncate_at]
+
+    guidance_message = f"""
+
+---
+
+⚠️ **Response Truncated**
+
+Original: {len(text):,} chars, truncated to {len(truncated_text):,} chars.
+
+**To see more:**
+1. Reduce limit parameter
+2. Add filters
+3. Use pagination
+
+**Need specific data?** Use detail endpoints for individual items.
+"""
+
+    return truncated_text + guidance_message
 
 
 def create_error_response(message: str, is_error: bool = True) -> list[TextContent]:
@@ -365,7 +393,8 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:  # noqa: PL
                 response = await client.get(f"{BASE_URL}/api/listings", params=params)
                 response.raise_for_status()
                 data = response.json()
-                return [TextContent(type="text", text=json.dumps(data, indent=2))]
+                response_text = json.dumps(data, indent=2)
+                return [TextContent(type="text", text=truncate_response(response_text))]
 
             if name == "hostaway_get_property_details":
                 listing_id = arguments["listing_id"]
@@ -381,7 +410,8 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:  # noqa: PL
                 response = await client.get(f"{BASE_URL}/api/listings/{listing_id}")
                 response.raise_for_status()
                 data = response.json()
-                return [TextContent(type="text", text=json.dumps(data, indent=2))]
+                response_text = json.dumps(data, indent=2)
+                return [TextContent(type="text", text=truncate_response(response_text))]
 
             if name == "hostaway_check_availability":
                 listing_id = arguments["listing_id"]
@@ -414,7 +444,8 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:  # noqa: PL
                 )
                 response.raise_for_status()
                 data = response.json()
-                return [TextContent(type="text", text=json.dumps(data, indent=2))]
+                response_text = json.dumps(data, indent=2)
+                return [TextContent(type="text", text=truncate_response(response_text))]
 
             if name == "hostaway_search_bookings":
                 params = {k: v for k, v in arguments.items() if v is not None}
@@ -423,7 +454,8 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:  # noqa: PL
                 response = await client.get(f"{BASE_URL}/api/reservations", params=params)
                 response.raise_for_status()
                 data = response.json()
-                return [TextContent(type="text", text=json.dumps(data, indent=2))]
+                response_text = json.dumps(data, indent=2)
+                return [TextContent(type="text", text=truncate_response(response_text))]
 
             if name == "hostaway_get_booking_details":
                 booking_id = arguments["booking_id"]
@@ -439,7 +471,8 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:  # noqa: PL
                 response = await client.get(f"{BASE_URL}/api/reservations/{booking_id}")
                 response.raise_for_status()
                 data = response.json()
-                return [TextContent(type="text", text=json.dumps(data, indent=2))]
+                response_text = json.dumps(data, indent=2)
+                return [TextContent(type="text", text=truncate_response(response_text))]
 
             if name == "hostaway_get_guest_info":
                 booking_id = arguments["booking_id"]
@@ -453,7 +486,8 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:  # noqa: PL
                 response = await client.get(f"{BASE_URL}/api/reservations/{booking_id}/guest")
                 response.raise_for_status()
                 data = response.json()
-                return [TextContent(type="text", text=json.dumps(data, indent=2))]
+                response_text = json.dumps(data, indent=2)
+                return [TextContent(type="text", text=truncate_response(response_text))]
 
             if name == "hostaway_get_financial_reports":
                 start_date = arguments["start_date"]
@@ -474,7 +508,8 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:  # noqa: PL
                 response = await client.get(f"{BASE_URL}/api/financialReports", params=params)
                 response.raise_for_status()
                 data = response.json()
-                return [TextContent(type="text", text=json.dumps(data, indent=2))]
+                response_text = json.dumps(data, indent=2)
+                return [TextContent(type="text", text=truncate_response(response_text))]
 
             return create_error_response(
                 f"Unknown tool: {name}. "

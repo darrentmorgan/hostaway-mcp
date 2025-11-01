@@ -4,7 +4,6 @@ Provides common fixtures for testing Hostaway API client, authentication,
 and MCP protocol endpoints.
 """
 
-from datetime import UTC
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -373,7 +372,7 @@ def mock_rate_limit_state():
     Returns:
         Dictionary with rate limit state (count, window_start)
     """
-    from datetime import datetime
+    from datetime import UTC, datetime
 
     return {
         "count": 5,
