@@ -30,7 +30,7 @@ async def list_tools() -> list[Tool]:
     """List available Hostaway API tools."""
     return [
         Tool(
-            name="hostaway_list_properties",
+            name="list_properties",
             description="List all Hostaway properties with pagination",
             inputSchema={
                 "type": "object",
@@ -41,7 +41,7 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
-            name="hostaway_get_property_details",
+            name="get_property_details",
             description="Get detailed information about a specific property",
             inputSchema={
                 "type": "object",
@@ -55,7 +55,7 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
-            name="hostaway_check_availability",
+            name="check_availability",
             description="Check property availability for a date range",
             inputSchema={
                 "type": "object",
@@ -71,7 +71,7 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
-            name="hostaway_search_bookings",
+            name="search_bookings",
             description="Search bookings with filters",
             inputSchema={
                 "type": "object",
@@ -85,7 +85,7 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
-            name="hostaway_get_booking_details",
+            name="get_booking_details",
             description="Get detailed booking information",
             inputSchema={
                 "type": "object",
@@ -96,7 +96,7 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
-            name="hostaway_get_guest_info",
+            name="get_guest_info",
             description="Get guest information for a booking",
             inputSchema={
                 "type": "object",
@@ -107,7 +107,7 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
-            name="hostaway_get_financial_reports",
+            name="get_financial_reports",
             description="Get financial reports with revenue/expense breakdown",
             inputSchema={
                 "type": "object",
@@ -133,7 +133,7 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
 
     async with httpx.AsyncClient(timeout=30.0, headers=headers) as client:
         try:
-            if name == "hostaway_list_properties":
+            if name == "list_properties":
                 params = {k: v for k, v in arguments.items() if v is not None}
                 # Use summary=true to prevent context window overflow
                 params["summary"] = "true"
