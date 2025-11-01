@@ -23,6 +23,34 @@ app = Server("hostaway-mcp")
 # HTTP client for API calls - use remote server
 BASE_URL = os.getenv("REMOTE_MCP_URL", "http://72.60.233.157:8080")
 API_KEY = os.getenv("REMOTE_MCP_API_KEY", "")
+CHARACTER_LIMIT = 25000  # MCP best practice: 25,000 character limit
+
+
+def truncate_response(text: str, limit: int = CHARACTER_LIMIT) -> str:
+    """Truncate response text if it exceeds character limit."""
+    if len(text) <= limit:
+        return text
+
+    truncate_at = int(limit * 0.8)
+    truncated_text = text[:truncate_at]
+
+    guidance_message = f"""
+
+---
+
+⚠️ **Response Truncated**
+
+Original: {len(text):,} chars, truncated to {len(truncated_text):,} chars.
+
+**To see more:**
+1. Reduce limit parameter
+2. Add filters
+3. Use pagination
+
+**Need specific data?** Use detail endpoints for individual items.
+"""
+
+    return truncated_text + guidance_message
 
 
 @app.list_tools()
@@ -267,7 +295,7 @@ Returns detailed financial data including revenue, expenses, and net income for 
 
 
 @app.call_tool()
-async def call_tool(name: str, arguments: Any) -> list[TextContent]:
+async def call_tool(name: str, arguments: Any) -> list[TextContent]:  # noqa: PLR0915
     """Execute a tool by calling the HTTP API."""
     # Add API key to headers if configured
     headers = {"X-API-Key": API_KEY} if API_KEY else {}
@@ -281,14 +309,16 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 response = await client.get(f"{BASE_URL}/api/listings", params=params)
                 response.raise_for_status()
                 data = response.json()
-                return [TextContent(type="text", text=json.dumps(data, indent=2))]
+                response_text = json.dumps(data, indent=2)
+                return [TextContent(type="text", text=truncate_response(response_text))]
 
             if name == "get_property_details":
                 listing_id = arguments["listing_id"]
                 response = await client.get(f"{BASE_URL}/api/listings/{listing_id}")
                 response.raise_for_status()
                 data = response.json()
-                return [TextContent(type="text", text=json.dumps(data, indent=2))]
+                response_text = json.dumps(data, indent=2)
+                return [TextContent(type="text", text=truncate_response(response_text))]
 
             if name == "check_availability":
                 listing_id = arguments["listing_id"]
@@ -302,7 +332,8 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 )
                 response.raise_for_status()
                 data = response.json()
-                return [TextContent(type="text", text=json.dumps(data, indent=2))]
+                response_text = json.dumps(data, indent=2)
+                return [TextContent(type="text", text=truncate_response(response_text))]
 
             if name == "search_bookings":
                 params = {k: v for k, v in arguments.items() if v is not None}
@@ -311,28 +342,32 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:
                 response = await client.get(f"{BASE_URL}/api/reservations", params=params)
                 response.raise_for_status()
                 data = response.json()
-                return [TextContent(type="text", text=json.dumps(data, indent=2))]
+                response_text = json.dumps(data, indent=2)
+                return [TextContent(type="text", text=truncate_response(response_text))]
 
             if name == "get_booking_details":
                 booking_id = arguments["booking_id"]
                 response = await client.get(f"{BASE_URL}/api/reservations/{booking_id}")
                 response.raise_for_status()
                 data = response.json()
-                return [TextContent(type="text", text=json.dumps(data, indent=2))]
+                response_text = json.dumps(data, indent=2)
+                return [TextContent(type="text", text=truncate_response(response_text))]
 
             if name == "get_guest_info":
                 booking_id = arguments["booking_id"]
                 response = await client.get(f"{BASE_URL}/api/reservations/{booking_id}/guest")
                 response.raise_for_status()
                 data = response.json()
-                return [TextContent(type="text", text=json.dumps(data, indent=2))]
+                response_text = json.dumps(data, indent=2)
+                return [TextContent(type="text", text=truncate_response(response_text))]
 
             if name == "get_financial_reports":
                 params = {k: v for k, v in arguments.items() if v is not None}
                 response = await client.get(f"{BASE_URL}/api/financialReports", params=params)
                 response.raise_for_status()
                 data = response.json()
-                return [TextContent(type="text", text=json.dumps(data, indent=2))]
+                response_text = json.dumps(data, indent=2)
+                return [TextContent(type="text", text=truncate_response(response_text))]
 
             return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
