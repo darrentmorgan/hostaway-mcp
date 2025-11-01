@@ -31,7 +31,18 @@ async def list_tools() -> list[Tool]:
     return [
         Tool(
             name="hostaway_list_properties",
-            description="List all Hostaway properties with pagination",
+            description="""List all Hostaway properties with cursor-based pagination.
+
+Returns summarized property information optimized for AI context windows (ID, name, location, bedrooms, status).
+
+**When to use:**
+- Browsing all available properties
+- Finding properties by specific criteria
+- Building property catalogs or inventories
+
+**When NOT to use:**
+- Getting complete details for a single property → Use hostaway_get_property_details instead
+- Checking availability for specific dates → Use hostaway_check_availability instead""",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -49,7 +60,18 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="hostaway_get_property_details",
-            description="Get detailed information about a specific property",
+            description="""Get detailed information about a specific Hostaway property.
+
+Returns complete property data including amenities, pricing, policies, and calendar information.
+
+**When to use:**
+- Need full property specifications (amenities, policies, etc.)
+- Preparing detailed property descriptions
+- Reviewing complete property configuration
+
+**When NOT to use:**
+- Just need basic property info → Use hostaway_list_properties instead
+- Checking availability → Use hostaway_check_availability instead""",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -70,7 +92,19 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="hostaway_check_availability",
-            description="Check property availability for a date range",
+            description="""Check if a Hostaway property is available for specific dates.
+
+Returns availability status and pricing for the requested date range.
+
+**When to use:**
+- Checking if property is available for booking
+- Getting pricing for specific dates
+- Verifying date range before creating reservation
+
+**Required inputs:**
+- listing_id: Property ID from hostaway_list_properties
+- start_date: Check-in date (YYYY-MM-DD format)
+- end_date: Check-out date (YYYY-MM-DD format)""",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -93,7 +127,19 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="hostaway_search_bookings",
-            description="Search bookings with filters",
+            description="""Search and filter Hostaway bookings with pagination.
+
+Returns booking summaries matching specified criteria (date range, status, property).
+
+**When to use:**
+- Finding bookings by date range
+- Filtering bookings by status (confirmed, cancelled, etc.)
+- Getting recent bookings for a property
+
+**Common filters:**
+- status: confirmed, cancelled, inquiry, reserved
+- start_date/end_date: Filter by booking dates
+- limit/offset: Control pagination""",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -114,7 +160,17 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="hostaway_get_booking_details",
-            description="Get detailed booking information",
+            description="""Get complete details for a specific Hostaway booking.
+
+Returns full booking information including guest details, pricing, payments, and status.
+
+**When to use:**
+- Need complete booking information
+- Reviewing payment and pricing details
+- Accessing guest communication history
+
+**Required inputs:**
+- booking_id: Booking ID from hostaway_search_bookings""",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -132,7 +188,17 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="hostaway_get_guest_info",
-            description="Get guest information for a booking",
+            description="""Get guest contact and personal information for a Hostaway booking.
+
+Returns guest name, email, phone, and other contact details associated with the booking.
+
+**When to use:**
+- Contacting guests about their reservation
+- Verifying guest information
+- Preparing check-in instructions
+
+**Required inputs:**
+- booking_id: Booking ID from hostaway_search_bookings""",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -150,7 +216,21 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="hostaway_get_financial_reports",
-            description="Get financial reports with revenue/expense breakdown",
+            description="""Get financial reports with revenue and expense breakdown for Hostaway properties.
+
+Returns detailed financial data including revenue, expenses, and net income for specified date range.
+
+**When to use:**
+- Generating financial summaries
+- Analyzing property performance
+- Preparing accounting reports
+
+**Required inputs:**
+- start_date: Report start date (YYYY-MM-DD)
+- end_date: Report end date (YYYY-MM-DD)
+
+**Optional filters:**
+- listing_id: Limit report to specific property""",
             inputSchema={
                 "type": "object",
                 "properties": {
