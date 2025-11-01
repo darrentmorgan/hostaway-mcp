@@ -78,9 +78,9 @@ def test_wave_1_is_independent(dependency_graph):
     # Check that no Wave 1 fix depends on another Wave 1 fix
     for edge in edges:
         if edge["to"] in wave_1:
-            assert (
-                edge["from"] not in wave_1
-            ), f"{edge['to']} in Wave 1 should not depend on {edge['from']} also in Wave 1"
+            assert edge["from"] not in wave_1, (
+                f"{edge['to']} in Wave 1 should not depend on {edge['from']} also in Wave 1"
+            )
 
 
 def test_wave_2_depends_on_wave_1(dependency_graph):
@@ -149,9 +149,9 @@ def test_execution_waves_match_dependencies(dependency_graph):
         from_wave = wave_map[edge["from"]]
         to_wave = wave_map[edge["to"]]
 
-        assert (
-            from_wave < to_wave
-        ), f"{edge['to']} (wave {to_wave}) depends on {edge['from']} (wave {from_wave}), but they're in wrong order"
+        assert from_wave < to_wave, (
+            f"{edge['to']} (wave {to_wave}) depends on {edge['from']} (wave {from_wave}), but they're in wrong order"
+        )
 
 
 @pytest.mark.skip(reason="Integration test - requires actual execution")

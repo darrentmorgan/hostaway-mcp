@@ -89,9 +89,9 @@ def test_fix_2_tool_annotations():
 
         # Verify read-only
         assert tool.annotations["readOnlyHint"] is True, f"{tool.name} should be read-only"
-        assert (
-            tool.annotations["destructiveHint"] is False
-        ), f"{tool.name} should not be destructive"
+        assert tool.annotations["destructiveHint"] is False, (
+            f"{tool.name} should not be destructive"
+        )
 
         # Verify open-world
         assert tool.annotations["openWorldHint"] is True, f"{tool.name} should be open-world"
@@ -270,9 +270,9 @@ def test_imp_2_input_validation():
         assert has_examples, f"{tool.name} has no examples in schema"
 
         # Check additionalProperties
-        assert (
-            schema.get("additionalProperties") is False
-        ), f"{tool.name} should reject additional properties"
+        assert schema.get("additionalProperties") is False, (
+            f"{tool.name} should reject additional properties"
+        )
 
 
 @pytest.mark.skip(reason="Requires mcp_stdio_server implementation")

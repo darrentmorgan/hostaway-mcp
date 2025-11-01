@@ -150,9 +150,9 @@ def test_input_validation_with_annotations():
                 for p in properties
                 if any(keyword in p.lower() for keyword in ["update", "delete", "modify", "create"])
             ]
-            assert (
-                len(write_params) == 0
-            ), f"Read-only tool {tool.name} has write parameters: {write_params}"
+            assert len(write_params) == 0, (
+                f"Read-only tool {tool.name} has write parameters: {write_params}"
+            )
 
 
 @pytest.mark.skip(reason="Requires mcp_stdio_server implementation")
@@ -285,9 +285,9 @@ def test_consistency_across_fixes():
         if annotation_keys is None:
             annotation_keys = set(tool.annotations.keys())
         else:
-            assert (
-                set(tool.annotations.keys()) == annotation_keys
-            ), f"Tool {tool.name} has different annotation keys"
+            assert set(tool.annotations.keys()) == annotation_keys, (
+                f"Tool {tool.name} has different annotation keys"
+            )
 
     # All list/search tools should support response_format parameter
     list_search_tools = [t for t in tools if "list" in t.name or "search" in t.name]
@@ -295,9 +295,9 @@ def test_consistency_across_fixes():
         schema = tool.inputSchema
         properties = schema.get("properties", {})
 
-        assert (
-            "response_format" in properties
-        ), f"Tool {tool.name} missing response_format parameter"
+        assert "response_format" in properties, (
+            f"Tool {tool.name} missing response_format parameter"
+        )
 
         # Should support both json and markdown
         format_enum = properties["response_format"].get("enum", [])
