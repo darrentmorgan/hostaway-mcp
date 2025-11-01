@@ -154,11 +154,90 @@ apply_fix_1_service_prefixes() {
 apply_fix_2_tool_annotations() {
     echo "  Applying Fix 2: Tool Annotations..."
 
-    # This would require more sophisticated editing
-    # For now, output a message that manual intervention is needed
-    echo "    ! This fix requires manual code editing"
-    echo "    ! Add annotations dict to each Tool() definition"
-    echo "    ! See docs/MCP_MIGRATION_GUIDE.md Fix 2 for details"
+    local target_file="mcp_stdio_server.py"
+
+    if [[ ! -f "$target_file" ]]; then
+        echo "ERROR: Target file not found: ${target_file}"
+        return 1
+    fi
+
+    # Backup original file
+    cp "${target_file}" "${target_file}.bak"
+
+    # Add annotations to each tool using Python for precision
+    python3 << 'PYTHON_SCRIPT'
+import re
+
+with open("mcp_stdio_server.py", "r") as f:
+    content = f.read()
+
+# Define annotations for each tool
+annotations = {
+    "hostaway_list_properties": '''annotations={
+                "title": "List Properties",
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": True
+            }''',
+    "hostaway_get_property_details": '''annotations={
+                "title": "Get Property Details",
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": True
+            }''',
+    "hostaway_check_availability": '''annotations={
+                "title": "Check Availability",
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": True
+            }''',
+    "hostaway_search_bookings": '''annotations={
+                "title": "Search Bookings",
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": True
+            }''',
+    "hostaway_get_booking_details": '''annotations={
+                "title": "Get Booking Details",
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": True
+            }''',
+    "hostaway_get_guest_info": '''annotations={
+                "title": "Get Guest Info",
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": True
+            }''',
+    "hostaway_get_financial_reports": '''annotations={
+                "title": "Get Financial Reports",
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": False,
+                "openWorldHint": True
+            }'''
+}
+
+# Add annotations after inputSchema closing brace for each tool
+for tool_name, annotation in annotations.items():
+    # Pattern: find tool with this name, then its inputSchema closing brace
+    pattern = rf'(name="{tool_name}".*?inputSchema=\{{.*?\}},)(\s*\))'
+    replacement = rf'\1\n            {annotation}\2'
+    content = re.sub(pattern, replacement, content, flags=re.DOTALL)
+
+with open("mcp_stdio_server.py", "w") as f:
+    f.write(content)
+
+print("✓ Annotations added to all tools")
+PYTHON_SCRIPT
+
+    echo "    ✓ Tool annotations applied"
 }
 
 # Fix 3: Improve Error Messages
