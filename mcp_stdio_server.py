@@ -47,6 +47,9 @@ Returns summarized property information optimized for AI context windows (ID, na
                 "type": "object",
                 "properties": {
                     "limit": {"type": "integer", "description": "Max results (default 10)"},
+                    "minimum": 1,
+                    "maximum": 200,
+                    "default": 10,
                     "offset": {"type": "integer", "description": "Offset for pagination"},
                 },
             },
@@ -110,6 +113,8 @@ Returns availability status and pricing for the requested date range.
                 "properties": {
                     "listing_id": {"type": "integer", "description": "Property ID"},
                     "start_date": {
+                        "format": "date",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
                         "type": "string",
                         "description": "Start date (YYYY-MM-DD)",
                     },
@@ -144,9 +149,14 @@ Returns booking summaries matching specified criteria (date range, status, prope
                 "type": "object",
                 "properties": {
                     "limit": {"type": "integer", "description": "Max results"},
+                    "minimum": 1,
+                    "maximum": 200,
+                    "default": 10,
                     "offset": {"type": "integer", "description": "Offset"},
                     "status": {"type": "string", "description": "Booking status"},
                     "start_date": {"type": "string", "description": "Filter by start date"},
+                    "format": "date",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
                     "end_date": {"type": "string", "description": "Filter by end date"},
                 },
             },
@@ -235,6 +245,8 @@ Returns detailed financial data including revenue, expenses, and net income for 
                 "type": "object",
                 "properties": {
                     "start_date": {
+                        "format": "date",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
                         "type": "string",
                         "description": "Start date (YYYY-MM-DD)",
                     },
