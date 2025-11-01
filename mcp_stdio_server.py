@@ -39,6 +39,13 @@ async def list_tools() -> list[Tool]:
                     "offset": {"type": "integer", "description": "Offset for pagination"},
                 },
             },
+            annotations={
+                "title": "List Properties",
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": True,
+            },
         ),
         Tool(
             name="hostaway_get_property_details",
@@ -52,6 +59,13 @@ async def list_tools() -> list[Tool]:
                     },
                 },
                 "required": ["listing_id"],
+            },
+            annotations={
+                "title": "Get Property Details",
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": True,
             },
         ),
         Tool(
@@ -69,6 +83,13 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["listing_id", "start_date", "end_date"],
             },
+            annotations={
+                "title": "Check Availability",
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": True,
+            },
         ),
         Tool(
             name="hostaway_search_bookings",
@@ -83,6 +104,13 @@ async def list_tools() -> list[Tool]:
                     "end_date": {"type": "string", "description": "Filter by end date"},
                 },
             },
+            annotations={
+                "title": "Search Bookings",
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": True,
+            },
         ),
         Tool(
             name="hostaway_get_booking_details",
@@ -94,6 +122,13 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["booking_id"],
             },
+            annotations={
+                "title": "Get Booking Details",
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": True,
+            },
         ),
         Tool(
             name="hostaway_get_guest_info",
@@ -104,6 +139,13 @@ async def list_tools() -> list[Tool]:
                     "booking_id": {"type": "integer", "description": "Booking ID"},
                 },
                 "required": ["booking_id"],
+            },
+            annotations={
+                "title": "Get Guest Info",
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": True,
             },
         ),
         Tool(
@@ -120,6 +162,13 @@ async def list_tools() -> list[Tool]:
                     "listing_id": {"type": "integer", "description": "Filter by property"},
                 },
                 "required": ["start_date", "end_date"],
+            },
+            annotations={
+                "title": "Get Financial Reports",
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": False,
+                "openWorldHint": True,
             },
         ),
     ]
