@@ -137,6 +137,248 @@ def create_http_error_response(error: httpx.HTTPError, context: str) -> list[Tex
     )
 
 
+# Markdown formatting functions
+def format_property_markdown(property_data: dict) -> str:
+    """Format a single property as Markdown.
+
+    Args:
+        property_data: Property dict from API
+
+    Returns:
+        Markdown-formatted property information
+    """
+    prop_id = property_data.get("id", "N/A")
+    name = property_data.get("name", "Unnamed Property")
+    city = property_data.get("city", "N/A")
+    country = property_data.get("country", "N/A")
+    bedrooms = property_data.get("bedrooms", 0)
+    status = property_data.get("status", "unknown")
+
+    return f"""### {name}
+**ID**: {prop_id}
+**Location**: {city}, {country}
+**Bedrooms**: {bedrooms}
+**Status**: {status}
+"""
+
+
+def format_properties_list_markdown(data: dict) -> str:
+    """Format properties list response as Markdown.
+
+    Args:
+        data: API response with items and pagination metadata
+
+    Returns:
+        Markdown-formatted properties list
+    """
+    items = data.get("items", [])
+    meta = data.get("meta", {})
+
+    if not items:
+        return "No properties found."
+
+    output = f"# Properties ({len(items)} results)\n\n"
+
+    for item in items:
+        output += format_property_markdown(item)
+        output += "\n---\n\n"
+
+    # Add pagination info
+    if meta.get("hasMore"):
+        output += (
+            f"**More results available** - Use nextCursor: `{data.get('nextCursor', 'N/A')}`\n"
+        )
+
+    if meta.get("note"):
+        output += f"\n*{meta['note']}*\n"
+
+    return output
+
+
+def format_booking_markdown(booking_data: dict) -> str:
+    """Format a single booking as Markdown.
+
+    Args:
+        booking_data: Booking dict from API
+
+    Returns:
+        Markdown-formatted booking information
+    """
+    booking_id = booking_data.get("id", "N/A")
+    guest_name = booking_data.get("guestName", "Unknown Guest")
+    check_in = booking_data.get("checkIn", "N/A")
+    check_out = booking_data.get("checkOut", "N/A")
+    listing_id = booking_data.get("listingId", "N/A")
+    status = booking_data.get("status", "unknown")
+    total_price = booking_data.get("totalPrice", 0)
+
+    return f"""### Booking #{booking_id}
+**Guest**: {guest_name}
+**Property**: #{listing_id}
+**Check-in**: {check_in}
+**Check-out**: {check_out}
+**Status**: {status}
+**Total Price**: ${total_price:,.2f}
+"""
+
+
+def format_bookings_list_markdown(data: dict) -> str:
+    """Format bookings list response as Markdown.
+
+    Args:
+        data: API response with items and pagination metadata
+
+    Returns:
+        Markdown-formatted bookings list
+    """
+    items = data.get("items", [])
+    meta = data.get("meta", {})
+
+    if not items:
+        return "No bookings found."
+
+    output = f"# Bookings ({len(items)} results)\n\n"
+
+    for item in items:
+        output += format_booking_markdown(item)
+        output += "\n---\n\n"
+
+    # Add pagination info
+    if meta.get("hasMore"):
+        output += (
+            f"**More results available** - Use nextCursor: `{data.get('nextCursor', 'N/A')}`\n"
+        )
+
+    if meta.get("note"):
+        output += f"\n*{meta['note']}*\n"
+
+    return output
+
+
+def format_property_details_markdown(property_data: dict) -> str:
+    """Format detailed property information as Markdown.
+
+    Args:
+        property_data: Full property details from API
+
+    Returns:
+        Markdown-formatted detailed property information
+    """
+    name = property_data.get("name", "Unnamed Property")
+    prop_id = property_data.get("id", "N/A")
+
+    output = f"# {name}\n\n"
+    output += f"**Property ID**: {prop_id}\n\n"
+
+    # Location
+    output += "## Location\n"
+    output += f"- **City**: {property_data.get('city', 'N/A')}\n"
+    output += f"- **Country**: {property_data.get('country', 'N/A')}\n"
+    output += f"- **Address**: {property_data.get('address', 'N/A')}\n\n"
+
+    # Property Details
+    output += "## Property Details\n"
+    output += f"- **Bedrooms**: {property_data.get('bedrooms', 'N/A')}\n"
+    output += f"- **Bathrooms**: {property_data.get('bathrooms', 'N/A')}\n"
+    output += f"- **Max Guests**: {property_data.get('maxGuests', 'N/A')}\n"
+    output += f"- **Property Type**: {property_data.get('propertyType', 'N/A')}\n"
+    output += f"- **Status**: {property_data.get('status', 'N/A')}\n\n"
+
+    # Description
+    description = property_data.get("description", "")
+    if description:
+        output += "## Description\n"
+        output += f"{description}\n\n"
+
+    # Amenities
+    amenities = property_data.get("amenities", [])
+    if amenities:
+        output += "## Amenities\n"
+        for amenity in amenities:
+            output += f"- {amenity}\n"
+        output += "\n"
+
+    return output
+
+
+def format_availability_markdown(data: dict) -> str:
+    """Format availability calendar as Markdown.
+
+    Args:
+        data: Availability data from API
+
+    Returns:
+        Markdown-formatted availability calendar
+    """
+    listing_id = data.get("listing_id", "N/A")
+    start_date = data.get("start_date", "N/A")
+    end_date = data.get("end_date", "N/A")
+    availability = data.get("availability", [])
+
+    output = f"# Availability for Property #{listing_id}\n\n"
+    output += f"**Date Range**: {start_date} to {end_date}\n\n"
+
+    if not availability:
+        return output + "No availability data for this date range."
+
+    output += "| Date | Status | Price | Min Stay |\n"
+    output += "|------|--------|-------|----------|\n"
+
+    for record in availability:
+        date = record.get("date", "N/A")
+        status = record.get("status", "unknown")
+        price = record.get("price")
+        min_stay = record.get("min_stay", "N/A")
+
+        price_str = f"${price:,.2f}" if price else "N/A"
+
+        output += f"| {date} | {status} | {price_str} | {min_stay} |\n"
+
+    return output
+
+
+def format_financial_report_markdown(data: dict) -> str:
+    """Format financial report as Markdown.
+
+    Args:
+        data: Financial report data from API
+
+    Returns:
+        Markdown-formatted financial report
+    """
+    start_date = data.get("start_date", "N/A")
+    end_date = data.get("end_date", "N/A")
+    total_revenue = data.get("total_revenue", 0)
+    total_expenses = data.get("total_expenses", 0)
+    net_income = total_revenue - total_expenses
+
+    output = "# Financial Report\n\n"
+    output += f"**Period**: {start_date} to {end_date}\n\n"
+
+    output += "## Summary\n\n"
+    output += f"- **Total Revenue**: ${total_revenue:,.2f}\n"
+    output += f"- **Total Expenses**: ${total_expenses:,.2f}\n"
+    output += f"- **Net Income**: ${net_income:,.2f}\n\n"
+
+    # Revenue breakdown
+    revenue_breakdown = data.get("revenue_breakdown", {})
+    if revenue_breakdown:
+        output += "## Revenue Breakdown\n\n"
+        for category, amount in revenue_breakdown.items():
+            output += f"- **{category}**: ${amount:,.2f}\n"
+        output += "\n"
+
+    # Expense breakdown
+    expense_breakdown = data.get("expense_breakdown", {})
+    if expense_breakdown:
+        output += "## Expense Breakdown\n\n"
+        for category, amount in expense_breakdown.items():
+            output += f"- **{category}**: ${amount:,.2f}\n"
+        output += "\n"
+
+    return output
+
+
 @app.list_tools()
 async def list_tools() -> list[Tool]:
     """List available Hostaway API tools."""
@@ -163,6 +405,12 @@ Returns summarized property information optimized for AI context windows (ID, na
                     "maximum": 200,
                     "default": 10,
                     "offset": {"type": "integer", "description": "Offset for pagination"},
+                    "response_format": {
+                        "type": "string",
+                        "enum": ["json", "markdown"],
+                        "default": "markdown",
+                        "description": "Response format: 'markdown' for human-readable output (default), 'json' for programmatic processing",
+                    },
                 },
             },
             annotations={
@@ -193,6 +441,12 @@ Returns complete property data including amenities, pricing, policies, and calen
                     "listing_id": {
                         "type": "integer",
                         "description": "Property listing ID",
+                    },
+                    "response_format": {
+                        "type": "string",
+                        "enum": ["json", "markdown"],
+                        "default": "markdown",
+                        "description": "Response format: 'markdown' for human-readable output (default), 'json' for programmatic processing",
                     },
                 },
                 "required": ["listing_id"],
@@ -231,6 +485,12 @@ Returns availability status and pricing for the requested date range.
                         "description": "Start date (YYYY-MM-DD)",
                     },
                     "end_date": {"type": "string", "description": "End date (YYYY-MM-DD)"},
+                    "response_format": {
+                        "type": "string",
+                        "enum": ["json", "markdown"],
+                        "default": "markdown",
+                        "description": "Response format: 'markdown' for human-readable output (default), 'json' for programmatic processing",
+                    },
                 },
                 "required": ["listing_id", "start_date", "end_date"],
             },
@@ -270,6 +530,12 @@ Returns booking summaries matching specified criteria (date range, status, prope
                     "format": "date",
                     "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
                     "end_date": {"type": "string", "description": "Filter by end date"},
+                    "response_format": {
+                        "type": "string",
+                        "enum": ["json", "markdown"],
+                        "default": "markdown",
+                        "description": "Response format: 'markdown' for human-readable output (default), 'json' for programmatic processing",
+                    },
                 },
             },
             annotations={
@@ -297,6 +563,12 @@ Returns full booking information including guest details, pricing, payments, and
                 "type": "object",
                 "properties": {
                     "booking_id": {"type": "integer", "description": "Booking ID"},
+                    "response_format": {
+                        "type": "string",
+                        "enum": ["json", "markdown"],
+                        "default": "markdown",
+                        "description": "Response format: 'markdown' for human-readable output (default), 'json' for programmatic processing",
+                    },
                 },
                 "required": ["booking_id"],
             },
@@ -325,6 +597,12 @@ Returns guest name, email, phone, and other contact details associated with the 
                 "type": "object",
                 "properties": {
                     "booking_id": {"type": "integer", "description": "Booking ID"},
+                    "response_format": {
+                        "type": "string",
+                        "enum": ["json", "markdown"],
+                        "default": "markdown",
+                        "description": "Response format: 'markdown' for human-readable output (default), 'json' for programmatic processing",
+                    },
                 },
                 "required": ["booking_id"],
             },
@@ -364,6 +642,12 @@ Returns detailed financial data including revenue, expenses, and net income for 
                     },
                     "end_date": {"type": "string", "description": "End date (YYYY-MM-DD)"},
                     "listing_id": {"type": "integer", "description": "Filter by property"},
+                    "response_format": {
+                        "type": "string",
+                        "enum": ["json", "markdown"],
+                        "default": "markdown",
+                        "description": "Response format: 'markdown' for human-readable output (default), 'json' for programmatic processing",
+                    },
                 },
                 "required": ["start_date", "end_date"],
             },
@@ -379,22 +663,31 @@ Returns detailed financial data including revenue, expenses, and net income for 
 
 
 @app.call_tool()
-async def call_tool(name: str, arguments: Any) -> list[TextContent]:  # noqa: PLR0912, PLR0915
+async def call_tool(name: str, arguments: Any) -> list[TextContent]:  # noqa: PLR0912,PLR0915
     """Execute a tool by calling the HTTP API."""
     # Add API key to headers if configured
     headers = {"X-API-Key": API_KEY} if API_KEY else {}
+
+    # Extract response_format parameter (default to markdown)
+    response_format = arguments.get("response_format", "markdown")
 
     async with httpx.AsyncClient(timeout=30.0, headers=headers) as client:
         try:
             if name == "hostaway_list_properties":
                 params = {k: v for k, v in arguments.items() if v is not None}
+                # Remove response_format from API params
+                params.pop("response_format", None)
                 # Use summary=true to prevent context window overflow
                 params["summary"] = "true"
                 response = await client.get(f"{BASE_URL}/api/listings", params=params)
                 response.raise_for_status()
                 data = response.json()
-                response_text = json.dumps(data, indent=2)
-                return [TextContent(type="text", text=truncate_response(response_text))]
+
+                # Format based on response_format
+                if response_format == "markdown":
+                    formatted_text = format_properties_list_markdown(data)
+                    return [TextContent(type="text", text=formatted_text)]
+                return [TextContent(type="text", text=json.dumps(data, indent=2))]
 
             if name == "hostaway_get_property_details":
                 listing_id = arguments["listing_id"]
@@ -410,8 +703,12 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:  # noqa: PL
                 response = await client.get(f"{BASE_URL}/api/listings/{listing_id}")
                 response.raise_for_status()
                 data = response.json()
-                response_text = json.dumps(data, indent=2)
-                return [TextContent(type="text", text=truncate_response(response_text))]
+
+                # Format based on response_format
+                if response_format == "markdown":
+                    formatted_text = format_property_details_markdown(data)
+                    return [TextContent(type="text", text=formatted_text)]
+                return [TextContent(type="text", text=json.dumps(data, indent=2))]
 
             if name == "hostaway_check_availability":
                 listing_id = arguments["listing_id"]
@@ -444,18 +741,28 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:  # noqa: PL
                 )
                 response.raise_for_status()
                 data = response.json()
-                response_text = json.dumps(data, indent=2)
-                return [TextContent(type="text", text=truncate_response(response_text))]
+
+                # Format based on response_format
+                if response_format == "markdown":
+                    formatted_text = format_availability_markdown(data)
+                    return [TextContent(type="text", text=formatted_text)]
+                return [TextContent(type="text", text=json.dumps(data, indent=2))]
 
             if name == "hostaway_search_bookings":
                 params = {k: v for k, v in arguments.items() if v is not None}
+                # Remove response_format from API params
+                params.pop("response_format", None)
                 # Use summary=true to prevent context window overflow
                 params["summary"] = "true"
                 response = await client.get(f"{BASE_URL}/api/reservations", params=params)
                 response.raise_for_status()
                 data = response.json()
-                response_text = json.dumps(data, indent=2)
-                return [TextContent(type="text", text=truncate_response(response_text))]
+
+                # Format based on response_format
+                if response_format == "markdown":
+                    formatted_text = format_bookings_list_markdown(data)
+                    return [TextContent(type="text", text=formatted_text)]
+                return [TextContent(type="text", text=json.dumps(data, indent=2))]
 
             if name == "hostaway_get_booking_details":
                 booking_id = arguments["booking_id"]
@@ -471,8 +778,12 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:  # noqa: PL
                 response = await client.get(f"{BASE_URL}/api/reservations/{booking_id}")
                 response.raise_for_status()
                 data = response.json()
-                response_text = json.dumps(data, indent=2)
-                return [TextContent(type="text", text=truncate_response(response_text))]
+
+                # Format based on response_format
+                if response_format == "markdown":
+                    formatted_text = format_booking_markdown(data)
+                    return [TextContent(type="text", text=formatted_text)]
+                return [TextContent(type="text", text=json.dumps(data, indent=2))]
 
             if name == "hostaway_get_guest_info":
                 booking_id = arguments["booking_id"]
@@ -486,30 +797,34 @@ async def call_tool(name: str, arguments: Any) -> list[TextContent]:  # noqa: PL
                 response = await client.get(f"{BASE_URL}/api/reservations/{booking_id}/guest")
                 response.raise_for_status()
                 data = response.json()
-                response_text = json.dumps(data, indent=2)
-                return [TextContent(type="text", text=truncate_response(response_text))]
+
+                # Guest info is typically small, markdown formatting optional
+                if response_format == "markdown":
+                    # Simple markdown format for guest
+                    guest = data.get("guest", {})
+                    formatted_text = f"""# Guest Information
+
+**Name**: {guest.get('name', 'N/A')}
+**Email**: {guest.get('email', 'N/A')}
+**Phone**: {guest.get('phone', 'N/A')}
+**Country**: {guest.get('country', 'N/A')}
+"""
+                    return [TextContent(type="text", text=formatted_text)]
+                return [TextContent(type="text", text=json.dumps(data, indent=2))]
 
             if name == "hostaway_get_financial_reports":
-                start_date = arguments["start_date"]
-                end_date = arguments["end_date"]
-
-                # NEW: Add date validation
-                date_pattern = r"^\d{4}-\d{2}-\d{2}$"
-                if not re.match(date_pattern, start_date):
-                    return create_error_response(
-                        f"Invalid start_date format: {start_date}. Must be YYYY-MM-DD."
-                    )
-                if not re.match(date_pattern, end_date):
-                    return create_error_response(
-                        f"Invalid end_date format: {end_date}. Must be YYYY-MM-DD."
-                    )
-
                 params = {k: v for k, v in arguments.items() if v is not None}
+                # Remove response_format from API params
+                params.pop("response_format", None)
                 response = await client.get(f"{BASE_URL}/api/financialReports", params=params)
                 response.raise_for_status()
                 data = response.json()
-                response_text = json.dumps(data, indent=2)
-                return [TextContent(type="text", text=truncate_response(response_text))]
+
+                # Format based on response_format
+                if response_format == "markdown":
+                    formatted_text = format_financial_report_markdown(data)
+                    return [TextContent(type="text", text=formatted_text)]
+                return [TextContent(type="text", text=json.dumps(data, indent=2))]
 
             return create_error_response(
                 f"Unknown tool: {name}. "
